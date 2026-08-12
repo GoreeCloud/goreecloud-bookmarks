@@ -162,7 +162,7 @@ export default function CollectionCard({
                   title={t("collection_publicly_shared")}
                 >
                   <i className="bi-globe2" />
-                  {t("public")}
+                  Public
                 </span>
               )}
             </div>
