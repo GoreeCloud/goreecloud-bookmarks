@@ -99,6 +99,7 @@ export default function Login({
                       fill="none"
                       viewBox="0 0 24 24"
                       className="stroke-info h-6 w-6 shrink-0"
+                      aria-hidden="true"
                     >
                       <path
                         strokeLinecap="round"
@@ -107,19 +108,10 @@ export default function Login({
                         d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                       ></path>
                     </svg>
-                    <p className="font-bold">{t("demo_title")}</p>
+                    <p className="font-bold">Demo Only</p>
                   </div>
-                  <div className="text-xs">{t("demo_desc")}</div>
-
                   <div className="text-xs">
-                    {t("demo_desc_2")}{" "}
-                    <a
-                      href="https://cloud.linkwarden.app"
-                      target="_blank"
-                      className="font-bold"
-                    >
-                      cloud.linkwarden.app
-                    </a>
+                    This is a GoreeCloud Bookmarks demo instance. Demo restrictions may apply.
                   </div>
                   <Button
                     variant="primary"
@@ -142,7 +134,7 @@ export default function Login({
                       toast.dismiss(load);
                     }}
                   >
-                    {t("demo_button")}
+                    Login as demo user
                   </Button>
                 </div>
               </div>
@@ -258,7 +250,7 @@ export default function Login({
   }
 
   return (
-    <CenteredForm header={t("sign_in_to_linkwarden")}>
+    <CenteredForm header="Sign in to GoreeCloud Bookmarks">
       <form onSubmit={loginUser}>
         <div
           className="mx-auto flex flex-col gap-3 justify-between max-w-md min-w-80 w-full"
