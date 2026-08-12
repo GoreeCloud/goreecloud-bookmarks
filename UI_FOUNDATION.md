@@ -88,4 +88,4 @@ Continue with:
 
 ## Validation
 
-Every head of this branch must continue to pass the GoreeCloud web build and inherited login regression suite before it is considered for merge into the identity branch. Broader responsive, visual, keyboard, and interaction testing is required before any production release.
+Every code-bearing head of this branch must pass the GoreeCloud web build and inherited login regression suite before it is considered for merge into the identity branch. Documentation-only follow-up commits remain part of the same validated change set, but broader responsive, visual, keyboard, and interaction testing is still required before any production release.
