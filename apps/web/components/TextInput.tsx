@@ -10,7 +10,7 @@ const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
         ref={ref}
         type={type}
         className={cn(
-          "w-full rounded-md p-2 border-neutral-content border-solid border outline-none focus:border-primary duration-100",
+          "w-full rounded-md p-2 border-neutral-content border-solid border outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-1 ring-offset-background duration-100",
           className
         )}
         {...rest}

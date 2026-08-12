@@ -21,14 +21,22 @@ export default function LinkPin({ link, btnStyle }: Props) {
       variant="simple"
       size="icon"
       className={clsx(
-        "absolute top-3 right-[3.25rem] group-hover:opacity-100 group-focus-within:opacity-100 opacity-0 duration-100 text-neutral",
+        "absolute right-[3.75rem] top-2.5 h-10 w-10 rounded-lg border border-base-content/10 bg-base-100/90 text-base-content/60 shadow-sm backdrop-blur-md transition-all duration-150 hover:bg-base-100 hover:text-base-content focus-visible:opacity-100 sm:right-[3.25rem] sm:top-3 sm:h-8 sm:w-8",
+        isAlreadyPinned
+          ? "opacity-100 text-primary"
+          : "opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100",
         btnStyle
       )}
       onClick={() => pinLink(link)}
+      aria-label={isAlreadyPinned ? "Unpin bookmark" : "Pin bookmark"}
+      title={isAlreadyPinned ? "Unpin bookmark" : "Pin bookmark"}
     >
       <i
-        title="Pin"
-        className={clsx("text-xl", isAlreadyPinned ? "bi-pin-fill" : "bi-pin")}
+        aria-hidden="true"
+        className={clsx(
+          "text-sm",
+          isAlreadyPinned ? "bi-pin-fill" : "bi-pin"
+        )}
       />
     </Button>
   );

@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/router";
 import { toast } from "react-hot-toast";
 import { useTranslation } from "next-i18next";
@@ -59,8 +58,9 @@ export default function SearchModal({ onClose }: { onClose: () => void }) {
       { query: trimmed, searchedAt: new Date().toISOString() },
       ...recents.filter((entry) => entry.query !== trimmed),
     ].slice(0, MAX_RECENT_SEARCHES);
-    setRecentSearches(updated);
 
+    setRecentSearches(updated);
+    setRecents(updated);
     router.push("/search?q=" + encodeURIComponent(trimmed));
     onClose();
   };
@@ -76,102 +76,144 @@ export default function SearchModal({ onClose }: { onClose: () => void }) {
       const needsSpace = prev.length > 0 && !prev.endsWith(" ");
       return `${prev}${needsSpace ? " " : ""}${operator}`;
     });
-    inputRef.current?.focus();
+    requestAnimationFrame(() => inputRef.current?.focus());
   };
 
   return (
-    <Modal toggleModal={onClose} hideCloseButton>
-      <div className="flex items-center gap-3">
-        <i className="bi-search text-neutral text-lg leading-none" />
-        <input
-          type="text"
-          ref={inputRef}
-          autoFocus
-          placeholder={t("search_for_links")}
-          value={searchQuery}
-          onChange={(e) => {
-            e.target.value.includes("%") &&
-              toast.error(t("search_query_invalid_symbol"));
-            setSearchQuery(e.target.value.replace("%", ""));
-          }}
-          onKeyDown={(e) => e.key === "Enter" && submit(searchQuery)}
-          className="w-full bg-transparent outline-none text-lg"
-        />
-        <div className="hidden sm:flex items-center gap-1 shrink-0">
-          <Kbd>{isAppleDevice ? "⌘" : "Ctrl"}</Kbd>
-          <Kbd>K</Kbd>
+    <Modal toggleModal={onClose} hideCloseButton className="sm:!max-w-2xl">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          submit(searchQuery);
+        }}
+      >
+        <div className="flex items-center gap-3 rounded-xl border border-base-content/10 bg-base-content/[0.025] px-3 py-2.5 focus-within:border-primary/35 focus-within:ring-2 focus-within:ring-primary/10">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/[0.08] text-primary/80">
+            <i className="bi-search text-sm leading-none" aria-hidden="true" />
+          </span>
+
+          <input
+            type="search"
+            ref={inputRef}
+            autoFocus
+            aria-label={t("search_for_links")}
+            placeholder={t("search_for_links")}
+            value={searchQuery}
+            onChange={(e) => {
+              e.target.value.includes("%") &&
+                toast.error(t("search_query_invalid_symbol"));
+              setSearchQuery(e.target.value.replace("%", ""));
+            }}
+            className="min-w-0 flex-1 bg-transparent text-base font-medium text-base-content outline-none placeholder:font-normal placeholder:text-base-content/35 sm:text-lg"
+          />
+
+          {searchQuery ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-10 w-10 shrink-0 rounded-lg text-base-content/40 hover:bg-base-content/[0.06] hover:text-base-content sm:h-8 sm:w-8"
+              aria-label="Clear search"
+              onClick={() => {
+                setSearchQuery("");
+                inputRef.current?.focus();
+              }}
+            >
+              <i className="bi-x-lg text-xs" aria-hidden="true" />
+            </Button>
+          ) : (
+            <div className="hidden shrink-0 items-center gap-1 sm:flex">
+              <Kbd>{isAppleDevice ? "⌘" : "Ctrl"}</Kbd>
+              <Kbd>K</Kbd>
+            </div>
+          )}
         </div>
-      </div>
+      </form>
 
-      <div className="border-t border-neutral-content -mx-4 sm:-mx-5 mt-4" />
-
-      <div className="sm:max-h-80 sm:overflow-y-auto -mx-4 sm:-mx-5 -mb-4 sm:-mb-5">
+      <div className="mt-4 max-h-[28rem] overflow-y-auto pr-1">
         {recents.length > 0 && (
-          <div className="px-4 sm:px-5">
-            <p className="text-xs font-bold text-neutral mt-4">{t("recent")}</p>
-            <div className="flex flex-col gap-1 mt-2">
+          <section>
+            <div className="flex items-center justify-between px-1">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-base-content/40">
+                {t("recent")}
+              </p>
+            </div>
+
+            <div className="mt-2 flex flex-col gap-1">
               {recents.map((entry) => (
                 <div
                   key={entry.query}
-                  className="flex items-center gap-3 rounded-md px-2 py-1.5 cursor-pointer hover:bg-base-200 duration-100"
+                  className="group/recent flex min-h-11 cursor-pointer items-center gap-3 rounded-xl px-2.5 py-2.5 transition-colors hover:bg-base-content/[0.045] focus-within:bg-base-content/[0.045]"
                   onClick={() => submit(entry.query)}
                 >
-                  <i className="bi-clock-history text-neutral" />
-                  <span className="flex-1 truncate text-sm">{entry.query}</span>
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-base-content/[0.045] text-base-content/45">
+                    <i className="bi-clock-history text-sm" aria-hidden="true" />
+                  </span>
+                  <span className="min-w-0 flex-1 truncate text-sm font-medium text-base-content/75">
+                    {entry.query}
+                  </span>
+                  <span className="hidden text-[11px] text-base-content/30 sm:inline">
+                    <Kbd>Enter</Kbd>
+                  </span>
                   <Button
+                    type="button"
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6"
+                    className="h-9 w-9 shrink-0 rounded-lg text-base-content/35 opacity-80 hover:bg-base-content/[0.06] hover:text-base-content sm:h-7 sm:w-7 sm:opacity-70 group-hover/recent:opacity-100"
                     aria-label={t("delete")}
                     onClick={(e) => {
                       e.stopPropagation();
                       removeRecent(entry.query);
                     }}
                   >
-                    <i className="bi-x text-lg text-neutral" />
+                    <i className="bi-x-lg text-[11px]" aria-hidden="true" />
                   </Button>
                 </div>
               ))}
             </div>
-            <div className="border-t border-neutral-content -mx-4 sm:-mx-5 mt-4" />
-          </div>
+          </section>
         )}
 
-        <div className="px-4 sm:px-5 pb-4 sm:pb-5">
-          <p className="text-xs font-bold text-neutral mt-4">
-            {t("suggested_search_operators")}
-          </p>
-          <div className="flex flex-col gap-1 mt-2">
+        <section className={recents.length > 0 ? "mt-5" : ""}>
+          <div className="px-1">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-base-content/40">
+              {t("suggested_search_operators")}
+            </p>
+          </div>
+
+          <div className="mt-2 grid gap-1 sm:grid-cols-2">
             {ADVANCED_SEARCH_OPERATORS.map((entry) => (
               <button
                 key={entry.operator}
                 type="button"
-                className="flex items-center gap-2 justify-between rounded-md px-2 py-1.5 text-left hover:bg-base-200 duration-100"
+                className="flex min-h-11 items-center justify-between gap-3 rounded-xl px-2.5 py-2.5 text-left transition-colors hover:bg-base-content/[0.045] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                 onClick={() => appendOperator(entry.operator)}
               >
-                <div className="flex items-center gap-3">
-                  <i className={`${entry.icon} text-primary`} />
-                  <span className="text-sm">{t(entry.labelKey)}</span>
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/[0.07] text-primary/80">
+                    <i className={`${entry.icon} text-sm`} aria-hidden="true" />
+                  </span>
+                  <span className="truncate text-sm font-medium text-base-content/70">
+                    {t(entry.labelKey)}
+                  </span>
                 </div>
-                <span className="font-mono text-xs px-1.5 py-0.5 rounded-md bg-base-200 border border-neutral-content text-base-content">
+                <span className="shrink-0 rounded-md border border-base-content/10 bg-base-content/[0.035] px-1.5 py-0.5 font-mono text-[11px] text-base-content/50">
                   {entry.operator}
                 </span>
               </button>
             ))}
           </div>
+        </section>
+      </div>
 
-          <div className="flex justify-end mt-2">
-            <Button asChild variant="ghost" size="sm" className="text-xs">
-              <Link
-                href="https://docs.linkwarden.app/Usage/advanced-search"
-                target="_blank"
-                className="flex items-center gap-1"
-              >
-                {t("learn_more")}
-                <i className="bi-box-arrow-up-right text-xs" />
-              </Link>
-            </Button>
-          </div>
+      <div className="mt-4 flex items-center justify-between border-t border-base-content/[0.07] pt-3 text-[11px] text-base-content/40">
+        <div className="flex items-center gap-1.5">
+          <Kbd>Enter</Kbd>
+          <span>{t("search_for_links")}</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <Kbd>Esc</Kbd>
+          <span>{t("cancel")}</span>
         </div>
       </div>
     </Modal>
