@@ -22,7 +22,6 @@ import LinkIcon from "./LinkViews/LinkComponents/LinkIcon";
 import LinkFormats from "./LinkViews/LinkComponents/LinkFormats";
 import LinkTypeBadge from "./LinkViews/LinkComponents/LinkTypeBadge";
 import LinkPin from "./LinkViews/LinkComponents/LinkPin";
-import { Separator } from "./ui/separator";
 import { useDraggable } from "@dnd-kit/core";
 import { cn } from "@linkwarden/lib/utils";
 import { useTranslation } from "next-i18next";
@@ -37,19 +36,18 @@ export function DashboardLinks({
   type?: "collection" | "recent";
 }) {
   return (
-    <div
-      className={`flex gap-3 overflow-x-auto overflow-y-hidden hide-scrollbar w-full min-h-fit`}
-    >
+    <div className="flex w-full gap-3 overflow-x-auto overflow-y-hidden pb-1 hide-scrollbar">
       {isLoading ? (
-        <div className="flex flex-col gap-4 min-w-60 w-60">
-          <div className="skeleton h-40 w-full"></div>
-          <div className="skeleton h-3 w-2/3"></div>
-          <div className="skeleton h-3 w-full"></div>
-          <div className="skeleton h-3 w-full"></div>
-          <div className="skeleton h-3 w-1/3"></div>
+        <div className="min-w-60 w-60 overflow-hidden rounded-2xl border border-base-content/[0.07] bg-base-100">
+          <div className="skeleton h-40 w-full rounded-none" />
+          <div className="space-y-2 p-4">
+            <div className="skeleton h-4 w-2/3" />
+            <div className="skeleton h-3 w-full" />
+            <div className="skeleton h-3 w-1/2" />
+          </div>
         </div>
       ) : (
-        links?.map((e, i) => <Card key={i} link={e} dashboardType={type} />)
+        links?.map((e) => <Card key={e.id} link={e} dashboardType={type} />)
       )}
     </div>
   );
@@ -73,7 +71,6 @@ export function Card({ link, editMode, dashboardType }: Props) {
     },
   });
   const { data: collections = [] } = useCollections();
-
   const { data: user } = useUser();
 
   const {
@@ -81,7 +78,7 @@ export function Card({ link, editMode, dashboardType }: Props) {
   } = useLocalSettingsStore();
 
   const router = useRouter();
-  const isPublicRoute = router.pathname.startsWith("/public") ? true : false;
+  const isPublicRoute = router.pathname.startsWith("/public");
 
   const [collection, setCollection] =
     useState<CollectionIncludingMembersAndLinkCount>(
@@ -104,106 +101,111 @@ export function Card({ link, editMode, dashboardType }: Props) {
     <div
       ref={setNodeRef}
       className={cn(
-        isDragging ? "opacity-30" : "opacity-100",
-        "relative group touch-manipulation select-none"
+        "group relative min-w-60 w-60 overflow-hidden rounded-2xl border border-base-content/10 bg-base-100 shadow-sm transition-all duration-200 touch-manipulation select-none",
+        "hover:-translate-y-0.5 hover:border-base-content/20 hover:shadow-lg focus-within:border-primary/30 focus-within:shadow-md",
+        isDragging ? "opacity-30" : "opacity-100"
       )}
     >
       <div
-        className={`min-w-60 w-60 border border-solid border-neutral-content bg-base-200 duration-100 rounded-xl relative group h-full`}
+        className="flex h-full cursor-pointer flex-col"
+        onClick={() =>
+          !editMode && openLink(link, user, () => setLinkModal(true))
+        }
+        {...listeners}
+        {...attributes}
       >
-        <div
-          className="rounded-xl cursor-pointer h-full w-full flex flex-col justify-between"
-          onClick={() =>
-            !editMode && openLink(link, user, () => setLinkModal(true))
-          }
-          {...listeners}
-          {...attributes}
-        >
-          {show.image && (
-            <div>
-              <div className={`relative rounded-t-xl h-40 overflow-hidden`}>
-                {formatAvailable(link, "preview") ? (
-                  <Image
-                    src={`/api/v1/archives/${link.id}?format=${ArchivedFormat.jpeg}&preview=true&updatedAt=${link.updatedAt}`}
-                    width={1280}
-                    height={720}
-                    alt=""
-                    className={`rounded-t-xl select-none object-cover z-10 h-40 w-full shadow opacity-80 scale-105`}
-                    style={show.icon ? { filter: "blur(1px)" } : undefined}
-                    draggable="false"
-                    onError={(e) => {
-                      const target = e.target as HTMLElement;
-                      target.style.display = "none";
-                    }}
-                    unoptimized
-                  />
-                ) : link.preview === "unavailable" ? (
-                  <div className={`bg-gray-50 h-40 bg-opacity-80`}></div>
-                ) : (
-                  <div
-                    className={`h-40 bg-opacity-80 skeleton rounded-none`}
-                  ></div>
-                )}
-                {show.icon && (
-                  <div className="absolute top-0 left-0 right-0 bottom-0 rounded-t-xl flex items-center justify-center rounded-md">
-                    <LinkIcon link={link} />
-                  </div>
-                )}
-                {show.preserved_formats &&
-                  link.type === "url" &&
-                  atLeastOneFormatAvailable(link) && (
-                    <div className="absolute bottom-0 right-0 m-2 bg-base-200 bg-opacity-60 px-1 rounded-md">
-                      <LinkFormats link={link} />
-                    </div>
-                  )}
+        {show.image && (
+          <div className="relative h-40 overflow-hidden border-b border-base-content/[0.07] bg-base-200/45">
+            {formatAvailable(link, "preview") ? (
+              <Image
+                src={`/api/v1/archives/${link.id}?format=${ArchivedFormat.jpeg}&preview=true&updatedAt=${link.updatedAt}`}
+                width={1280}
+                height={720}
+                alt=""
+                className="z-10 h-40 w-full select-none object-cover transition-transform duration-300 group-hover:scale-[1.015]"
+                draggable="false"
+                onError={(e) => {
+                  const target = e.target as HTMLElement;
+                  target.style.display = "none";
+                }}
+                unoptimized
+              />
+            ) : link.preview === "unavailable" ? (
+              <div className="flex h-40 items-center justify-center bg-base-200/70">
+                <div className="opacity-70">
+                  <LinkIcon link={link} />
+                </div>
               </div>
-              <Separator />
-            </div>
-          )}
+            ) : (
+              <div className="skeleton h-40 rounded-none" />
+            )}
 
-          <div className="flex flex-col justify-between h-full min-h-11">
-            <div className="p-3 flex flex-col justify-between h-full gap-2">
-              {show.name && (
-                <p className="line-clamp-2 w-full text-primary text-sm">
-                  {unescapeString(link.name)}
-                </p>
-              )}
-
-              {show.link && <LinkTypeBadge link={link} />}
-            </div>
-
-            {(show.collection || show.date) && (
-              <div>
-                <Separator className="mb-1" />
-
-                <div className="flex justify-between items-center text-xs text-neutral px-3 pb-1 gap-2">
-                  {show.collection && !isPublicRoute && (
-                    <div className="cursor-pointer truncate">
-                      <LinkCollection
-                        link={link}
-                        collection={collection}
-                        isPublicRoute={false}
-                      />
-                    </div>
-                  )}
-                  {show.date && <LinkDate link={link} />}
+            {show.icon && formatAvailable(link, "preview") && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center bg-gradient-to-t from-black/20 via-transparent to-black/[0.03]">
+                <div className="rounded-2xl bg-base-100/90 p-1.5 shadow-lg ring-1 ring-white/30 backdrop-blur-md">
+                  <LinkIcon link={link} />
                 </div>
               </div>
             )}
-          </div>
-        </div>
 
-        {/* Overlay on hover */}
-        <div className="absolute pointer-events-none top-0 left-0 right-0 bottom-0 bg-base-100 bg-opacity-0 group-hover:bg-opacity-20 group-focus-within:opacity-20 rounded-xl duration-100"></div>
-        <LinkActions
-          link={link}
-          t={t}
-          linkModal={linkModal}
-          setLinkModal={(e) => setLinkModal(e)}
-          className="absolute top-3 right-3 group-hover:opacity-100 group-focus-within:opacity-100 opacity-0 duration-100 text-neutral z-20"
-        />
-        {!isPublicRoute && <LinkPin link={link} />}
+            {show.preserved_formats &&
+              link.type === "url" &&
+              atLeastOneFormatAvailable(link) && (
+                <div className="absolute bottom-2 right-2 z-20 rounded-lg border border-white/15 bg-base-100/85 px-1.5 py-0.5 text-base-content/70 shadow-sm backdrop-blur-md">
+                  <LinkFormats link={link} />
+                </div>
+              )}
+          </div>
+        )}
+
+        <div className="flex min-h-0 flex-1 flex-col">
+          <div className="flex flex-1 flex-col gap-2.5 p-3.5">
+            {show.name && (
+              <p className="line-clamp-2 text-sm font-semibold leading-5 tracking-[-0.01em] text-base-content">
+                {unescapeString(link.name)}
+              </p>
+            )}
+
+            {show.link && <LinkTypeBadge link={link} />}
+
+            {show.description && link.description && (
+              <p className="line-clamp-2 text-xs leading-5 text-base-content/55">
+                {unescapeString(link.description)}
+              </p>
+            )}
+          </div>
+
+          {(show.collection || show.date) && (
+            <div className="border-t border-base-content/[0.07] px-3.5 py-2.5">
+              <div className="flex min-w-0 items-center justify-between gap-2 text-xs text-base-content/50">
+                {show.collection && !isPublicRoute && collection && (
+                  <div className="min-w-0 truncate">
+                    <LinkCollection
+                      link={link}
+                      collection={collection}
+                      isPublicRoute={false}
+                    />
+                  </div>
+                )}
+                {show.date && (
+                  <div className="shrink-0">
+                    <LinkDate link={link} />
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
+
+      <LinkActions
+        link={link}
+        t={t}
+        linkModal={linkModal}
+        setLinkModal={(e) => setLinkModal(e)}
+        className="absolute top-3 right-3 z-30 h-8 w-8 rounded-lg border border-base-content/10 bg-base-100/90 text-base-content/60 opacity-0 shadow-sm backdrop-blur-md transition-all duration-150 hover:bg-base-100 hover:text-base-content group-hover:opacity-100 group-focus-within:opacity-100"
+      />
+      {!isPublicRoute && <LinkPin link={link} />}
     </div>
   );
 }
