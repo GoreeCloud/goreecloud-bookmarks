@@ -11,7 +11,7 @@ The interface should feel like a focused private library rather than an administ
 - Strong light and dark theme behavior using the existing semantic theme tokens.
 - A calm navigation rail inspired by modern bookmark/read-later applications without copying another product's branding or proprietary artwork.
 - Accessible focus states, labels, and touch targets.
-- Consistent information hierarchy across card, masonry, list, dashboard, search, and capture surfaces.
+- Consistent information hierarchy across card, masonry, list, dashboard, search, capture, collection, and tag surfaces.
 
 ## Completed foundation work
 
@@ -89,6 +89,47 @@ The interface should feel like a focused private library rather than an administ
     - Normalizes query decoding before passing the value into the existing links query.
     - Preserves result sorting, card/masonry/list switching, bulk selection, pagination, and link rendering behavior.
 
+### Collections and tags
+
+15. `apps/web/components/CollectionCard.tsx`
+    - Rebuilds collection cards as library objects with a restrained color accent, collection icon, title/description hierarchy, link count, creation date, public-state cue, and compact collaborator stack.
+    - Preserves collection routing, edit/share/delete-or-leave actions, owner/member lookup, permission handling, configured icons, and configured colors.
+
+16. `apps/web/pages/collections/index.tsx`
+    - Reworks the collections index into separate owned and shared collection sections with compact sorting/creation controls and a focused first-collection empty state.
+    - Preserves existing collection sorting and root-collection filtering.
+
+17. `apps/web/pages/collections/[id].tsx`
+    - Replaces the legacy page-wide gradient with a compact collection identity surface and a restrained collection-color accent.
+    - Makes subcollections a distinct nested-library section and keeps bookmarks as the primary content workspace.
+    - Preserves open-all, edit, sharing, subcollection creation, delete/leave, membership display, collection permissions, bookmark sorting, bookmark views, and bulk-edit capability.
+
+18. `apps/web/components/CollectionListing.tsx`
+    - Refines the nested sidebar tree with clearer active rows, disclosure chevrons, collection icons/colors, public-state cues, recursive link-count badges, and keyboard focus treatment.
+    - Preserves Atlaskit tree behavior, nesting, drag/reorder behavior, collection-order persistence, recursive count calculation, ownership restrictions, and collection update mutations.
+
+19. `apps/web/components/ModalContent/NewCollectionModal.tsx`
+    - Reorganizes collection creation around collection identity, name, optional description, and existing icon/color selection.
+    - Adds a clearer parent-collection context for subcollection creation and prevents blank-name submission.
+
+20. `apps/web/components/ModalContent/EditCollectionModal.tsx`
+    - Aligns collection editing with the creation surface while preserving the existing update mutation, icon/color controls, name, and description.
+
+21. `apps/web/components/TagCard.tsx`
+    - Rebuilds tag cards around a consistent tag identity, creation date, and prominent linked-bookmark count.
+    - Preserves tag routing, selection mode, and deletion behavior.
+
+22. `apps/web/pages/tags/index.tsx`
+    - Reworks the tags index with compact create/sort/select controls, a calmer responsive grid, a clearer multi-select action bar, and a focused first-tag empty state.
+    - Preserves pagination, sorting modes, bulk deletion, and tag merging.
+
+23. `apps/web/pages/tags/[id].tsx`
+    - Gives tag detail pages the same compact identity/workspace hierarchy used by collections and search.
+    - Refines inline rename and empty states while preserving rename/delete mutations, bookmark sorting, view switching, bulk selection, and tag-filtered link queries.
+
+24. `apps/web/components/ModalContent/NewTagModal.tsx`
+    - Converts tag creation into a focused keyboard-submit form with explicit cancel/create actions while preserving the existing tag upsert mutation.
+
 ## Non-goals for this foundation
 
 - No backend, database, API, authentication, or authorization changes.
@@ -103,8 +144,7 @@ The interface should feel like a focused private library rather than an administ
 
 Continue with:
 
-- Collections and tags navigation refinement.
-- Empty-state and modal consistency beyond the dashboard/search/capture surfaces.
+- Empty-state and modal consistency beyond the completed dashboard/search/capture/collection/tag surfaces.
 - Mobile navigation and touch ergonomics.
 - Light/dark visual QA and keyboard accessibility.
 - Firefox extension visual alignment after the web application shell stabilizes.
