@@ -74,7 +74,7 @@ const Page: NextPageWithLayout = () => {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label={t("sort_by")}>
+              <Button variant="ghost" size="icon" aria-label="Sort tags">
                 <i className="bi-arrow-down-up text-neutral" />
               </Button>
             </DropdownMenuTrigger>
