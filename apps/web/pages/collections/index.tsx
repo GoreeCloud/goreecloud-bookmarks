@@ -10,19 +10,13 @@ import getServerSideProps from "@/lib/client/getServerSideProps";
 import { useTranslation } from "next-i18next";
 import { useCollections } from "@linkwarden/router/collections";
 import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { NextPageWithLayout } from "../_app";
 
 const Page: NextPageWithLayout = () => {
   const { t } = useTranslation();
   const { data: collections = [], isLoading } = useCollections();
   const [sortBy, setSortBy] = useState<Sort>(Sort.DateNewestFirst);
-
+  const [newCollectionModal, setNewCollectionModal] = useState(false);
   const { data } = useSession();
 
   const sortKey: Sort =
@@ -51,88 +45,102 @@ const Page: NextPageWithLayout = () => {
     [collections, compare]
   );
 
-  const [newCollectionModal, setNewCollectionModal] = useState(false);
+  const ownedCollections = sortedCollections.filter(
+    (collection) =>
+      collection.ownerId === data?.user.id && collection.parentId === null
+  );
+  const sharedCollections = sortedCollections.filter(
+    (collection) => collection.ownerId !== data?.user.id
+  );
 
   return (
-    <div className="p-3 flex flex-col gap-5 w-full h-full">
-      <div className="flex justify-between">
-        <div className="flex items-center gap-3">
-          <PageHeader
-            icon={"bi-folder"}
-            title={t("collections")}
-            description={t("collections_you_own")}
-          />
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setNewCollectionModal(true)}
-                >
-                  <i className="bi-plus-lg text-xl text-neutral"></i>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">
-                <p>{t("new_collection")}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-        <div className="flex gap-3 justify-end">
-          <div className="relative mt-2">
-            <SortDropdown sortBy={sortBy} setSort={setSortBy} t={t} />
-          </div>
+    <div className="flex h-full w-full flex-col gap-6 p-3 sm:p-5">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <PageHeader
+          icon="bi-folder"
+          title={t("collections")}
+          description={t("collections_you_own")}
+        />
+
+        <div className="flex items-center gap-2 self-start rounded-xl border border-neutral-content bg-base-100 p-1.5 shadow-sm sm:self-auto">
+          <SortDropdown sortBy={sortBy} setSort={setSortBy} t={t} />
+          <Button
+            variant="primary"
+            className="h-9"
+            onClick={() => setNewCollectionModal(true)}
+          >
+            <i className="bi-folder-plus" />
+            <span className="hidden sm:inline">{t("new_collection")}</span>
+          </Button>
         </div>
       </div>
 
-      {!isLoading && collections && !collections[0] ? (
-        <div
-          style={{ flex: "1 1 auto" }}
-          className="flex flex-col gap-2 justify-center h-full w-full mx-auto p-10"
-        >
-          <p className="text-center text-xl">
-            {t("create_your_first_collection")}
-          </p>
-          <p className="text-center mx-auto max-w-96 w-fit text-neutral text-sm">
-            {t("create_your_first_collection_desc")}
-          </p>
-          <Button
-            className="mx-auto mt-5"
-            variant="primary"
-            onClick={() => setNewCollectionModal(true)}
-          >
-            <i className="bi-plus-lg text-xl mr-2" />
-            {t("new_collection")}
-          </Button>
+      {!isLoading && collections.length === 0 ? (
+        <div className="flex min-h-[22rem] flex-1 items-center justify-center rounded-2xl border border-dashed border-neutral-content bg-base-200/40 p-8">
+          <div className="flex max-w-md flex-col items-center text-center">
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-neutral-content bg-base-100 text-primary shadow-sm">
+              <i className="bi-folder-plus text-2xl" />
+            </div>
+            <h2 className="text-lg font-semibold">{t("create_your_first_collection")}</h2>
+            <p className="mt-2 text-sm leading-relaxed text-neutral">
+              {t("create_your_first_collection_desc")}
+            </p>
+            <Button
+              className="mt-5"
+              variant="primary"
+              onClick={() => setNewCollectionModal(true)}
+            >
+              <i className="bi-plus-lg" />
+              {t("new_collection")}
+            </Button>
+          </div>
         </div>
       ) : (
-        <div className="grid 2xl:grid-cols-4 xl:grid-cols-3 sm:grid-cols-2 grid-cols-1 gap-3">
-          {sortedCollections
-            .filter((e) => e.ownerId === data?.user.id && e.parentId === null)
-            .map((e) => (
-              <CollectionCard key={e.id} collection={e} />
-            ))}
-        </div>
-      )}
-
-      {sortedCollections.filter((e) => e.ownerId !== data?.user.id)[0] && (
         <>
-          <PageHeader
-            icon={"bi-folder"}
-            title={t("other_collections")}
-            description={t("other_collections_desc")}
-          />
+          <section className="flex flex-col gap-3">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-sm font-semibold">{t("collections_you_own")}</h2>
+                <p className="text-xs text-neutral">
+                  {ownedCollections.length === 1
+                    ? t("showing_count_result", { count: ownedCollections.length })
+                    : t("showing_count_results", { count: ownedCollections.length })}
+                </p>
+              </div>
+            </div>
 
-          <div className="grid 2xl:grid-cols-4 xl:grid-cols-3 sm:grid-cols-2 grid-cols-1 gap-5">
-            {sortedCollections
-              .filter((e) => e.ownerId !== data?.user.id)
-              .map((e) => (
-                <CollectionCard key={e.id} collection={e} />
-              ))}
-          </div>
+            {ownedCollections.length > 0 ? (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+                {ownedCollections.map((collection) => (
+                  <CollectionCard key={collection.id} collection={collection} />
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-xl border border-dashed border-neutral-content bg-base-200/30 px-5 py-8 text-center text-sm text-neutral">
+                {t("you_have_no_collections")}
+              </div>
+            )}
+          </section>
+
+          {sharedCollections.length > 0 && (
+            <section className="flex flex-col gap-3 border-t border-neutral-content pt-5">
+              <PageHeader
+                icon="bi-people"
+                title={t("other_collections")}
+                description={t("other_collections_desc")}
+                sm
+              />
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+                {sharedCollections.map((collection) => (
+                  <CollectionCard key={collection.id} collection={collection} />
+                ))}
+              </div>
+            </section>
+          )}
         </>
       )}
+
       {newCollectionModal && (
         <NewCollectionModal onClose={() => setNewCollectionModal(false)} />
       )}
