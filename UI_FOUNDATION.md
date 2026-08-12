@@ -11,7 +11,7 @@ The interface should feel like a focused private library rather than an administ
 - Strong light and dark theme behavior using the existing semantic theme tokens.
 - A calm navigation rail inspired by modern bookmark/read-later applications without copying another product's branding or proprietary artwork.
 - Accessible focus states, labels, and touch targets.
-- Consistent information hierarchy across card, masonry, list, and dashboard bookmark presentations.
+- Consistent information hierarchy across card, masonry, list, dashboard, search, and capture surfaces.
 
 ## Completed foundation work
 
@@ -66,11 +66,35 @@ The interface should feel like a focused private library rather than an administ
 10. `apps/web/components/DashboardLinks.tsx`
     - Aligns dashboard bookmark cards with the canonical card-view hierarchy and actions.
 
+### Search and quick capture
+
+11. `apps/web/components/SearchBar.tsx`
+    - Rebuilds the inline search field as a focused library-search control with clearer focus treatment, a compact clear action, and consistent advanced-operator suggestions.
+    - Preserves public-collection search routing, private `/search` routing, percent-symbol validation, and existing advanced-search syntax.
+    - Removes the product-facing dependency on the upstream Linkwarden advanced-search documentation link from the suggestion surface.
+
+12. `apps/web/components/ModalContent/SearchModal.tsx`
+    - Reworks the `Ctrl/⌘+K` experience into a command-style search surface with a prominent input, recent searches, advanced operators, keyboard cues, and stronger focus behavior.
+    - Preserves browser-local recent-search history and existing search-query routing.
+    - Keeps advanced operators as additive helpers rather than changing search semantics.
+
+13. `apps/web/components/ModalContent/NewLinkModal.tsx`
+    - Rebuilds quick capture around URL and collection as the primary decisions, with title, tags, and description moved into an expandable secondary layer.
+    - Adds a lightweight client-side source/domain preview without introducing a new metadata API or network request.
+    - Converts the capture surface to a semantic form so Enter can submit from the primary URL field while preserving schema validation and the existing add-link mutation.
+    - Preserves collection-context defaults when capture begins from a collection route.
+
+14. `apps/web/pages/search.tsx`
+    - Turns search results into a dedicated library workspace with a prominent editable query field, integrated view/sort controls, and a calm no-results state.
+    - Normalizes query decoding before passing the value into the existing links query.
+    - Preserves result sorting, card/masonry/list switching, bulk selection, pagination, and link rendering behavior.
+
 ## Non-goals for this foundation
 
 - No backend, database, API, authentication, or authorization changes.
 - No route changes.
-- No bookmark, collection, tag, preservation, or sharing data-model changes.
+- No bookmark, collection, tag, preservation, search-query, or sharing data-model changes.
+- No new metadata-fetching service for the capture modal.
 - No attempt to copy Raindrop.io assets, trademarks, proprietary artwork, or exact layouts.
 - No change to upstream licensing or attribution.
 - No production deployment approval.
@@ -79,9 +103,8 @@ The interface should feel like a focused private library rather than an administ
 
 Continue with:
 
-- Search and create flows.
 - Collections and tags navigation refinement.
-- Empty-state and modal consistency beyond the dashboard.
+- Empty-state and modal consistency beyond the dashboard/search/capture surfaces.
 - Mobile navigation and touch ergonomics.
 - Light/dark visual QA and keyboard accessibility.
 - Firefox extension visual alignment after the web application shell stabilizes.
