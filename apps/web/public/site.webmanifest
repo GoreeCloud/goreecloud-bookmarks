@@ -1,7 +1,7 @@
 {
   "id": "/dashboard",
-  "name":"Linkwarden",
-  "short_name":"Linkwarden",
+  "name":"GoreeCloud Bookmarks",
+  "short_name":"GoreeCloud Bookmarks",
   "icons":[
     {
       "src":"/android-chrome-192x192.png",
