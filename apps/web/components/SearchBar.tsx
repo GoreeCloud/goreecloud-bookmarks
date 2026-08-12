@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/router";
 import { toast } from "react-hot-toast";
 import { useTranslation } from "next-i18next";
@@ -56,129 +55,114 @@ export default function SearchBar({ placeholder, fullWidth }: Props) {
       const needsSpace = prev.length > 0 && !prev.endsWith(" ");
       return `${prev}${needsSpace ? " " : ""}${operator}`;
     });
-    setShowSuggestions(false);
     requestAnimationFrame(() => inputRef.current?.focus());
+  };
+
+  const submitSearch = () => {
+    if (router.pathname.startsWith("/public")) {
+      if (!searchQuery) {
+        return router.push("/public/collections/" + router.query.id);
+      }
+
+      return router.push(
+        "/public/collections/" +
+          router.query.id +
+          "?q=" +
+          encodeURIComponent(searchQuery || "")
+      );
+    }
+
+    return router.push("/search?q=" + encodeURIComponent(searchQuery));
   };
 
   return (
     <div
-      className={`flex items-center relative group ${
-        fullWidth ? "w-full" : ""
-      }`}
+      className={`relative flex items-center ${fullWidth ? "w-full" : ""}`}
     >
-      <label
-        htmlFor="search-box"
-        className="inline-flex items-center w-fit absolute left-1 pointer-events-none rounded-md p-1 text-primary"
-      >
-        <i className="bi-search"></i>
-      </label>
+      <div className="pointer-events-none absolute left-3 z-10 flex h-8 w-8 items-center justify-center text-base-content/45">
+        <i className="bi-search text-sm leading-none" aria-hidden="true" />
+      </div>
 
       <input
         id="search-box"
-        type="text"
+        type="search"
         ref={inputRef}
+        aria-label={placeholder || t("search_for_links")}
         placeholder={placeholder || t("search_for_links")}
         value={searchQuery}
-        onFocus={() => {
-          setShowSuggestions(true);
-        }}
-        onBlur={() => {
-          setShowSuggestions(false);
-        }}
+        onFocus={() => setShowSuggestions(true)}
+        onBlur={() => setShowSuggestions(false)}
         onChange={(e) => {
           e.target.value.includes("%") &&
             toast.error(t("search_query_invalid_symbol"));
           setSearchQuery(e.target.value.replace("%", ""));
-          setShowSuggestions(false);
         }}
         onKeyDown={(e) => {
           if (e.key === "Enter") {
-            if (router.pathname.startsWith("/public")) {
-              if (!searchQuery) {
-                return router.push("/public/collections/" + router.query.id);
-              }
-
-              return router.push(
-                "/public/collections/" +
-                  router.query.id +
-                  "?q=" +
-                  encodeURIComponent(searchQuery || "")
-              );
-            } else {
-              return router.push(
-                "/search?q=" + encodeURIComponent(searchQuery)
-              );
-            }
+            e.preventDefault();
+            submitSearch();
+          }
+          if (e.key === "Escape") {
+            setShowSuggestions(false);
+            inputRef.current?.blur();
           }
         }}
-        className={`border border-neutral-content bg-base-100 focus:border-primary py-1 rounded-md pl-9 pr-2 outline-none ${
+        className={`h-10 rounded-xl border border-base-content/10 bg-base-100 pl-11 pr-11 text-sm text-base-content shadow-sm outline-none transition-all duration-150 placeholder:text-base-content/35 hover:border-base-content/20 focus:border-primary/40 focus:ring-2 focus:ring-primary/10 ${
           fullWidth ? "w-full" : "w-full max-w-[15rem] md:w-80 md:max-w-full"
         }`}
       />
 
+      {searchQuery && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="absolute right-1.5 h-7 w-7 rounded-lg text-base-content/40 hover:bg-base-content/[0.06] hover:text-base-content"
+          aria-label={t("clear")}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => {
+            setSearchQuery("");
+            requestAnimationFrame(() => inputRef.current?.focus());
+          }}
+        >
+          <i className="bi-x-lg text-xs" aria-hidden="true" />
+        </Button>
+      )}
+
       {showSuggestions && (
-        <div className="absolute left-0 top-full mt-2 w-full z-50">
+        <div className="absolute left-0 top-full z-50 mt-2 w-full min-w-[18rem]">
           <div
-            className="border border-neutral-content bg-base-200 shadow-md rounded-md px-2 py-1 flex flex-col gap-1"
+            className="overflow-hidden rounded-xl border border-base-content/10 bg-base-100 p-2 shadow-xl ring-1 ring-black/[0.02]"
             onMouseDown={(e) => e.preventDefault()}
           >
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-bold text-neutral">
+            <div className="flex items-center justify-between px-2 pb-1.5 pt-1">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-base-content/40">
                 {t("suggested_search_operators")}
               </p>
             </div>
-            <div className="flex flex-col gap-1">
+
+            <div className="flex flex-col gap-0.5">
               {ADVANCED_SEARCH_OPERATORS.map((entry) => (
                 <button
                   key={entry.operator}
                   type="button"
-                  className="flex items-center gap-2 justify-between rounded-md px-2 py-1 text-left hover:bg-neutral-content duration-100"
+                  className="flex items-center justify-between gap-3 rounded-lg px-2.5 py-2 text-left transition-colors hover:bg-base-content/[0.045] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
                   onClick={() => handleSuggestionClick(entry.operator)}
                 >
-                  <div className="flex items-center gap-2">
-                    <i className={`${entry.icon} text-primary text-sm`} />
-                    <span className="text-xs text-neutral">
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/[0.07] text-primary/80">
+                      <i className={`${entry.icon} text-sm`} aria-hidden="true" />
+                    </span>
+                    <span className="truncate text-xs font-medium text-base-content/70">
                       {t(entry.labelKey)}
                     </span>
                   </div>
-                  <span className="font-mono text-xs px-1 rounded-md bg-base-100 border border-neutral-content text-base-content">
+                  <span className="shrink-0 rounded-md border border-base-content/10 bg-base-content/[0.035] px-1.5 py-0.5 font-mono text-[11px] text-base-content/50">
                     {entry.operator}
                   </span>
                 </button>
               ))}
             </div>
-            <div className="flex justify-end">
-              <Button asChild variant="ghost" size="sm" className="text-xs">
-                <Link
-                  href="https://docs.linkwarden.app/Usage/advanced-search"
-                  target="_blank"
-                  className="flex items-center gap-1"
-                >
-                  {t("learn_more")}
-                  <i className="bi-box-arrow-up-right text-xs" />
-                </Link>
-              </Button>
-            </div>
-
-            {/* {user?.hasUnIndexedLinks && !dismissSearchNote ? (
-              <div
-                role="alert"
-                className="border border-neutral p-2 my-1 rounded flex flex-col gap-2"
-              >
-                <p className="text-xs text-neutral">
-                  <i className="bi-info-circle text-primary mr-1" />
-                  <b>{t("note")}:</b> {t("search_unindexed_links_in_bg_info")}
-                </p>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full"
-                  onClick={() => setDismissSearchNote(true)}
-                >
-                  Dismiss
-                </Button>
-              </div>
-            ) : undefined} */}
           </div>
         </div>
       )}
