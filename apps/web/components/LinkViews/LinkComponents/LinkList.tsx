@@ -60,82 +60,84 @@ function LinkList({
   const [linkModal, setLinkModal] = useState(false);
 
   return (
-    <>
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "group relative mb-2 flex min-h-[4.5rem] items-center overflow-hidden rounded-xl border bg-base-100 shadow-sm transition-all duration-150 touch-manipulation select-none",
+        isSelected
+          ? "border-primary/60 bg-primary/[0.035] ring-2 ring-primary/15"
+          : "border-base-content/[0.08] hover:border-base-content/15 hover:bg-base-200/35 hover:shadow-md",
+        !isPWA() ? "px-3 py-2.5" : "px-2 py-2.5",
+        isDragging ? "opacity-30" : "opacity-100"
+      )}
+      onClick={() =>
+        editMode
+          ? toggleSelected(link.id as number)
+          : editMode
+            ? toast.error(t("link_selection_error"))
+            : undefined
+      }
+    >
       <div
-        ref={setNodeRef}
-        className={cn(
-          "rounded-md border relative group items-center flex",
-          isSelected
-            ? "border border-primary bg-base-300"
-            : "border-transparent",
-          !isPWA() ? "hover:bg-base-300 px-2 py-1" : "py-1",
-          isDragging ? "opacity-30" : "opacity-100",
-          "duration-200, touch-manipulation select-none"
-        )}
+        className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 pr-20"
         onClick={() =>
-          editMode
-            ? toggleSelected(link.id as number)
-            : editMode
-              ? toast.error(t("link_selection_error"))
-              : undefined
+          !editMode && openLink(link, user, () => setLinkModal(true))
         }
+        {...attributes}
+        {...listeners}
       >
-        <div
-          className="flex items-center cursor-pointer w-full min-h-12"
-          onClick={() =>
-            !editMode && openLink(link, user, () => setLinkModal(true))
-          }
-          {...attributes}
-          {...listeners}
-        >
-          {show.icon && (
-            <div className="shrink-0">
-              <LinkIcon link={link} hideBackground />
-            </div>
-          )}
+        {show.icon && (
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-base-content/[0.07] bg-base-200/55 shadow-sm">
+            <LinkIcon link={link} hideBackground />
+          </div>
+        )}
 
-          <div className="w-[calc(100%-56px)] ml-2">
+        <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 items-center gap-2">
             {show.name && (
-              <div className="flex gap-1 mr-20">
-                <p className="truncate text-primary">
-                  {unescapeString(link.name)}
-                </p>
-                {show.preserved_formats &&
-                  link.type === "url" &&
-                  atLeastOneFormatAvailable(link) && (
-                    <div className="pl-1 inline-block text-lg">
-                      <LinkFormats link={link} />
-                    </div>
-                  )}
-              </div>
+              <p className="truncate text-sm font-semibold tracking-[-0.01em] text-base-content sm:text-[15px]">
+                {unescapeString(link.name)}
+              </p>
             )}
 
-            <div className="mt-1 flex flex-col sm:flex-row sm:items-center gap-2 text-xs text-neutral">
-              <div className="flex items-center gap-x-3 text-neutral flex-wrap">
-                {show.link && <LinkTypeBadge link={link} />}
-                {show.collection && collection && (
-                  <LinkCollection
-                    link={link}
-                    collection={collection}
-                    isPublicRoute={isPublicRoute}
-                  />
-                )}
-                {show.date && <LinkDate link={link} />}
+            {show.preserved_formats &&
+              link.type === "url" &&
+              atLeastOneFormatAvailable(link) && (
+                <div className="hidden shrink-0 rounded-md bg-base-content/[0.045] px-1.5 py-0.5 text-base-content/50 sm:block">
+                  <LinkFormats link={link} />
+                </div>
+              )}
+          </div>
+
+          <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-base-content/50">
+            {show.link && <LinkTypeBadge link={link} />}
+            {show.collection && collection && !isPublicRoute && (
+              <div className="min-w-0 max-w-48 truncate">
+                <LinkCollection
+                  link={link}
+                  collection={collection}
+                  isPublicRoute={isPublicRoute}
+                />
               </div>
-            </div>
+            )}
+            {show.date && (
+              <div className="shrink-0">
+                <LinkDate link={link} />
+              </div>
+            )}
           </div>
         </div>
-        {!isPublicRoute && <LinkPin link={link} />}
-        <LinkActions
-          link={link}
-          linkModal={linkModal}
-          t={t}
-          setLinkModal={(e) => setLinkModal(e)}
-          className="absolute top-3 right-3 group-hover:opacity-100 group-focus-within:opacity-100 opacity-0 duration-100 text-neutral z-20"
-        />
       </div>
-      <div className="last:hidden rounded-none my-0 mx-1 border-t border-base-300 h-[1px]"></div>
-    </>
+
+      {!isPublicRoute && <LinkPin link={link} />}
+      <LinkActions
+        link={link}
+        linkModal={linkModal}
+        t={t}
+        setLinkModal={(e) => setLinkModal(e)}
+        className="absolute top-3 right-3 z-20 h-8 w-8 rounded-lg border border-base-content/10 bg-base-100/90 text-base-content/60 opacity-0 shadow-sm backdrop-blur-md transition-all duration-150 hover:bg-base-100 hover:text-base-content group-hover:opacity-100 group-focus-within:opacity-100"
+      />
+    </div>
   );
 }
 
