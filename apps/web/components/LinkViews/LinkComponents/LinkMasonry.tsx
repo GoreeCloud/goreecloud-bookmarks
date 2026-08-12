@@ -18,7 +18,6 @@ import LinkIcon from "./LinkIcon";
 import toast from "react-hot-toast";
 import LinkTypeBadge from "./LinkTypeBadge";
 import useLocalSettingsStore from "@/store/localSettings";
-import clsx from "clsx";
 import LinkPin from "./LinkPin";
 import LinkFormats from "./LinkFormats";
 import openLink from "@/lib/client/openLink";
