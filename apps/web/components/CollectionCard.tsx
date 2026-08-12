@@ -131,7 +131,7 @@ export default function CollectionCard({
 
       <Link
         href={`/collections/${collection.id}`}
-        className="flex min-h-[12rem] flex-col rounded-xl border border-neutral-content bg-base-100 p-4 pr-12 shadow-sm transition duration-150 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+        className="flex min-h-[12rem] flex-col rounded-xl border border-neutral-content bg-base-100 p-4 pb-14 pr-12 shadow-sm transition duration-150 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
         style={{ borderTopColor: collection.color, borderTopWidth: "3px" }}
       >
         <div className="flex min-w-0 items-start gap-3">
@@ -174,52 +174,46 @@ export default function CollectionCard({
           </div>
         </div>
 
-        <div className="mt-auto flex items-end justify-between gap-3 pt-5">
-          <button
-            type="button"
-            className="flex items-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setEditCollectionSharingModal(true);
-            }}
-            aria-label={permissions === true ? t("share_and_collaborate") : t("view_team")}
-          >
-            {collectionOwner.id && (
-              <ProfilePhoto
-                src={collectionOwner.image || undefined}
-                name={collectionOwner.name}
-              />
-            )}
-            {visibleMembers.map((member, index) => (
-              <ProfilePhoto
-                key={member.userId || index}
-                src={member.user.image || undefined}
-                name={member.user.name}
-                className="-ml-2.5"
-              />
-            ))}
-            {extraMembers > 0 && (
-              <div className="-ml-2.5 flex h-8 w-8 items-center justify-center rounded-full border-2 border-base-100 bg-base-200 text-[10px] font-semibold text-neutral">
-                +{extraMembers}
-              </div>
-            )}
-          </button>
-
-          <div className="flex items-center gap-3 text-xs text-neutral">
-            <span className="inline-flex items-center gap-1.5">
-              <i className="bi-link-45deg text-sm" />
-              <span className="font-medium tabular-nums text-base-content">
-                {collection._count?.links || 0}
-              </span>
+        <div className="mt-auto flex justify-end gap-3 pt-5 text-xs text-neutral">
+          <span className="inline-flex items-center gap-1.5">
+            <i className="bi-link-45deg text-sm" />
+            <span className="font-medium tabular-nums text-base-content">
+              {collection._count?.links || 0}
             </span>
-            <span className="hidden items-center gap-1.5 sm:inline-flex">
-              <i className="bi-calendar3" />
-              {formattedDate}
-            </span>
-          </div>
+          </span>
+          <span className="hidden items-center gap-1.5 sm:inline-flex">
+            <i className="bi-calendar3" />
+            {formattedDate}
+          </span>
         </div>
       </Link>
+
+      <button
+        type="button"
+        className="absolute bottom-3 left-3 z-20 flex items-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+        onClick={() => setEditCollectionSharingModal(true)}
+        aria-label={permissions === true ? t("share_and_collaborate") : t("view_team")}
+      >
+        {collectionOwner.id && (
+          <ProfilePhoto
+            src={collectionOwner.image || undefined}
+            name={collectionOwner.name}
+          />
+        )}
+        {visibleMembers.map((member, index) => (
+          <ProfilePhoto
+            key={member.userId || index}
+            src={member.user.image || undefined}
+            name={member.user.name}
+            className="-ml-2.5"
+          />
+        ))}
+        {extraMembers > 0 && (
+          <div className="-ml-2.5 flex h-8 w-8 items-center justify-center rounded-full border-2 border-base-100 bg-base-200 text-[10px] font-semibold text-neutral">
+            +{extraMembers}
+          </div>
+        )}
+      </button>
 
       {editCollectionModal && (
         <EditCollectionModal
