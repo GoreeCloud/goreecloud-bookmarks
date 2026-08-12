@@ -113,7 +113,7 @@ export default function SearchModal({ onClose }: { onClose: () => void }) {
               variant="ghost"
               size="icon"
               className="h-8 w-8 shrink-0 rounded-lg text-base-content/40 hover:bg-base-content/[0.06] hover:text-base-content"
-              aria-label={t("clear")}
+              aria-label="Clear search"
               onClick={() => {
                 setSearchQuery("");
                 inputRef.current?.focus();
@@ -209,11 +209,11 @@ export default function SearchModal({ onClose }: { onClose: () => void }) {
       <div className="mt-4 flex items-center justify-between border-t border-base-content/[0.07] pt-3 text-[11px] text-base-content/40">
         <div className="flex items-center gap-1.5">
           <Kbd>Enter</Kbd>
-          <span>{t("search")}</span>
+          <span>{t("search_for_links")}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <Kbd>Esc</Kbd>
-          <span>{t("close")}</span>
+          <span>{t("cancel")}</span>
         </div>
       </div>
     </Modal>
