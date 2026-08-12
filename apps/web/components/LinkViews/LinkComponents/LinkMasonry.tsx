@@ -22,8 +22,6 @@ import clsx from "clsx";
 import LinkPin from "./LinkPin";
 import LinkFormats from "./LinkFormats";
 import openLink from "@/lib/client/openLink";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { useDraggable } from "@dnd-kit/core";
 import { cn } from "@linkwarden/lib/utils";
 import { TFunction } from "i18next";
@@ -67,15 +65,16 @@ function LinkMasonry({
   } = useLocalSettingsStore();
 
   const ref = useRef<HTMLDivElement>(null);
-
   const [linkModal, setLinkModal] = useState(false);
 
   return (
     <div
       ref={setNodeRef}
       className={cn(
-        "border border-solid border-neutral-content bg-base-200 shadow-md hover:shadow-none duration-100 rounded-xl relative group",
-        isSelected && "border-primary bg-base-300"
+        "group relative overflow-hidden rounded-2xl border bg-base-100 shadow-sm transition-all duration-200 touch-manipulation select-none",
+        "border-base-content/10 hover:-translate-y-0.5 hover:border-base-content/20 hover:shadow-lg focus-within:border-primary/30 focus-within:shadow-md",
+        isSelected && "border-primary/60 bg-primary/[0.035] ring-2 ring-primary/20",
+        isDragging ? "opacity-30" : "opacity-100"
       )}
       onClick={() =>
         editMode
@@ -87,7 +86,7 @@ function LinkMasonry({
     >
       <div ref={ref}>
         <div
-          className="rounded-xl cursor-pointer"
+          className="cursor-pointer"
           onClick={() =>
             !editMode && openLink(link, user, () => setLinkModal(true))
           }
@@ -95,87 +94,90 @@ function LinkMasonry({
           {...attributes}
         >
           {show.image && formatAvailable(link, "preview") && (
-            <div>
-              <div className="relative rounded-t-xl overflow-hidden">
-                {formatAvailable(link, "preview") ? (
-                  <Image
-                    src={`/api/v1/archives/${link.id}?format=${ArchivedFormat.jpeg}&preview=true&updatedAt=${link.updatedAt}`}
-                    width={1280}
-                    height={720}
-                    alt=""
-                    className={`rounded-t-xl select-none object-cover z-10 ${imageHeightClass} w-full shadow opacity-80 scale-105`}
-                    style={show.icon ? { filter: "blur(1px)" } : undefined}
-                    draggable="false"
-                    onError={(e) => {
-                      const target = e.target as HTMLElement;
-                      target.style.display = "none";
-                    }}
-                    unoptimized
-                  />
-                ) : link.preview === "unavailable" ? null : (
-                  <div
-                    className={`duration-100 ${imageHeightClass} bg-opacity-80 skeleton rounded-none`}
-                  ></div>
+            <div className="relative overflow-hidden border-b border-base-content/[0.07] bg-base-200/45">
+              <Image
+                src={`/api/v1/archives/${link.id}?format=${ArchivedFormat.jpeg}&preview=true&updatedAt=${link.updatedAt}`}
+                width={1280}
+                height={720}
+                alt=""
+                className={cn(
+                  "z-10 w-full select-none object-cover transition-transform duration-300 group-hover:scale-[1.015]",
+                  imageHeightClass
                 )}
-                {show.icon && (
-                  <div className="absolute top-0 left-0 right-0 bottom-0 rounded-t-xl flex items-center justify-center rounded-md">
+                draggable="false"
+                onError={(e) => {
+                  const target = e.target as HTMLElement;
+                  target.style.display = "none";
+                }}
+                unoptimized
+              />
+
+              {show.icon && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-gradient-to-t from-black/20 via-transparent to-black/[0.03]">
+                  <div className="rounded-2xl bg-base-100/90 p-1.5 shadow-lg ring-1 ring-white/30 backdrop-blur-md">
                     <LinkIcon link={link} />
                   </div>
-                )}
-              </div>
+                </div>
+              )}
 
-              <Separator />
+              {show.preserved_formats &&
+                link.type === "url" &&
+                atLeastOneFormatAvailable(link) && (
+                  <div className="absolute bottom-2 right-2 z-20 rounded-lg border border-white/15 bg-base-100/85 px-1.5 py-0.5 text-base-content/70 shadow-sm backdrop-blur-md">
+                    <LinkFormats link={link} />
+                  </div>
+                )}
             </div>
           )}
 
-          <div className="p-3 flex flex-col gap-2 h-full min-h-14">
+          <div className="flex flex-col gap-2.5 p-3.5 sm:p-4">
             {show.name && (
-              <div className="hyphens-auto w-full text-primary text-sm">
+              <p className="hyphens-auto text-sm font-semibold leading-5 tracking-[-0.01em] text-base-content">
                 {unescapeString(link.name)}
-                {show.preserved_formats &&
-                  link.type === "url" &&
-                  atLeastOneFormatAvailable(link) && (
-                    <div className="pl-1 inline-block">
-                      <LinkFormats link={link} />
-                    </div>
-                  )}
-              </div>
+              </p>
             )}
 
-            {show.link && <LinkTypeBadge link={link} />}
+            <div className="flex flex-wrap items-center gap-2">
+              {show.link && <LinkTypeBadge link={link} />}
+              {!show.image &&
+                show.preserved_formats &&
+                link.type === "url" &&
+                atLeastOneFormatAvailable(link) && (
+                  <div className="rounded-md bg-base-content/[0.045] px-1.5 py-0.5 text-base-content/50">
+                    <LinkFormats link={link} />
+                  </div>
+                )}
+            </div>
 
             {show.description && link.description && (
-              <p className={clsx("hyphens-auto text-sm w-full")}>
+              <p className="hyphens-auto line-clamp-4 text-xs leading-5 text-base-content/55">
                 {unescapeString(link.description)}
               </p>
             )}
 
             {show.tags && link.tags && link.tags[0] && (
-              <div className="flex gap-1 items-center flex-wrap">
-                {link.tags.map((e, i) => (
-                  <Button variant="ghost" size="sm" key={i}>
-                    <Link
-                      href={"/tags/" + e.id}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                      }}
-                      className="truncate max-w-[19rem]"
-                    >
-                      #{e.name}
-                    </Link>
-                  </Button>
+              <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                {link.tags.map((e) => (
+                  <Link
+                    key={e.id}
+                    href={`/tags/${e.id}`}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                    }}
+                    className="max-w-full truncate rounded-md bg-primary/[0.07] px-2 py-1 text-[11px] font-medium text-primary/80 transition-colors hover:bg-primary/12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                  >
+                    #{e.name}
+                  </Link>
                 ))}
               </div>
             )}
           </div>
 
           {(show.collection || show.date) && (
-            <div>
-              <Separator className="mb-1" />
-
-              <div className="flex flex-wrap justify-between items-center text-xs text-neutral px-3 pb-1 w-full gap-x-2">
+            <div className="border-t border-base-content/[0.07] px-3.5 py-2.5 sm:px-4">
+              <div className="flex min-w-0 flex-wrap items-center justify-between gap-x-2 gap-y-1 text-xs text-base-content/50">
                 {!isPublicRoute && show.collection && collection && (
-                  <div className="cursor-pointer truncate">
+                  <div className="min-w-0 truncate">
                     <LinkCollection
                       link={link}
                       collection={collection}
@@ -183,20 +185,22 @@ function LinkMasonry({
                     />
                   </div>
                 )}
-                {show.date && <LinkDate link={link} />}
+                {show.date && (
+                  <div className="shrink-0">
+                    <LinkDate link={link} />
+                  </div>
+                )}
               </div>
             </div>
           )}
         </div>
 
-        {/* Overlay on hover */}
-        <div className="absolute pointer-events-none top-0 left-0 right-0 bottom-0 bg-base-100 bg-opacity-0 group-hover:bg-opacity-20 group-focus-within:opacity-20 rounded-xl duration-100"></div>
         <LinkActions
           link={link}
           linkModal={linkModal}
           t={t}
           setLinkModal={(e) => setLinkModal(e)}
-          className="absolute top-3 right-3 group-hover:opacity-100 group-focus-within:opacity-100 opacity-0 duration-100 text-neutral z-20"
+          className="absolute top-3 right-3 z-30 h-8 w-8 rounded-lg border border-base-content/10 bg-base-100/90 text-base-content/60 opacity-0 shadow-sm backdrop-blur-md transition-all duration-150 hover:bg-base-100 hover:text-base-content group-hover:opacity-100 group-focus-within:opacity-100"
         />
         {!isPublicRoute && <LinkPin link={link} />}
       </div>
