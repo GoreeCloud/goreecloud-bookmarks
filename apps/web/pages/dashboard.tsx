@@ -1,11 +1,10 @@
 import MainLayout from "@/layouts/MainLayout";
-import { ReactElement, useEffect, useMemo, useState } from "react";
+import { ReactElement, ReactNode, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import React from "react";
 import { toast } from "react-hot-toast";
 import DashboardItem from "@/components/DashboardItem";
 import NewLinkModal from "@/components/ModalContent/NewLinkModal";
-import PageHeader from "@/components/PageHeader";
 import getServerSideProps from "@/lib/client/getServerSideProps";
 import { useTranslation } from "next-i18next";
 import { useCollections } from "@linkwarden/router/collections";
@@ -132,13 +131,25 @@ const Page: NextPageWithLayout = () => {
 
   return (
     <>
-      <div className="p-3 flex flex-col gap-3 grow">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-2xl drop-shadow">
-            <i className="bi-house-fill text-primary" />
-            <p className="font-thin">{t("dashboard")}</p>
+      <div className="mx-auto flex w-full max-w-[1600px] grow flex-col gap-6 p-4 sm:p-6 lg:p-7">
+        <header className="flex flex-col gap-4 border-b border-neutral-content/70 pb-5 sm:flex-row sm:items-end sm:justify-between">
+          <div className="min-w-0">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-neutral-content/70 bg-base-200/70 text-primary">
+                <i className="bi-house-fill text-lg" />
+              </div>
+              <div className="min-w-0">
+                <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+                  {t("dashboard")}
+                </h1>
+                <p className="mt-0.5 max-w-2xl text-sm text-neutral">
+                  {t("dashboard_desc")}
+                </p>
+              </div>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
+
+          <div className="flex w-fit items-center gap-1 rounded-xl border border-neutral-content/70 bg-base-200/55 p-1 shadow-sm">
             <DashboardLayoutDropdown />
             <ViewDropdown
               viewMode={viewMode}
@@ -146,42 +157,35 @@ const Page: NextPageWithLayout = () => {
               dashboard
             />
           </div>
-        </div>
+        </header>
+
         {orderedSections[0] ? (
-          orderedSections?.map((section, i) => (
-            <Section
-              key={i}
-              sectionData={section}
-              t={t}
-              collection={collections.find(
-                (c) => c.id === section.collectionId
-              )}
-              collectionLinks={
-                section.collectionId
-                  ? collectionLinks[section.collectionId]
-                  : []
-              }
-              links={links}
-              numberOfTags={numberOfTags}
-              numberOfLinks={numberOfLinks}
-              collectionsLength={collections.length}
-              numberOfPinnedLinks={numberOfPinnedLinks}
-              dashboardData={dashboardData}
-              setNewLinkModal={setNewLinkModal}
-            />
-          ))
-        ) : (
-          <div className="h-full flex flex-col gap-4">
-            <div className="xl:flex flex flex-col sm:grid grid-cols-2 gap-4 xl:flex-row xl:justify-evenly xl:w-full">
-              <div className="skeleton h-20 w-full"></div>
-              <div className="skeleton h-20 w-full"></div>
-              <div className="skeleton h-20 w-full"></div>
-              <div className="skeleton h-20 w-full"></div>
-            </div>
-            <div className="skeleton h-full"></div>
-            <div className="skeleton h-full"></div>
-            <div className="skeleton h-full"></div>
+          <div className="flex flex-col gap-5">
+            {orderedSections.map((section, i) => (
+              <Section
+                key={i}
+                sectionData={section}
+                t={t}
+                collection={collections.find(
+                  (c) => c.id === section.collectionId
+                )}
+                collectionLinks={
+                  section.collectionId
+                    ? collectionLinks[section.collectionId]
+                    : []
+                }
+                links={links}
+                numberOfTags={numberOfTags}
+                numberOfLinks={numberOfLinks}
+                collectionsLength={collections.length}
+                numberOfPinnedLinks={numberOfPinnedLinks}
+                dashboardData={dashboardData}
+                setNewLinkModal={setNewLinkModal}
+              />
+            ))}
           </div>
+        ) : (
+          <DashboardSkeleton />
         )}
       </div>
 
@@ -226,6 +230,112 @@ type SectionProps = {
   setNewLinkModal: (value: boolean) => void;
 };
 
+type DashboardSectionHeaderProps = {
+  title: string;
+  description?: string;
+  icon?: string;
+  leading?: ReactNode;
+  href?: string;
+  viewAllLabel?: string;
+};
+
+const DashboardSectionHeader = ({
+  title,
+  description,
+  icon,
+  leading,
+  href,
+  viewAllLabel,
+}: DashboardSectionHeaderProps) => (
+  <div className="flex items-start justify-between gap-4">
+    <div className="flex min-w-0 items-start gap-3">
+      {leading || (
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <i className={clsx(icon, "text-base")} />
+        </div>
+      )}
+      <div className="min-w-0">
+        <h2 className="truncate text-base font-semibold tracking-tight sm:text-lg">
+          {title}
+        </h2>
+        {description && (
+          <p className="mt-0.5 text-xs text-neutral sm:text-sm">{description}</p>
+        )}
+      </div>
+    </div>
+
+    {href && viewAllLabel && (
+      <Link
+        href={href}
+        className="flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 text-sm font-medium text-neutral transition-colors hover:bg-base-content/5 hover:text-base-content focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+      >
+        {viewAllLabel}
+        <i className="bi-chevron-right text-xs" />
+      </Link>
+    )}
+  </div>
+);
+
+const DashboardSectionSurface = ({ children }: { children: ReactNode }) => (
+  <section className="flex flex-col gap-4 rounded-2xl border border-neutral-content/70 bg-base-100/55 p-4 shadow-sm sm:p-5">
+    {children}
+  </section>
+);
+
+const DashboardEmptyState = ({
+  icon,
+  title,
+  description,
+  children,
+  minHeight = "min-h-56",
+}: {
+  icon: string;
+  title: string;
+  description: string;
+  children?: ReactNode;
+  minHeight?: string;
+}) => (
+  <div
+    className={clsx(
+      "flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-neutral-content/80 bg-base-200/35 px-6 py-9 text-center",
+      minHeight
+    )}
+  >
+    <div className="mb-1 flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+      <i className={clsx(icon, "text-xl")} />
+    </div>
+    <p className="text-base font-semibold tracking-tight">{title}</p>
+    <p className="max-w-md text-sm leading-6 text-neutral">{description}</p>
+    {children && <div className="mt-3 flex flex-wrap justify-center gap-2">{children}</div>}
+  </div>
+);
+
+const DashboardSkeleton = () => (
+  <div className="flex flex-col gap-5">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="skeleton h-24 w-full rounded-2xl" />
+      <div className="skeleton h-24 w-full rounded-2xl" />
+      <div className="skeleton h-24 w-full rounded-2xl" />
+      <div className="skeleton h-24 w-full rounded-2xl" />
+    </div>
+    {[0, 1, 2].map((item) => (
+      <div
+        key={item}
+        className="rounded-2xl border border-neutral-content/50 bg-base-100/40 p-5"
+      >
+        <div className="mb-5 flex items-center gap-3">
+          <div className="skeleton h-9 w-9 rounded-lg" />
+          <div className="flex flex-col gap-2">
+            <div className="skeleton h-4 w-32" />
+            <div className="skeleton h-3 w-48" />
+          </div>
+        </div>
+        <div className="skeleton h-56 w-full rounded-xl" />
+      </div>
+    ))}
+  </div>
+);
+
 const Section = ({
   sectionData,
   t,
@@ -242,7 +352,7 @@ const Section = ({
   switch (sectionData.type) {
     case DashboardSectionType.STATS:
       return (
-        <div className="xl:flex flex flex-col sm:grid grid-cols-2 gap-3 xl:flex-row xl:justify-evenly xl:w-full">
+        <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <DashboardItem
             name={numberOfLinks === 1 ? t("link") : t("links")}
             value={numberOfLinks}
@@ -266,27 +376,18 @@ const Section = ({
             value={numberOfPinnedLinks}
             icon={"bi-pin-angle"}
           />
-        </div>
+        </section>
       );
     case DashboardSectionType.RECENT_LINKS:
       return (
-        <>
-          <div className="flex justify-between items-center">
-            <div className="flex gap-2 items-center">
-              <PageHeader
-                icon={"bi-clock-history"}
-                title={t("recent_links")}
-                sm
-              />
-            </div>
-            <Link
-              href="/links"
-              className="flex items-center text-sm text-black/75 dark:text-white/75 gap-2 cursor-pointer"
-            >
-              {t("view_all")}
-              <i className="bi-chevron-right text-sm"></i>
-            </Link>
-          </div>
+        <DashboardSectionSurface>
+          <DashboardSectionHeader
+            icon="bi-clock-history"
+            title={t("recent_links")}
+            description={t("recent_links_desc")}
+            href="/links"
+            viewAllLabel={t("view_all")}
+          />
 
           {dashboardData.isLoading ||
           (links && links[0] && !dashboardData.isLoading) ? (
@@ -296,30 +397,24 @@ const Section = ({
               isLoading={dashboardData.isLoading}
             />
           ) : (
-            <div className="grow flex flex-col gap-2 justify-center border border-solid border-neutral-content w-full mx-auto p-10 rounded-xl bg-base-200 bg-gradient-to-tr from-neutral-content/70 to-50% to-base-200">
-              <p className="text-center text-xl">
-                {t("view_added_links_here")}
-              </p>
-              <p className="text-center mx-auto max-w-96 w-fit text-neutral text-sm mt-2">
-                {t("view_added_links_here_desc")}
-              </p>
-
-              <div className="text-center w-full mt-4 flex flex-wrap gap-4 justify-center">
-                <Button
-                  onClick={() => {
-                    setNewLinkModal(true);
-                  }}
-                  variant="primary"
-                >
-                  <i className="bi-plus-lg text-xl"></i>
-                  {t("add_link")}
-                </Button>
-
-                <ImportDropdown />
-              </div>
-            </div>
+            <DashboardEmptyState
+              icon="bi-link-45deg"
+              title={t("view_added_links_here")}
+              description={t("view_added_links_here_desc")}
+            >
+              <Button
+                onClick={() => {
+                  setNewLinkModal(true);
+                }}
+                variant="primary"
+              >
+                <i className="bi-plus-lg text-lg" />
+                {t("add_link")}
+              </Button>
+              <ImportDropdown />
+            </DashboardEmptyState>
           )}
-        </>
+        </DashboardSectionSurface>
       );
     case DashboardSectionType.PINNED_LINKS: {
       const hasPinnedLinks = links?.some(
@@ -327,19 +422,14 @@ const Section = ({
       );
 
       return (
-        <>
-          <div className="flex justify-between items-center">
-            <div className="flex gap-2 items-center">
-              <PageHeader icon={"bi-pin-angle"} title={t("pinned_links")} sm />
-            </div>
-            <Link
-              href="/links/pinned"
-              className="flex items-center text-sm text-black/75 dark:text-white/75 gap-2 cursor-pointer"
-            >
-              {t("view_all")}
-              <i className="bi-chevron-right text-sm "></i>
-            </Link>
-          </div>
+        <DashboardSectionSurface>
+          <DashboardSectionHeader
+            icon="bi-pin-angle"
+            title={t("pinned_links")}
+            description={t("pinned_links_desc")}
+            href="/links/pinned"
+            viewAllLabel={t("view_all")}
+          />
           <Droppable
             id="pinned-links-section"
             data={{
@@ -357,18 +447,14 @@ const Section = ({
                 isLoading={dashboardData.isLoading}
               />
             ) : (
-              <div className="grow flex flex-col gap-2 justify-center border border-solid border-neutral-content w-full mx-auto p-10 rounded-xl bg-base-200 bg-gradient-to-tr from-neutral-content/70 to-50% to-base-200">
-                <i className="bi-pin mx-auto text-6xl text-primary"></i>
-                <p className="text-center text-xl">
-                  {t("pin_favorite_links_here")}
-                </p>
-                <p className="text-center mx-auto max-w-96 w-fit text-neutral text-sm">
-                  {t("pin_favorite_links_here_desc")}
-                </p>
-              </div>
+              <DashboardEmptyState
+                icon="bi-pin-angle"
+                title={t("pin_favorite_links_here")}
+                description={t("pin_favorite_links_here_desc")}
+              />
             )}
           </Droppable>
-        </>
+        </DashboardSectionSurface>
       );
     }
     case DashboardSectionType.COLLECTION: {
@@ -376,10 +462,10 @@ const Section = ({
 
       return (
         collection?.id && (
-          <>
-            <div className="flex justify-between items-center">
-              <div className="flex gap-2 items-center">
-                <div className={clsx("flex items-center gap-2")}>
+          <DashboardSectionSurface>
+            <DashboardSectionHeader
+              leading={
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-base-200/80">
                   {collection.icon ? (
                     <Icon
                       icon={collection.icon}
@@ -387,23 +473,17 @@ const Section = ({
                     />
                   ) : (
                     <i
-                      className={`bi-folder-fill text-primary text-2xl drop-shadow`}
+                      className="bi-folder-fill text-lg"
                       style={{ color: collection.color || "#0ea5e9" }}
-                    ></i>
+                    />
                   )}
-                  <div>
-                    <p className="capitalize font-thin">{collection.name}</p>
-                  </div>
                 </div>
-              </div>
-              <Link
-                href={`/collections/${collection.id}`}
-                className="flex items-center text-sm text-black/75 dark:text-white/75 gap-2 cursor-pointer whitespace-nowrap"
-              >
-                {t("view_all")}
-                <i className="bi-chevron-right text-sm"></i>
-              </Link>
-            </div>
+              }
+              title={collection.name}
+              description={collection.description || undefined}
+              href={`/collections/${collection.id}`}
+              viewAllLabel={t("view_all")}
+            />
             <Droppable
               id={`dashboard-${collection.id}`}
               data={{
@@ -425,18 +505,15 @@ const Section = ({
                   isLoading={dashboardData.isLoading}
                 />
               ) : (
-                <div className="grow flex flex-col gap-2 justify-center border border-solid border-neutral-content w-full mx-auto p-10 rounded-xl bg-base-200 bg-gradient-to-tr from-neutral-content/70 to-50% to-base-200 min-h-72">
-                  <i className="bi-folder mx-auto text-6xl text-primary"></i>
-                  <p className="text-center text-xl">
-                    {t("no_link_in_collection")}
-                  </p>
-                  <p className="text-center mx-auto max-w-96 w-fit text-neutral text-sm">
-                    {t("no_link_in_collection_desc")}
-                  </p>
-                </div>
+                <DashboardEmptyState
+                  icon="bi-folder"
+                  title={t("no_link_in_collection")}
+                  description={t("no_link_in_collection_desc")}
+                  minHeight="min-h-64"
+                />
               )}
             </Droppable>
-          </>
+          </DashboardSectionSurface>
         )
       );
     }
