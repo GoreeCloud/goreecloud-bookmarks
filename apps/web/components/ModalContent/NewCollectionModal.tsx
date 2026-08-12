@@ -84,7 +84,7 @@ export default function NewCollectionModal({ onClose, parent }: Props) {
       <div className="flex flex-col gap-5">
         <div className="grid gap-4 sm:grid-cols-[auto,1fr] sm:items-end">
           <div>
-            <p className="mb-2 text-xs font-medium text-neutral">{t("icon")}</p>
+            <p className="mb-2 text-xs font-medium text-neutral">Icon</p>
             <div className="rounded-xl border border-neutral-content bg-base-200/50 p-1">
               <IconPicker
                 color={collection.color || oklchVariableToHex("--p")}
