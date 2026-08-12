@@ -11,6 +11,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
+import Link from "next/link";
 
 export function ActionIcon({
   icon,
@@ -42,7 +44,7 @@ export function ActionIcon({
           <Button
             variant={variant}
             size="icon"
-            className="h-9 w-9 shrink-0"
+            className="h-9 w-9 shrink-0 rounded-xl"
             onClick={onClick}
             aria-label={label}
           >
@@ -94,31 +96,63 @@ export default function SidebarShell({
         <>
           <div className="w-14 shrink-0" />
           <div
-            className="fixed inset-0 bg-black bg-opacity-10 backdrop-blur-sm z-30 fade-in"
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-30 fade-in"
             onClick={() => setMobileExpanded(false)}
           />
         </>
       )}
-      <div
+      <aside
         id="sidebar"
         className={cn(
-          "bg-base-200 h-screen flex flex-col border-solid border border-base-200 border-r-neutral-content z-20",
+          "h-screen flex flex-col z-20 bg-base-200/80 backdrop-blur-xl border-r border-base-content/10",
           className,
-          collapsed ? "p-2 w-14" : "p-1 w-72",
+          collapsed ? "p-2 w-14" : "p-2 w-72",
           isMobile &&
             mobileExpanded &&
-            "p-2 fixed inset-y-0 left-0 z-40 shadow-lg"
+            "fixed inset-y-0 left-0 z-40 shadow-2xl"
         )}
       >
-        {children({
-          collapsed,
-          toggle,
-          closeMobileSidebar: () => setMobileExpanded(false),
-        })}
+        <Link
+          href="/dashboard"
+          className={cn(
+            "shrink-0 flex items-center rounded-xl mb-2 transition-colors hover:bg-base-content/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+            collapsed ? "justify-center h-10" : "gap-3 px-2 py-2"
+          )}
+          aria-label="GoreeCloud Bookmarks dashboard"
+        >
+          <Image
+            src="/goreecloud-bookmarks.svg"
+            width={36}
+            height={36}
+            alt=""
+            aria-hidden="true"
+            className="h-9 w-9 shrink-0 rounded-xl"
+            unoptimized
+            priority
+          />
+          {!collapsed && (
+            <div className="min-w-0 leading-tight">
+              <p className="truncate text-sm font-semibold text-base-content">
+                GoreeCloud Bookmarks
+              </p>
+              <p className="truncate text-[11px] text-base-content/55">
+                Private library
+              </p>
+            </div>
+          )}
+        </Link>
+
+        <div className="min-h-0 flex-1 flex flex-col">
+          {children({
+            collapsed,
+            toggle,
+            closeMobileSidebar: () => setMobileExpanded(false),
+          })}
+        </div>
 
         <div
           className={cn(
-            "shrink-0 flex items-center gap-2 p-1 mt-1",
+            "shrink-0 flex items-center gap-2 mt-2 pt-2 border-t border-base-content/10",
             collapsed ? "flex-col" : "justify-between relative"
           )}
         >
@@ -129,7 +163,7 @@ export default function SidebarShell({
               dropdownAlign="end"
             />
           ) : (
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0 flex-1 px-1">
               <ProfileDropdown showName />
             </div>
           )}
@@ -138,8 +172,16 @@ export default function SidebarShell({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" onClick={toggle} size="icon">
-                    <i className="bi-layout-sidebar" />
+                  <Button
+                    variant="ghost"
+                    onClick={toggle}
+                    size="icon"
+                    className="rounded-xl"
+                    aria-label={
+                      collapsed ? t("expand_sidebar") : t("shrink_sidebar")
+                    }
+                  >
+                    <i className="bi-layout-sidebar" aria-hidden="true" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side={collapsed ? "right" : "top"}>
@@ -149,7 +191,7 @@ export default function SidebarShell({
             </TooltipProvider>
           )}
         </div>
-      </div>
+      </aside>
     </>
   );
 }
