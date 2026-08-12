@@ -112,7 +112,7 @@ export default function SearchModal({ onClose }: { onClose: () => void }) {
               type="button"
               variant="ghost"
               size="icon"
-              className="h-8 w-8 shrink-0 rounded-lg text-base-content/40 hover:bg-base-content/[0.06] hover:text-base-content"
+              className="h-10 w-10 shrink-0 rounded-lg text-base-content/40 hover:bg-base-content/[0.06] hover:text-base-content sm:h-8 sm:w-8"
               aria-label="Clear search"
               onClick={() => {
                 setSearchQuery("");
@@ -143,7 +143,7 @@ export default function SearchModal({ onClose }: { onClose: () => void }) {
               {recents.map((entry) => (
                 <div
                   key={entry.query}
-                  className="group/recent flex cursor-pointer items-center gap-3 rounded-xl px-2.5 py-2.5 transition-colors hover:bg-base-content/[0.045] focus-within:bg-base-content/[0.045]"
+                  className="group/recent flex min-h-11 cursor-pointer items-center gap-3 rounded-xl px-2.5 py-2.5 transition-colors hover:bg-base-content/[0.045] focus-within:bg-base-content/[0.045]"
                   onClick={() => submit(entry.query)}
                 >
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-base-content/[0.045] text-base-content/45">
@@ -159,7 +159,7 @@ export default function SearchModal({ onClose }: { onClose: () => void }) {
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 shrink-0 rounded-lg text-base-content/35 opacity-70 hover:bg-base-content/[0.06] hover:text-base-content group-hover/recent:opacity-100"
+                    className="h-9 w-9 shrink-0 rounded-lg text-base-content/35 opacity-80 hover:bg-base-content/[0.06] hover:text-base-content sm:h-7 sm:w-7 sm:opacity-70 group-hover/recent:opacity-100"
                     aria-label={t("delete")}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -186,7 +186,7 @@ export default function SearchModal({ onClose }: { onClose: () => void }) {
               <button
                 key={entry.operator}
                 type="button"
-                className="flex items-center justify-between gap-3 rounded-xl px-2.5 py-2.5 text-left transition-colors hover:bg-base-content/[0.045] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                className="flex min-h-11 items-center justify-between gap-3 rounded-xl px-2.5 py-2.5 text-left transition-colors hover:bg-base-content/[0.045] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                 onClick={() => appendOperator(entry.operator)}
               >
                 <div className="flex min-w-0 items-center gap-2.5">

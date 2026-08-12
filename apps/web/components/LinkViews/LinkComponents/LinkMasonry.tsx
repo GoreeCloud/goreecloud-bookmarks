@@ -199,7 +199,7 @@ function LinkMasonry({
           linkModal={linkModal}
           t={t}
           setLinkModal={(e) => setLinkModal(e)}
-          className="absolute top-3 right-3 z-30 h-8 w-8 rounded-lg border border-base-content/10 bg-base-100/90 text-base-content/60 opacity-0 shadow-sm backdrop-blur-md transition-all duration-150 hover:bg-base-100 hover:text-base-content group-hover:opacity-100 group-focus-within:opacity-100"
+          className="absolute right-2.5 top-2.5 z-30 h-10 w-10 rounded-lg border border-base-content/10 bg-base-100/90 text-base-content/60 opacity-100 shadow-sm backdrop-blur-md transition-all duration-150 hover:bg-base-100 hover:text-base-content sm:right-3 sm:top-3 sm:h-8 sm:w-8 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
         />
         {!isPublicRoute && <LinkPin link={link} />}
       </div>

@@ -130,6 +130,24 @@ The interface should feel like a focused private library rather than an administ
 24. `apps/web/components/ModalContent/NewTagModal.tsx`
     - Converts tag creation into a focused keyboard-submit form with explicit cancel/create actions while preserving the existing tag upsert mutation.
 
+### Mobile, touch, theme, and keyboard QA
+
+25. Shared controls and focus treatment
+    - Adds a consistent visible `focus-visible` ring to the shared button primitive and text-input primitive instead of relying on individual screens to restore focus visibility.
+    - Keeps the existing semantic theme tokens so the same focus, border, surface, and text hierarchy works in both light and dark themes.
+
+26. Sidebar and nested navigation
+    - Widens the compact mobile rail from 56px to 64px so its primary actions can use 44px touch targets without clipping.
+    - Separates collection/tag disclosure controls from their navigation links so an interactive button is no longer nested inside an interactive link.
+    - Adds Escape-to-close behavior for the expanded mobile sidebar and larger mobile create/search/sidebar controls.
+    - Enlarges nested collection rows and disclosure controls while preserving Atlaskit drag, reorder, nesting, ownership, and persisted ordering behavior.
+
+27. Bookmark, collection, tag, and search touch controls
+    - Makes bookmark action and pin controls visible by default on small viewports while retaining hover/focus reveal on larger screens.
+    - Increases small-screen action targets for collection and tag cards without changing their mutations or routing behavior.
+    - Makes tag cards keyboard reachable in both navigation and multi-select modes.
+    - Enlarges mobile search clear, recent-search delete, and operator controls while preserving search semantics and recent-search storage.
+
 ## Non-goals for this foundation
 
 - No backend, database, API, authentication, or authorization changes.
@@ -145,10 +163,9 @@ The interface should feel like a focused private library rather than an administ
 Continue with:
 
 - Empty-state and modal consistency beyond the completed dashboard/search/capture/collection/tag surfaces.
-- Mobile navigation and touch ergonomics.
-- Light/dark visual QA and keyboard accessibility.
+- Broader manual responsive and light/dark visual acceptance on representative phone, tablet, laptop, and desktop widths.
 - Firefox extension visual alignment after the web application shell stabilizes.
 
 ## Validation
 
-Every code-bearing head of this branch must pass the GoreeCloud web build and inherited login regression suite before it is considered for merge into the identity branch. Broader responsive, visual, keyboard, and interaction testing is required before any production release.
+Every code-bearing head of this branch must pass the GoreeCloud web build and inherited login regression suite before it is considered for merge into the identity branch. The pre-QA collections/tags head `6d939e5815a27ec23d00f94ae9a47b4152f8873d` passed both required GitHub Actions workflows. Broader responsive, visual, keyboard, touch, and interaction testing remains required before any production release.

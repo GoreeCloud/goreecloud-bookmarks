@@ -243,16 +243,16 @@ const CollectionListing = () => {
   if (isLoading) {
     return (
       <div className="flex flex-col gap-2 px-1">
-        <div className="skeleton h-8 w-full rounded-lg" />
-        <div className="skeleton h-8 w-11/12 rounded-lg" />
-        <div className="skeleton h-8 w-full rounded-lg" />
+        <div className="skeleton h-10 w-full rounded-lg" />
+        <div className="skeleton h-10 w-11/12 rounded-lg" />
+        <div className="skeleton h-10 w-full rounded-lg" />
       </div>
     );
   }
 
   if (!tree) {
     return (
-      <p className="w-full truncate rounded-lg px-2 py-1.5 text-xs font-medium text-neutral">
+      <p className="w-full truncate rounded-lg px-2 py-2 text-xs font-medium text-neutral">
         {t("you_have_no_collections")}
       </p>
     );
@@ -301,17 +301,17 @@ const renderItem = (
               : droppableActive
                 ? "select-none"
                 : "hover:bg-base-content/5",
-            "relative flex min-h-8 items-center rounded-lg pr-1.5 transition-colors duration-100"
+            "relative flex min-h-10 items-center rounded-lg pr-1.5 transition-colors duration-100"
           )}
         >
           {Dropdown(item as ExtendedTreeItem, onExpand, onCollapse)}
 
           <Link
             href={`/collections/${collection.id}`}
-            className="min-w-0 flex-1 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+            className="min-w-0 flex-1 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
             {...provided.dragHandleProps}
           >
-            <div className="flex min-w-0 items-center gap-2 py-1.5 pl-5">
+            <div className="flex min-w-0 items-center gap-2 py-2 pl-8">
               <span className="flex h-5 w-5 shrink-0 items-center justify-center">
                 {collection.icon ? (
                   <Icon
@@ -324,6 +324,7 @@ const renderItem = (
                   <i
                     className="bi-folder-fill text-sm"
                     style={{ color: collection.color }}
+                    aria-hidden="true"
                   />
                 )}
               </span>
@@ -368,10 +369,15 @@ const Dropdown = (
     <button
       type="button"
       onClick={() => (expanded ? onCollapse(item.id) : onExpand(item.id))}
-      className="absolute left-0 top-1/2 z-10 flex h-6 w-5 -translate-y-1/2 items-center justify-center rounded text-neutral opacity-70 transition hover:bg-base-content/10 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+      className="absolute left-0 top-1/2 z-10 flex h-9 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-neutral opacity-70 transition hover:bg-base-content/10 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
       aria-label={expanded ? "Collapse collection" : "Expand collection"}
     >
-      <i className={expanded ? "bi-chevron-down text-[10px]" : "bi-chevron-right text-[10px]"} />
+      <i
+        className={
+          expanded ? "bi-chevron-down text-[10px]" : "bi-chevron-right text-[10px]"
+        }
+        aria-hidden="true"
+      />
     </button>
   );
 };

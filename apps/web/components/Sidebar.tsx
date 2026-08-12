@@ -125,7 +125,7 @@ export default function Sidebar({
         };
 
         const navLinks = (
-          <div className={cn("flex flex-col gap-2", collapsed && "gap-3")}>
+          <div className={cn("flex flex-col gap-2", collapsed && "gap-2")}>
             <SidebarHighlightLink
               title={t("dashboard")}
               href={`/dashboard`}
@@ -225,7 +225,7 @@ export default function Sidebar({
         return (
           <>
             {collapsed ? (
-              <div className="flex flex-col items-center gap-3 shrink-0">
+              <div className="flex flex-col items-center gap-2 shrink-0">
                 <ActionIcon
                   icon="bi-search"
                   variant="default"
@@ -241,10 +241,10 @@ export default function Sidebar({
                           <Button
                             variant="primary"
                             size="icon"
-                            className="h-9 w-9 shrink-0"
+                            className="h-11 w-11 shrink-0 rounded-xl lg:h-9 lg:w-9"
                             aria-label={t("create_new")}
                           >
-                            <i className="bi-plus-lg text-lg leading-none" />
+                            <i className="bi-plus-lg text-lg leading-none" aria-hidden="true" />
                           </Button>
                         </DropdownMenuTrigger>
                       </TooltipTrigger>
@@ -286,11 +286,11 @@ export default function Sidebar({
                 <Button
                   size="sm"
                   variant="default"
-                  className="justify-between whitespace-nowrap h-8"
+                  className="h-11 justify-between whitespace-nowrap lg:h-8"
                   onClick={() => openModal(setSearchModal)}
                 >
                   <div className="flex gap-2 items-center">
-                    <i className="bi-search leading-none" />
+                    <i className="bi-search leading-none" aria-hidden="true" />
                     {t("search_for_links")}
                   </div>
                 </Button>
@@ -298,10 +298,10 @@ export default function Sidebar({
                 <div className="flex items-center gap-1.5">
                   <Button
                     variant="primary"
-                    className="flex-1 min-w-0 h-9 justify-center whitespace-nowrap"
+                    className="h-11 min-w-0 flex-1 justify-center whitespace-nowrap lg:h-9"
                     onClick={() => openModal(setNewLinkModal)}
                   >
-                    <i className="bi-plus-lg text-lg leading-none" />
+                    <i className="bi-plus-lg text-lg leading-none" aria-hidden="true" />
                     {t("new_link")}
                   </Button>
 
@@ -326,10 +326,10 @@ export default function Sidebar({
                             <Button
                               variant="default"
                               size="icon"
-                              className="h-9 w-9 shrink-0"
+                              className="h-11 w-11 shrink-0 rounded-xl lg:h-9 lg:w-9"
                               aria-label={t("more")}
                             >
-                              <i className="bi-three-dots text-lg leading-none" />
+                              <i className="bi-three-dots text-lg leading-none" aria-hidden="true" />
                             </Button>
                           </DropdownMenuTrigger>
                         </TooltipTrigger>

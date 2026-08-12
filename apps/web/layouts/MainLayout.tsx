@@ -51,11 +51,11 @@ export default function MainLayout({ children }: Props) {
 
         <main
           className={cn(
-            "w-[calc(100%-56px)] min-w-0 h-screen overflow-hidden p-0 lg:py-2 lg:pr-2",
+            "h-screen w-[calc(100%-64px)] min-w-0 overflow-hidden p-0 lg:py-2 lg:pr-2",
             !sidebarIsCollapsed && "lg:w-[calc(100%-288px)]"
           )}
         >
-          <div className="h-full overflow-y-auto bg-base-100 sm:pb-0 pb-20 lg:rounded-2xl lg:border lg:border-base-content/10 lg:shadow-sm">
+          <div className="h-full overflow-y-auto bg-base-100 pb-20 sm:pb-0 lg:rounded-2xl lg:border lg:border-base-content/10 lg:shadow-sm">
             {children}
           </div>
         </main>

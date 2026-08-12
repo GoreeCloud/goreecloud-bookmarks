@@ -107,7 +107,7 @@ export default function SearchBar({ placeholder, fullWidth }: Props) {
             inputRef.current?.blur();
           }
         }}
-        className={`h-10 rounded-xl border border-base-content/10 bg-base-100 pl-11 pr-11 text-sm text-base-content shadow-sm outline-none transition-all duration-150 placeholder:text-base-content/35 hover:border-base-content/20 focus:border-primary/40 focus:ring-2 focus:ring-primary/10 ${
+        className={`h-11 rounded-xl border border-base-content/10 bg-base-100 pl-11 pr-12 text-sm text-base-content shadow-sm outline-none transition-all duration-150 placeholder:text-base-content/35 hover:border-base-content/20 focus:border-primary/40 focus:ring-2 focus:ring-primary/10 sm:h-10 sm:pr-11 ${
           fullWidth ? "w-full" : "w-full max-w-[15rem] md:w-80 md:max-w-full"
         }`}
       />
@@ -117,7 +117,7 @@ export default function SearchBar({ placeholder, fullWidth }: Props) {
           type="button"
           variant="ghost"
           size="icon"
-          className="absolute right-1.5 h-7 w-7 rounded-lg text-base-content/40 hover:bg-base-content/[0.06] hover:text-base-content"
+          className="absolute right-0.5 h-10 w-10 rounded-lg text-base-content/40 hover:bg-base-content/[0.06] hover:text-base-content sm:right-1.5 sm:h-7 sm:w-7"
           aria-label="Clear search"
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => {
@@ -146,7 +146,7 @@ export default function SearchBar({ placeholder, fullWidth }: Props) {
                 <button
                   key={entry.operator}
                   type="button"
-                  className="flex items-center justify-between gap-3 rounded-lg px-2.5 py-2 text-left transition-colors hover:bg-base-content/[0.045] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                  className="flex min-h-11 items-center justify-between gap-3 rounded-lg px-2.5 py-2 text-left transition-colors hover:bg-base-content/[0.045] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                   onClick={() => handleSuggestionClick(entry.operator)}
                 >
                   <div className="flex min-w-0 items-center gap-2.5">

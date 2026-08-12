@@ -44,11 +44,11 @@ export function ActionIcon({
           <Button
             variant={variant}
             size="icon"
-            className="h-9 w-9 shrink-0 rounded-xl"
+            className="h-11 w-11 shrink-0 rounded-xl lg:h-9 lg:w-9"
             onClick={onClick}
             aria-label={label}
           >
-            <i className={cn(icon, "text-lg leading-none")} />
+            <i className={cn(icon, "text-lg leading-none")} aria-hidden="true" />
           </Button>
         </TooltipTrigger>
         <TooltipContent side={tooltipSide}>{label}</TooltipContent>
@@ -85,6 +85,17 @@ export default function SidebarShell({
     setMobileExpanded(false);
   }, [router.asPath]);
 
+  useEffect(() => {
+    if (!isMobile || !mobileExpanded) return;
+
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMobileExpanded(false);
+    };
+
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [isMobile, mobileExpanded]);
+
   const collapsed = isMobile ? !mobileExpanded : sidebarIsCollapsed;
   const toggle = isMobile
     ? () => setMobileExpanded(!mobileExpanded)
@@ -94,19 +105,20 @@ export default function SidebarShell({
     <>
       {isMobile && mobileExpanded && (
         <>
-          <div className="w-14 shrink-0" />
+          <div className="w-16 shrink-0" />
           <div
-            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-30 fade-in"
+            className="fixed inset-0 z-30 bg-black/20 backdrop-blur-sm fade-in"
             onClick={() => setMobileExpanded(false)}
+            aria-hidden="true"
           />
         </>
       )}
       <aside
         id="sidebar"
         className={cn(
-          "h-screen flex flex-col z-20 bg-base-200/80 backdrop-blur-xl border-r border-base-content/10",
+          "z-20 flex h-screen flex-col border-r border-base-content/10 bg-base-200/80 backdrop-blur-xl",
           className,
-          collapsed ? "p-2 w-14" : "p-2 w-72",
+          collapsed ? "w-16 p-2" : "w-72 p-2",
           isMobile &&
             mobileExpanded &&
             "fixed inset-y-0 left-0 z-40 shadow-2xl"
@@ -115,8 +127,8 @@ export default function SidebarShell({
         <Link
           href="/dashboard"
           className={cn(
-            "shrink-0 flex items-center rounded-xl mb-2 transition-colors hover:bg-base-content/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-            collapsed ? "justify-center h-10" : "gap-3 px-2 py-2"
+            "mb-2 flex shrink-0 items-center rounded-xl transition-colors hover:bg-base-content/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+            collapsed ? "h-11 justify-center" : "gap-3 px-2 py-2"
           )}
           aria-label="GoreeCloud Bookmarks dashboard"
         >
@@ -142,7 +154,7 @@ export default function SidebarShell({
           )}
         </Link>
 
-        <div className="min-h-0 flex-1 flex flex-col">
+        <div className="flex min-h-0 flex-1 flex-col">
           {children({
             collapsed,
             toggle,
@@ -152,8 +164,8 @@ export default function SidebarShell({
 
         <div
           className={cn(
-            "shrink-0 flex items-center gap-2 mt-2 pt-2 border-t border-base-content/10",
-            collapsed ? "flex-col" : "justify-between relative"
+            "mt-2 flex shrink-0 items-center gap-2 border-t border-base-content/10 pt-2",
+            collapsed ? "flex-col" : "relative justify-between"
           )}
         >
           {collapsed ? (
@@ -176,7 +188,7 @@ export default function SidebarShell({
                     variant="ghost"
                     onClick={toggle}
                     size="icon"
-                    className="rounded-xl"
+                    className="h-11 w-11 rounded-xl lg:h-9 lg:w-9"
                     aria-label={
                       collapsed ? t("expand_sidebar") : t("shrink_sidebar")
                     }

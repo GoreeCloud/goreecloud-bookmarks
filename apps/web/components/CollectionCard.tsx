@@ -86,10 +86,10 @@ export default function CollectionCard({
             type="button"
             variant="ghost"
             size="icon"
-            className="absolute top-3 right-3 z-20 h-8 w-8 rounded-full bg-base-100/80 opacity-70 shadow-sm backdrop-blur hover:opacity-100"
+            className="absolute right-2.5 top-2.5 z-20 h-10 w-10 rounded-full bg-base-100/80 opacity-80 shadow-sm backdrop-blur hover:opacity-100 sm:right-3 sm:top-3 sm:h-8 sm:w-8"
             aria-label={t("more")}
           >
-            <i className="bi-three-dots text-lg text-neutral" />
+            <i className="bi-three-dots text-lg text-neutral" aria-hidden="true" />
           </Button>
         </DropdownMenuTrigger>
 
@@ -131,7 +131,7 @@ export default function CollectionCard({
 
       <Link
         href={`/collections/${collection.id}`}
-        className="flex min-h-[12rem] flex-col rounded-xl border border-neutral-content bg-base-100 p-4 pb-14 pr-12 shadow-sm transition duration-150 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+        className="flex min-h-[12rem] flex-col rounded-xl border border-neutral-content bg-base-100 p-4 pb-14 pr-14 shadow-sm transition duration-150 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 sm:pr-12"
         style={{ borderTopColor: collection.color, borderTopWidth: "3px" }}
       >
         <div className="flex min-w-0 items-start gap-3">
@@ -147,7 +147,7 @@ export default function CollectionCard({
                 color={collection.color}
               />
             ) : (
-              <i className="bi-folder-fill text-xl" />
+              <i className="bi-folder-fill text-xl" aria-hidden="true" />
             )}
           </div>
 
@@ -161,7 +161,7 @@ export default function CollectionCard({
                   className="inline-flex shrink-0 items-center gap-1 rounded-full border border-neutral-content bg-base-200 px-2 py-0.5 text-[10px] font-medium text-neutral"
                   title={t("collection_publicly_shared")}
                 >
-                  <i className="bi-globe2" />
+                  <i className="bi-globe2" aria-hidden="true" />
                   Public
                 </span>
               )}
@@ -176,13 +176,13 @@ export default function CollectionCard({
 
         <div className="mt-auto flex justify-end gap-3 pt-5 text-xs text-neutral">
           <span className="inline-flex items-center gap-1.5">
-            <i className="bi-link-45deg text-sm" />
+            <i className="bi-link-45deg text-sm" aria-hidden="true" />
             <span className="font-medium tabular-nums text-base-content">
               {collection._count?.links || 0}
             </span>
           </span>
           <span className="hidden items-center gap-1.5 sm:inline-flex">
-            <i className="bi-calendar3" />
+            <i className="bi-calendar3" aria-hidden="true" />
             {formattedDate}
           </span>
         </div>
@@ -190,7 +190,7 @@ export default function CollectionCard({
 
       <button
         type="button"
-        className="absolute bottom-3 left-3 z-20 flex items-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+        className="absolute bottom-1.5 left-2 z-20 flex min-h-11 items-center rounded-full px-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 sm:bottom-3 sm:left-3 sm:min-h-8 sm:px-0"
         onClick={() => setEditCollectionSharingModal(true)}
         aria-label={permissions === true ? t("share_and_collaborate") : t("view_team")}
       >
