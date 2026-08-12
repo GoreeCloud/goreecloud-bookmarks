@@ -1,0 +1,48 @@
+name: GoreeCloud Bookmarks CI
+
+on:
+  push:
+    branches:
+      - main
+      - "feature/**"
+      - "fix/**"
+      - "security/**"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DATABASE_URL: postgresql://goreecloud_ci:goreecloud_ci@127.0.0.1:5432/goreecloud_ci
+  NEXTAUTH_SECRET: goreecloud-ci-build-only-secret
+  NEXTAUTH_URL: http://localhost:3000/api/v1/auth
+
+jobs:
+  build:
+    name: Build web application
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: yarn
+
+      - name: Enable pinned Yarn
+        run: |
+          corepack enable
+          corepack prepare yarn@4.12.0 --activate
+          yarn --version
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Generate Prisma client
+        run: yarn prisma:generate
+
+      - name: Build web application
+        run: yarn web:build
