@@ -118,7 +118,7 @@ export default function SearchBar({ placeholder, fullWidth }: Props) {
           variant="ghost"
           size="icon"
           className="absolute right-1.5 h-7 w-7 rounded-lg text-base-content/40 hover:bg-base-content/[0.06] hover:text-base-content"
-          aria-label={t("clear")}
+          aria-label="Clear search"
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => {
             setSearchQuery("");
