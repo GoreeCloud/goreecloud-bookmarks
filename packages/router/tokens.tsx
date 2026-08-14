@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AccessToken } from "@linkwarden/prisma/client";
+import { PostTokenSchemaType } from "@linkwarden/lib/schemaValidation";
 import { useSession } from "next-auth/react";
 
 const useTokens = () => {
@@ -23,7 +24,7 @@ const useAddToken = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (body: Partial<AccessToken>) => {
+    mutationFn: async (body: PostTokenSchemaType) => {
       const response = await fetch("/api/v1/tokens", {
         body: JSON.stringify(body),
         method: "POST",
