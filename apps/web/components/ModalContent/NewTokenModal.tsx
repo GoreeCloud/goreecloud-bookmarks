@@ -14,7 +14,7 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
-import { Separator } from "../ui/separator";
+import GlazeModalFrame from "./GlazeModalFrame";
 
 type Props = {
   onClose: Function;
@@ -27,19 +27,24 @@ export default function NewTokenModal({ onClose }: Props) {
 
   const initial = {
     name: "",
-    expires: 0 as TokenExpiry,
+    expires: TokenExpiry.sevenDays,
   };
 
-  const [token, setToken] = useState(initial as any);
+  const [token, setToken] = useState(initial);
   const [submitLoader, setSubmitLoader] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const normalizedName = token.name.trim();
 
   const submit = async () => {
-    if (!submitLoader) {
-      setSubmitLoader(true);
+    if (submitLoader || !normalizedName) return;
 
-      const load = toast.loading(t("creating_token"));
+    setSubmitLoader(true);
+    const load = toast.loading(t("creating_token"));
 
-      await addToken.mutateAsync(token, {
+    await addToken.mutateAsync(
+      { ...token, name: normalizedName },
+      {
         onSettled: (data, error) => {
           setSubmitLoader(false);
           toast.dismiss(load);
@@ -50,8 +55,8 @@ export default function NewTokenModal({ onClose }: Props) {
             setNewToken(data.secretKey);
           }
         },
-      });
-    }
+      }
+    );
   };
 
   const getLabel = (expiry: TokenExpiry) => {
@@ -69,8 +74,6 @@ export default function NewTokenModal({ onClose }: Props) {
     }
   };
 
-  const inputRef = useRef<HTMLInputElement>(null);
-
   useLayoutEffect(() => {
     inputRef.current?.focus();
   }, []);
@@ -78,54 +81,92 @@ export default function NewTokenModal({ onClose }: Props) {
   return (
     <Modal toggleModal={onClose}>
       {newToken ? (
-        <div className="flex flex-col justify-center space-y-4">
-          <p className="text-xl font-thin">{t("access_token_created")}</p>
-          <p>{t("token_creation_notice")}</p>
-          <div className="relative">
-            <div className="w-full hide-scrollbar overflow-x-auto whitespace-nowrap rounded-md p-2 bg-base-200 border-neutral-content border-solid border flex items-center gap-2 justify-between pr-14">
-              {newToken}
-              <div className="absolute right-0 px-2 border-neutral-content border-solid border-r bg-base-200">
-                <CopyButton text={newToken} />
-              </div>
+        <GlazeModalFrame
+          title={t("access_token_created")}
+          description={t("token_creation_notice")}
+          icon="bi-key"
+        >
+          <div
+            role="note"
+            className="rounded-xl border border-warning/25 bg-warning/10 p-3"
+          >
+            <div className="flex items-center gap-2">
+              <code className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap rounded-lg border border-base-300 bg-base-100 px-3 py-2 font-mono text-xs text-base-content">
+                {newToken}
+              </code>
+              <CopyButton text={newToken} />
             </div>
           </div>
-        </div>
+        </GlazeModalFrame>
       ) : (
-        <>
-          <p className="text-xl font-thin">{t("create_access_token")}</p>
-
-          <Separator className="my-3" />
-
-          <div className="flex sm:flex-row flex-col gap-2 items-center">
-            <div className="w-full">
-              <p className="mb-2">{t("name")}</p>
-
+        <GlazeModalFrame
+          title={t("create_access_token")}
+          icon="bi-key"
+          footer={
+            <>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => onClose()}
+                disabled={submitLoader}
+              >
+                {t("cancel")}
+              </Button>
+              <Button
+                type="button"
+                variant="primary"
+                onClick={submit}
+                disabled={submitLoader || !normalizedName}
+              >
+                <i className="bi-key" aria-hidden="true" />
+                {t("create_token")}
+              </Button>
+            </>
+          }
+        >
+          <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+            <div className="rounded-xl border border-base-300 bg-base-200/50 p-3">
+              <p className="mb-2 text-xs font-medium text-base-content/60">
+                {t("name")}
+              </p>
               <TextInput
                 ref={inputRef}
                 value={token.name}
                 onChange={(e) => setToken({ ...token, name: e.target.value })}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    submit();
+                  }
+                }}
                 placeholder={t("token_name_placeholder")}
-                className="bg-base-200"
+                className="bg-base-100"
               />
             </div>
 
-            <div className="w-full sm:w-fit">
-              <p className="mb-2">{t("expires_in")}</p>
-
+            <div className="rounded-xl border border-base-300 bg-base-200/50 p-3">
+              <p className="mb-2 text-xs font-medium text-base-content/60">
+                {t("expires_in")}
+              </p>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="metal" className="whitespace-nowrap w-32">
+                  <Button
+                    type="button"
+                    variant="metal"
+                    className="w-full whitespace-nowrap sm:w-32"
+                  >
                     {getLabel(token.expires)}
+                    <i className="bi-chevron-down text-xs" aria-hidden="true" />
                   </Button>
                 </DropdownMenuTrigger>
 
-                <DropdownMenuContent>
+                <DropdownMenuContent align="end">
                   <DropdownMenuRadioGroup
                     value={token.expires.toString()}
-                    onValueChange={(e) =>
+                    onValueChange={(value) =>
                       setToken({
                         ...token,
-                        expires: Number(e),
+                        expires: Number(value) as TokenExpiry,
                       })
                     }
                   >
@@ -134,25 +175,21 @@ export default function NewTokenModal({ onClose }: Props) {
                     >
                       {t("7_days")}
                     </DropdownMenuRadioItem>
-
                     <DropdownMenuRadioItem
                       value={TokenExpiry.oneMonth.toString()}
                     >
                       {t("30_days")}
                     </DropdownMenuRadioItem>
-
                     <DropdownMenuRadioItem
                       value={TokenExpiry.twoMonths.toString()}
                     >
                       {t("60_days")}
                     </DropdownMenuRadioItem>
-
                     <DropdownMenuRadioItem
                       value={TokenExpiry.threeMonths.toString()}
                     >
                       {t("90_days")}
                     </DropdownMenuRadioItem>
-
                     <DropdownMenuRadioItem value={TokenExpiry.never.toString()}>
                       {t("no_expiration")}
                     </DropdownMenuRadioItem>
@@ -161,13 +198,7 @@ export default function NewTokenModal({ onClose }: Props) {
               </DropdownMenu>
             </div>
           </div>
-
-          <div className="flex justify-end items-center mt-5">
-            <Button variant="primary" onClick={submit}>
-              {t("create_token")}
-            </Button>
-          </div>
-        </>
+        </GlazeModalFrame>
       )}
     </Modal>
   );
