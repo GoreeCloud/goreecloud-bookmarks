@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useTranslation } from "next-i18next";
 import { useBulkDeleteLinks } from "@linkwarden/router/links";
 import toast from "react-hot-toast";
-import { Separator } from "../ui/separator";
+import GlazeModalFrame from "./GlazeModalFrame";
 
 type Props = {
   onClose: Function;
@@ -38,15 +38,26 @@ export default function BulkDeleteLinksModal({ onClose }: Props) {
 
   return (
     <Modal toggleModal={onClose}>
-      <p className="text-xl font-thin text-red-500">
-        {selectionCount === 1
-          ? t("delete_link")
-          : t("delete_links", { count: selectionCount })}
-      </p>
-
-      <Separator className="my-3" />
-
-      <div className="flex flex-col gap-3">
+      <GlazeModalFrame
+        title={
+          selectionCount === 1
+            ? t("delete_link")
+            : t("delete_links", { count: selectionCount })
+        }
+        icon="bi-trash"
+        tone="destructive"
+        footer={
+          <>
+            <Button type="button" variant="ghost" onClick={() => onClose()}>
+              {t("cancel")}
+            </Button>
+            <Button type="button" variant="destructive" onClick={deleteLink}>
+              <i className="bi-trash" />
+              {t("delete")}
+            </Button>
+          </>
+        }
+      >
         <p>
           {selectionCount === 1
             ? t("link_deletion_confirmation_message")
@@ -55,18 +66,19 @@ export default function BulkDeleteLinksModal({ onClose }: Props) {
               })}
         </p>
 
-        <div role="alert" className="alert alert-warning">
-          <i className="bi-exclamation-triangle text-xl" />
+        <div
+          role="alert"
+          className="flex items-start gap-3 rounded-xl border border-warning/25 bg-warning/10 p-3"
+        >
+          <i
+            className="bi-exclamation-triangle mt-0.5 text-base text-warning"
+            aria-hidden="true"
+          />
           <span>{t("warning_irreversible")}</span>
         </div>
 
-        <p>{t("shift_key_tip")}</p>
-
-        <Button className="ml-auto" variant="destructive" onClick={deleteLink}>
-          <i className="bi-trash text-xl" />
-          {t("delete")}
-        </Button>
-      </div>
+        <p className="text-base-content/60">{t("shift_key_tip")}</p>
+      </GlazeModalFrame>
     </Modal>
   );
 }
