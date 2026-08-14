@@ -76,7 +76,7 @@ export default function InviteModal({ onClose }: Props) {
     <Modal toggleModal={onClose}>
       <GlazeModalFrame
         title={t("invite_user")}
-        description={t("invite_user_desc")}
+        description={emailEnabled ? t("invite_user_desc") : undefined}
         icon="bi-person-plus"
         footer={
           <>
