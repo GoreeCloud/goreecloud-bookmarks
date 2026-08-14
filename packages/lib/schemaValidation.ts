@@ -27,7 +27,7 @@ export const VerifyEmailSchema = z.object({
 });
 
 export const PostTokenSchema = z.object({
-  name: z.string().max(50),
+  name: z.string().trim().min(1).max(50),
   expires: z.enum(TokenExpiry),
 });
 
