@@ -250,7 +250,7 @@ export default function EditCollectionSharingModal({
               </div>
 
               <div className="divide-y divide-base-300">
-                {collection.members
+                {[...collection.members]
                   .sort((a, b) => (a.userId as number) - (b.userId as number))
                   .map((member) => {
                     const roleKey: "viewer" | "contributor" | "admin" =
