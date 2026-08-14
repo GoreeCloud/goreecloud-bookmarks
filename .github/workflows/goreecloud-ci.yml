@@ -22,6 +22,21 @@ jobs:
   build:
     name: Test and build web application
     runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: goreecloud_ci
+          POSTGRES_PASSWORD: goreecloud_ci
+          POSTGRES_DB: goreecloud_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Check out source
         uses: actions/checkout@v4
@@ -42,6 +57,9 @@ jobs:
 
       - name: Generate Prisma client
         run: yarn prisma:generate
+
+      - name: Apply database migrations
+        run: yarn prisma:deploy
 
       - name: Run unit tests
         run: yarn test --run
