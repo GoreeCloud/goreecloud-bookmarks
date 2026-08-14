@@ -11,7 +11,7 @@ The interface should feel like a focused private library rather than an administ
 - Strong light and dark theme behavior using the existing semantic theme tokens.
 - A calm navigation rail inspired by modern bookmark/read-later applications without copying another product's branding or proprietary artwork.
 - Accessible focus states, labels, and touch targets.
-- Consistent information hierarchy across card, masonry, list, dashboard, search, capture, collection, and tag surfaces.
+- Consistent information hierarchy across card, masonry, list, dashboard, search, capture, collection, tag, and modal surfaces.
 
 ## Completed foundation work
 
@@ -148,6 +148,15 @@ The interface should feel like a focused private library rather than an administ
     - Makes tag cards keyboard reachable in both navigation and multi-select modes.
     - Enlarges mobile search clear, recent-search delete, and operator controls while preserving search semantics and recent-search storage.
 
+### Glaze modal consistency
+
+28. Shared modal surfaces and destructive flows
+    - Refines `apps/web/components/Modal.tsx` with Glaze UI geometry, semantic theme surfaces, a restrained backdrop, a calmer mobile drawer, and a larger desktop close target.
+    - Adds `apps/web/components/ModalContent/GlazeModalFrame.tsx` as the reusable hierarchy for modal identity, body spacing, separators, and action footers.
+    - Aligns single and bulk bookmark deletion, single and bulk tag deletion, and collection delete/leave dialogs with the shared Glaze hierarchy.
+    - Replaces legacy alert styling in the touched flows with quieter semantic warning/note surfaces and adds explicit cancel actions.
+    - Preserves existing mutations, collection permission distinctions, selection cleanup, toast behavior, post-delete routing, and responsive modal behavior.
+
 ## Non-goals for this foundation
 
 - No backend, database, API, authentication, or authorization changes.
@@ -162,10 +171,11 @@ The interface should feel like a focused private library rather than an administ
 
 Continue with:
 
-- Empty-state and modal consistency beyond the completed dashboard/search/capture/collection/tag surfaces.
+- Remaining bulk-edit, sharing, account, administration, import/export, and other secondary modal content that has not yet adopted the shared Glaze hierarchy.
+- Empty-state consistency beyond the completed dashboard/search/capture/collection/tag surfaces.
 - Broader manual responsive and light/dark visual acceptance on representative phone, tablet, laptop, and desktop widths.
 - Firefox extension visual alignment after the web application shell stabilizes.
 
 ## Validation
 
-Every code-bearing head of this branch must pass the GoreeCloud web build and inherited login regression suite before it is considered for merge into the identity branch. The pre-QA collections/tags head `6d939e5815a27ec23d00f94ae9a47b4152f8873d` passed both required GitHub Actions workflows. Broader responsive, visual, keyboard, touch, and interaction testing remains required before any production release.
+Every code-bearing head of these Glaze UI branches must pass the GoreeCloud web build and inherited login regression suite before it is considered for merge into the identity branch. The pre-QA collections/tags head `6d939e5815a27ec23d00f94ae9a47b4152f8873d` passed both required GitHub Actions workflows. Broader responsive, visual, keyboard, touch, and interaction testing remains required before any production release.
