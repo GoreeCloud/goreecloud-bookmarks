@@ -8,7 +8,7 @@ import Modal from "../Modal";
 import { useTranslation } from "next-i18next";
 import { useBulkEditLinks } from "@linkwarden/router/links";
 import { Button } from "../ui/button";
-import { Separator } from "../ui/separator";
+import GlazeModalFrame from "./GlazeModalFrame";
 
 type Props = {
   onClose: Function;
@@ -24,6 +24,7 @@ export default function BulkEditLinksModal({ onClose }: Props) {
   >({ tags: [] });
 
   const updateLinks = useBulkEditLinks();
+
   const setCollection = (e: any) => {
     const collectionId = e?.value || null;
     setUpdatedValues((prevValues) => ({ ...prevValues, collectionId }));
@@ -35,52 +36,74 @@ export default function BulkEditLinksModal({ onClose }: Props) {
   };
 
   const submit = async () => {
-    if (!submitLoader) {
-      setSubmitLoader(true);
+    if (submitLoader) return;
 
-      const load = toast.loading(t("updating"));
+    setSubmitLoader(true);
+    const load = toast.loading(t("updating"));
 
-      const links = Object.keys(selectedIds).map((k) => ({
-        id: Number(k),
-      }));
+    const links = Object.keys(selectedIds).map((k) => ({
+      id: Number(k),
+    }));
 
-      await updateLinks.mutateAsync(
-        {
-          links,
-          newData: updatedValues,
-          removePreviousTags,
+    await updateLinks.mutateAsync(
+      {
+        links,
+        newData: updatedValues,
+        removePreviousTags,
+      },
+      {
+        onSettled: (data, error) => {
+          setSubmitLoader(false);
+          toast.dismiss(load);
+
+          if (error) {
+            toast.error(error.message);
+          } else {
+            clearSelected();
+            onClose();
+            toast.success(t("updated"));
+          }
         },
-        {
-          onSettled: (data, error) => {
-            setSubmitLoader(false);
-            toast.dismiss(load);
-
-            if (error) {
-              toast.error(error.message);
-            } else {
-              clearSelected();
-              onClose();
-              toast.success(t("updated"));
-            }
-          },
-        }
-      );
-    }
+      }
+    );
   };
 
   return (
     <Modal toggleModal={onClose}>
-      <p className="text-xl font-thin">
-        {selectionCount === 1
-          ? t("edit_link")
-          : t("edit_links", { count: selectionCount })}
-      </p>
-      <Separator className="my-3" />
-
-      <div className="mt-5">
-        <div className="grid sm:grid-cols-2 gap-3">
-          <div>
-            <p className="mb-2">{t("move_to_collection")}</p>
+      <GlazeModalFrame
+        title={
+          selectionCount === 1
+            ? t("edit_link")
+            : t("edit_links", { count: selectionCount })
+        }
+        icon="bi-pencil-square"
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => onClose()}
+              disabled={submitLoader}
+            >
+              {t("cancel")}
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              onClick={submit}
+              disabled={submitLoader}
+            >
+              <i className="bi-check-lg" aria-hidden="true" />
+              {t("save_changes")}
+            </Button>
+          </>
+        }
+      >
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="rounded-xl border border-base-300 bg-base-200/50 p-3">
+            <p className="mb-2 text-xs font-medium text-base-content/60">
+              {t("move_to_collection")}
+            </p>
             <CollectionSelection
               showDefaultValue={false}
               onChange={setCollection}
@@ -88,29 +111,31 @@ export default function BulkEditLinksModal({ onClose }: Props) {
             />
           </div>
 
-          <div>
-            <p className="mb-2">{t("add_tags")}</p>
+          <div className="rounded-xl border border-base-300 bg-base-200/50 p-3">
+            <p className="mb-2 text-xs font-medium text-base-content/60">
+              {t("add_tags")}
+            </p>
             <TagSelection onChange={setTags} />
           </div>
         </div>
-        <div className="sm:ml-auto w-1/2 p-3">
-          <label className="flex items-center gap-2 ">
-            <input
-              type="checkbox"
-              className="checkbox checkbox-primary"
-              checked={removePreviousTags}
-              onChange={(e) => setRemovePreviousTags(e.target.checked)}
-            />
-            {t("remove_previous_tags")}
-          </label>
-        </div>
-      </div>
 
-      <div className="flex justify-end items-center mt-5">
-        <Button variant="primary" onClick={submit}>
-          {t("save_changes")}
-        </Button>
-      </div>
+        <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-base-300 bg-base-200/40 p-3">
+          <input
+            type="checkbox"
+            className="checkbox checkbox-primary mt-0.5"
+            checked={removePreviousTags}
+            onChange={(e) => setRemovePreviousTags(e.target.checked)}
+          />
+          <span className="min-w-0">
+            <span className="block font-medium text-base-content">
+              {t("remove_previous_tags")}
+            </span>
+            <span className="mt-0.5 block text-xs leading-5 text-base-content/60">
+              {t("add_tags")}
+            </span>
+          </span>
+        </label>
+      </GlazeModalFrame>
     </Modal>
   );
 }
