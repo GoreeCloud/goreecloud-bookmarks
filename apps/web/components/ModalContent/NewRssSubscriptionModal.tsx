@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 import TextInput from "../TextInput";
 import CollectionSelection from "../InputSelect/CollectionSelection";
 import { Button } from "../ui/button";
-import { Separator } from "../ui/separator";
+import GlazeModalFrame from "./GlazeModalFrame";
 
 type Props = {
   onClose: Function;
@@ -24,34 +24,44 @@ export default function NewRssSubscriptionModal({ onClose }: Props) {
     collectionName: "",
   });
 
+  const normalizedName = form.name.trim();
+  const normalizedUrl = form.url.trim();
+  const normalizedCollectionName = form.collectionName.trim();
+  const hasCollection = Boolean(form.collectionId || normalizedCollectionName);
+  const canSubmit = Boolean(normalizedName && normalizedUrl && hasCollection) && !submitLoader;
+
   const submit = async () => {
     if (submitLoader) return;
 
-    if (
-      !form.name ||
-      !form.url ||
-      (!form.collectionId && !form.collectionName)
-    ) {
-      return toast.error(t("fill_all_fields"));
+    if (!normalizedName || !normalizedUrl || !hasCollection) {
+      toast.error(t("fill_all_fields"));
+      return;
     }
 
     setSubmitLoader(true);
-
     const load = toast.loading(t("creating"));
 
-    await addRssSubscription.mutateAsync(form, {
-      onSettled: (_, error) => {
-        setSubmitLoader(false);
-        toast.dismiss(load);
-
-        if (error) {
-          toast.error(error.message);
-        } else {
-          onClose();
-          toast.success(t("created"));
-        }
+    await addRssSubscription.mutateAsync(
+      {
+        ...form,
+        name: normalizedName,
+        url: normalizedUrl,
+        collectionName: normalizedCollectionName,
       },
-    });
+      {
+        onSettled: (_, error) => {
+          setSubmitLoader(false);
+          toast.dismiss(load);
+
+          if (error) {
+            toast.error(error.message);
+          } else {
+            onClose();
+            toast.success(t("created"));
+          }
+        },
+      }
+    );
   };
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -62,56 +72,81 @@ export default function NewRssSubscriptionModal({ onClose }: Props) {
 
   return (
     <Modal toggleModal={onClose}>
-      <>
-        <p className="text-xl font-thin">{t("create_rss_subscription")}</p>
-
-        <Separator className="my-3" />
-
-        <div className="w-full mb-3">
-          <label>{t("link")}</label>
+      <GlazeModalFrame
+        title={t("create_rss_subscription")}
+        icon="bi-rss"
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => onClose()}
+              disabled={submitLoader}
+            >
+              {t("cancel")}
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              onClick={submit}
+              disabled={!canSubmit}
+            >
+              <i className="bi-rss" aria-hidden="true" />
+              {t("create_rss_subscription")}
+            </Button>
+          </>
+        }
+      >
+        <div className="rounded-xl border border-base-300 bg-base-200/50 p-3">
+          <label className="mb-2 block text-xs font-medium text-base-content/60">
+            {t("link")}
+          </label>
           <TextInput
             ref={inputRef}
-            type="text"
+            type="url"
             placeholder="https://example.com/rss"
-            className="bg-base-200 mt-2"
+            className="bg-base-100"
             value={form.url}
             onChange={(e) => setForm({ ...form, url: e.target.value })}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                submit();
+              }
+            }}
           />
         </div>
 
-        <div className="flex sm:flex-row flex-col gap-3 items-center">
-          <div className="w-full">
-            <label>{t("name")}</label>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="rounded-xl border border-base-300 bg-base-200/50 p-3">
+            <label className="mb-2 block text-xs font-medium text-base-content/60">
+              {t("name")}
+            </label>
             <TextInput
               type="text"
               placeholder="Sample RSS"
-              className="bg-base-200 mt-2"
+              className="bg-base-100"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
             />
           </div>
-          <div className="w-full">
-            <label>{t("collection")}</label>
+
+          <div className="rounded-xl border border-base-300 bg-base-200/50 p-3">
+            <label className="mb-2 block text-xs font-medium text-base-content/60">
+              {t("collection")}
+            </label>
             <CollectionSelection
-              className="mt-2"
-              onChange={(e: any) => {
-                if (e?.__isNew__) e.value = undefined;
+              onChange={(option: any) => {
                 setForm({
                   ...form,
-                  collectionId: e?.value,
-                  collectionName: e?.label,
+                  collectionId: option?.__isNew__ ? 0 : option?.value || 0,
+                  collectionName: option?.label || "",
                 });
               }}
             />
           </div>
         </div>
-
-        <div className="flex justify-end items-center mt-5">
-          <Button variant="primary" onClick={submit}>
-            {t("create_rss_subscription")}
-          </Button>
-        </div>
-      </>
+      </GlazeModalFrame>
     </Modal>
   );
 }
