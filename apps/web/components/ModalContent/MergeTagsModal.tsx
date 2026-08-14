@@ -3,9 +3,9 @@ import Modal from "../Modal";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "next-i18next";
 import toast from "react-hot-toast";
-import { Separator } from "../ui/separator";
 import { useMergeTags } from "@linkwarden/router/tags";
 import TextInput from "../TextInput";
+import GlazeModalFrame from "./GlazeModalFrame";
 
 type Props = {
   onClose: Function;
@@ -19,21 +19,25 @@ export default function MergeTagsModal({
   setSelectedTags,
 }: Props) {
   const { t } = useTranslation();
-
   const [newTagName, setNewTagName] = useState("");
-
+  const [submitLoader, setSubmitLoader] = useState(false);
   const mergeTags = useMergeTags();
 
   const merge = async () => {
+    const trimmedTagName = newTagName.trim();
+    if (submitLoader || !trimmedTagName) return;
+
+    setSubmitLoader(true);
     const load = toast.loading(t("merging"));
 
     await mergeTags.mutateAsync(
       {
         tagIds: selectedTags,
-        newTagName,
+        newTagName: trimmedTagName,
       },
       {
         onSettled: (data, error) => {
+          setSubmitLoader(false);
           toast.dismiss(load);
 
           if (error) {
@@ -41,7 +45,7 @@ export default function MergeTagsModal({
           } else {
             setSelectedTags([]);
             onClose();
-            toast.success(t("deleted"));
+            toast.success(t("updated"));
           }
         },
       }
@@ -50,26 +54,50 @@ export default function MergeTagsModal({
 
   return (
     <Modal toggleModal={onClose}>
-      <p className="text-xl font-thin">
-        {t("merge_count_tags", { count: selectedTags.length })}
-      </p>
-
-      <Separator className="my-3" />
-
-      <div className="flex flex-col gap-3">
-        <p>{t("rename_tag_instruction")}</p>
-
-        <TextInput
-          value={newTagName}
-          onChange={(e) => setNewTagName(e.target.value)}
-          placeholder={t("tag_name_placeholder")}
-        />
-
-        <Button className="ml-auto" variant="primary" onClick={merge}>
-          <i className="bi-intersect text-xl" />
-          {t("merge_tags")}
-        </Button>
-      </div>
+      <GlazeModalFrame
+        title={t("merge_count_tags", { count: selectedTags.length })}
+        description={t("rename_tag_instruction")}
+        icon="bi-intersect"
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => onClose()}
+              disabled={submitLoader}
+            >
+              {t("cancel")}
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              onClick={merge}
+              disabled={submitLoader || !newTagName.trim()}
+            >
+              <i className="bi-intersect" aria-hidden="true" />
+              {t("merge_tags")}
+            </Button>
+          </>
+        }
+      >
+        <div className="rounded-xl border border-base-300 bg-base-200/50 p-3">
+          <p className="mb-2 text-xs font-medium text-base-content/60">
+            {t("tag")}
+          </p>
+          <TextInput
+            value={newTagName}
+            onChange={(e) => setNewTagName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                merge();
+              }
+            }}
+            placeholder={t("tag_name_placeholder")}
+            className="bg-base-100"
+          />
+        </div>
+      </GlazeModalFrame>
     </Modal>
   );
 }

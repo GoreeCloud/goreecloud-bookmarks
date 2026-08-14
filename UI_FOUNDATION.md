@@ -164,6 +164,14 @@ The interface should feel like a focused private library rather than an administ
     - Preserves viewer/contributor/admin permission semantics and read-only team presentation for non-managing/public contexts.
     - Prevents blank member-add submissions, adds clearer touch/accessibility targets, uses stable keyed member rows, and avoids mutating collection member state while sorting for display.
 
+30. Tag merging and invitations
+    - Aligns `MergeTagsModal.tsx` with `GlazeModalFrame`, trims the destination tag name, blocks blank submissions, and prevents duplicate submission while merging.
+    - Preserves the existing merge mutation and selected-tag cleanup while replacing the misleading deletion success feedback with the existing updated-state feedback.
+    - Aligns `InviteModal.tsx` with the Glaze hierarchy, normalizes the required email/username value, and adds explicit cancel/send actions with loading-aware state.
+    - Preserves the existing invitation mutation and member-onboarding sign-in flow.
+    - Removes Linkwarden automatic seat-billing, seat-pricing, and Linkwarden billing-documentation copy from the GoreeCloud product surface.
+    - Shows email-specific invitation guidance only when an email provider is configured.
+
 ## Non-goals for this foundation
 
 - No backend, database, API, authentication, or authorization changes.
@@ -178,7 +186,7 @@ The interface should feel like a focused private library rather than an administ
 
 Continue with:
 
-- Account, administration, import/export, merge, and other remaining secondary modal content that has not yet adopted the shared Glaze hierarchy.
+- Account, administration, import/export, token-management, and other remaining secondary modal content that has not yet adopted the shared Glaze hierarchy.
 - Empty-state consistency beyond the completed dashboard/search/capture/collection/tag surfaces.
 - Broader manual responsive and light/dark visual acceptance on representative phone, tablet, laptop, and desktop widths.
 - Firefox extension visual alignment after the web application shell stabilizes.
