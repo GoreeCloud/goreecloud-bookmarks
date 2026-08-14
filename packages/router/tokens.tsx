@@ -39,7 +39,7 @@ const useAddToken = () => {
       return data.response;
     },
     onSuccess: (data) => {
-      queryClient.setQueryData(["tokens"], (oldData: AccessToken[]) => [
+      queryClient.setQueryData<AccessToken[]>(["tokens"], (oldData = []) => [
         ...oldData,
         data.token,
       ]);
@@ -62,8 +62,8 @@ const useRevokeToken = () => {
       return data.response;
     },
     onSuccess: (data, variables) => {
-      queryClient.setQueryData(["tokens"], (oldData: AccessToken[]) =>
-        oldData.filter((token: Partial<AccessToken>) => token.id !== variables)
+      queryClient.setQueryData<AccessToken[]>(["tokens"], (oldData = []) =>
+        oldData.filter((token) => token.id !== variables)
       );
     },
   });
