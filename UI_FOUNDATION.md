@@ -172,9 +172,16 @@ The interface should feel like a focused private library rather than an administ
     - Removes Linkwarden automatic seat-billing, seat-pricing, and Linkwarden billing-documentation copy from the GoreeCloud product surface.
     - Shows email-specific invitation guidance only when an email provider is configured.
 
+31. Access-token management
+    - Aligns access-token creation and revocation with `GlazeModalFrame`, including clear expiry selection, explicit cancel/create/revoke actions, and a one-time secret presentation optimized for safe copying.
+    - Preserves the existing seven-day default and all existing 7/30/60/90-day and no-expiration choices.
+    - Hardens `PostTokenSchema` so access-token names are trimmed, must contain at least one non-whitespace character, and retain the existing 50-character maximum.
+    - Adds regression coverage for blank names, whitespace-only names, trimming behavior, the seven-day expiry value, and the name-length limit.
+    - Types token creation against `PostTokenSchemaType` rather than the broader Prisma `AccessToken` model and makes token cache updates safe when the list has not yet been loaded.
+    - Preserves token generation, JWT lifetime calculation, uniqueness checks, revocation behavior, and the one-time secret response contract.
+
 ## Non-goals for this foundation
 
-- No backend, database, API, authentication, or authorization changes.
 - No route changes.
 - No bookmark, collection, tag, preservation, search-query, or sharing data-model changes.
 - No new metadata-fetching service for the capture modal.
@@ -186,11 +193,11 @@ The interface should feel like a focused private library rather than an administ
 
 Continue with:
 
-- Account, administration, import/export, token-management, and other remaining secondary modal content that has not yet adopted the shared Glaze hierarchy.
+- Account, administration, import/export, and other remaining secondary modal content that has not yet adopted the shared Glaze hierarchy.
 - Empty-state consistency beyond the completed dashboard/search/capture/collection/tag surfaces.
 - Broader manual responsive and light/dark visual acceptance on representative phone, tablet, laptop, and desktop widths.
 - Firefox extension visual alignment after the web application shell stabilizes.
 
 ## Validation
 
-Every code-bearing head of these Glaze UI branches must pass the PostgreSQL-backed GoreeCloud test/build workflow and inherited Playwright login regression suite before it is considered for merge into the identity branch. Broader responsive, visual, keyboard, touch, and interaction testing remains required before any production release.
+Every code-bearing head of these Glaze UI and security-stability branches must pass the PostgreSQL-backed GoreeCloud test/build workflow and inherited Playwright login regression suite before it is considered for merge into the identity branch. Broader responsive, visual, keyboard, touch, and interaction testing remains required before any production release.

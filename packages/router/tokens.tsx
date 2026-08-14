@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AccessToken } from "@linkwarden/prisma/client";
+import { PostTokenSchemaType } from "@linkwarden/lib/schemaValidation";
 import { useSession } from "next-auth/react";
 
 const useTokens = () => {
@@ -23,7 +24,7 @@ const useAddToken = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (body: Partial<AccessToken>) => {
+    mutationFn: async (body: PostTokenSchemaType) => {
       const response = await fetch("/api/v1/tokens", {
         body: JSON.stringify(body),
         method: "POST",
@@ -38,7 +39,7 @@ const useAddToken = () => {
       return data.response;
     },
     onSuccess: (data) => {
-      queryClient.setQueryData(["tokens"], (oldData: AccessToken[]) => [
+      queryClient.setQueryData<AccessToken[]>(["tokens"], (oldData = []) => [
         ...oldData,
         data.token,
       ]);
@@ -61,8 +62,8 @@ const useRevokeToken = () => {
       return data.response;
     },
     onSuccess: (data, variables) => {
-      queryClient.setQueryData(["tokens"], (oldData: AccessToken[]) =>
-        oldData.filter((token: Partial<AccessToken>) => token.id !== variables)
+      queryClient.setQueryData<AccessToken[]>(["tokens"], (oldData = []) =>
+        oldData.filter((token) => token.id !== variables)
       );
     },
   });
