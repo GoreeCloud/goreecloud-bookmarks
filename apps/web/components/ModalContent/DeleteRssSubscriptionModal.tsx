@@ -50,7 +50,7 @@ export default function DeleteRssSubscriptionModal({
   return (
     <Modal toggleModal={onClose}>
       <GlazeModalFrame
-        title={t("delete_rss_subscription")}
+        title={t("rss_subscriptions")}
         description={t("rss_deletion_confirmation")}
         icon="bi-rss"
         tone="destructive"
