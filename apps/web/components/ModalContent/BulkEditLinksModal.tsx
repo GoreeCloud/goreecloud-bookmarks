@@ -126,13 +126,8 @@ export default function BulkEditLinksModal({ onClose }: Props) {
             checked={removePreviousTags}
             onChange={(e) => setRemovePreviousTags(e.target.checked)}
           />
-          <span className="min-w-0">
-            <span className="block font-medium text-base-content">
-              {t("remove_previous_tags")}
-            </span>
-            <span className="mt-0.5 block text-xs leading-5 text-base-content/60">
-              {t("add_tags")}
-            </span>
+          <span className="block font-medium text-base-content">
+            {t("remove_previous_tags")}
           </span>
         </label>
       </GlazeModalFrame>
