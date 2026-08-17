@@ -5,7 +5,7 @@ import Modal from "./Modal";
 import { Separator } from "./ui/separator";
 
 type Props = {
-  toggleModal: () => void;
+  toggleModal: (open: boolean) => void;
   className?: string;
   children: ReactNode;
   title: string;
@@ -24,6 +24,8 @@ export default function ConfirmationModal({
   const { t } = useTranslation();
   const [isConfirming, setIsConfirming] = useState(false);
 
+  const closeModal = () => toggleModal(false);
+
   const handleConfirm = async () => {
     if (isConfirming) return;
 
@@ -31,7 +33,7 @@ export default function ConfirmationModal({
 
     try {
       await onConfirmed();
-      toggleModal();
+      closeModal();
     } finally {
       setIsConfirming(false);
     }
@@ -39,7 +41,7 @@ export default function ConfirmationModal({
 
   return (
     <Modal
-      toggleModal={toggleModal}
+      toggleModal={closeModal}
       className={className}
       dismissible={dismissible && !isConfirming}
     >
@@ -55,7 +57,7 @@ export default function ConfirmationModal({
           <Button
             variant="ghost"
             className="w-full hover:bg-base-200 sm:w-auto"
-            onClick={toggleModal}
+            onClick={closeModal}
             disabled={isConfirming}
           >
             {t("cancel")}
