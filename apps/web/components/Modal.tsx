@@ -43,14 +43,14 @@ export default function Modal({
         dismissible={dismissible}
       >
         <Drawer.Portal>
-          <Drawer.Overlay className="fixed inset-0 bg-black/40 z-40" />
-          <Drawer.Content className="flex flex-col rounded-t-xl h-[90%] mt-24 fixed bottom-0 left-0 right-0 z-50">
+          <Drawer.Overlay className="fixed inset-0 z-40 bg-black/45 backdrop-blur-[2px]" />
+          <Drawer.Content className="fixed bottom-0 left-0 right-0 z-50 mt-24 flex h-[90%] flex-col rounded-t-3xl outline-none">
             <div
-              className="p-4 bg-base-100 rounded-t-xl flex-1 border-neutral-content border-t overflow-y-auto"
+              className="flex-1 overflow-y-auto rounded-t-3xl border-t border-base-300 bg-base-100 px-4 pb-5 pt-3 shadow-2xl"
               data-testid="mobile-modal-container"
             >
               <div
-                className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-neutral mb-5"
+                className="mx-auto mb-5 h-1.5 w-12 flex-shrink-0 rounded-full bg-base-content/20"
                 data-testid="mobile-modal-slider"
               />
 
@@ -63,17 +63,15 @@ export default function Modal({
   } else {
     return ReactDOM.createPortal(
       <div
-        className="overflow-y-auto pt-2 sm:py-2 fixed top-0 bottom-0 right-0 left-0 bg-black bg-opacity-10 backdrop-blur-sm flex justify-center items-center fade-in z-40"
+        className="fade-in fixed inset-0 z-40 flex items-center justify-center overflow-y-auto bg-black/35 px-4 py-6 backdrop-blur-sm"
         data-testid="modal-outer"
       >
         <ClickAwayHandler
           onClickOutside={() => dismissible && toggleModal()}
-          className={`w-full mt-auto sm:m-auto sm:w-11/12 sm:max-w-xl ${
-            className || ""
-          }`}
+          className={`m-auto w-full sm:w-11/12 sm:max-w-xl ${className || ""}`}
         >
           <div
-            className="slide-up mt-auto sm:m-auto relative border-neutral-content rounded-t-xl sm:rounded-xl border-t sm:border shadow-xl p-5 bg-base-100 overflow-y-auto sm:overflow-y-visible"
+            className="slide-up relative m-auto overflow-y-auto rounded-2xl border border-base-300 bg-base-100 p-5 shadow-2xl sm:overflow-y-visible"
             data-testid="modal-container"
           >
             {dismissible && !hideCloseButton && (
@@ -81,10 +79,11 @@ export default function Modal({
                 variant="ghost"
                 size="icon"
                 onClick={toggleModal as MouseEventHandler<HTMLButtonElement>}
-                className="absolute top-4 right-3 z-10 rounded-full"
+                className="absolute right-3 top-3 z-10 h-10 w-10 rounded-full text-base-content/60 hover:bg-base-200 hover:text-base-content"
+                aria-label="Close dialog"
               >
                 <i
-                  className="bi-x text-neutral text-xl"
+                  className="bi-x text-xl"
                   data-testid="close-modal-button"
                 />
               </Button>

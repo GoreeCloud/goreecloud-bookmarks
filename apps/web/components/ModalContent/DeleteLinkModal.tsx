@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useTranslation } from "next-i18next";
 import { useDeleteLink } from "@linkwarden/router/links";
 import toast from "react-hot-toast";
-import { Separator } from "../ui/separator";
+import GlazeModalFrame from "./GlazeModalFrame";
 
 type Props = {
   onClose: Function;
@@ -39,25 +39,37 @@ export default function DeleteLinkModal({ onClose, activeLink }: Props) {
 
   return (
     <Modal toggleModal={onClose}>
-      <p className="text-xl font-thin text-red-500">{t("delete_link")}</p>
-
-      <Separator className="my-3" />
-
-      <div className="flex flex-col gap-3">
+      <GlazeModalFrame
+        title={t("delete_link")}
+        icon="bi-trash"
+        tone="destructive"
+        footer={
+          <>
+            <Button type="button" variant="ghost" onClick={() => onClose()}>
+              {t("cancel")}
+            </Button>
+            <Button type="button" variant="destructive" onClick={submit}>
+              <i className="bi-trash" />
+              {t("delete")}
+            </Button>
+          </>
+        }
+      >
         <p>{t("link_deletion_confirmation_message")}</p>
 
-        <div role="alert" className="alert alert-info">
-          <i className="bi-info-circle text-xl" />
+        <div
+          role="note"
+          className="flex items-start gap-3 rounded-xl border border-base-300 bg-base-200/60 p-3"
+        >
+          <i
+            className="bi-info-circle mt-0.5 text-base text-primary"
+            aria-hidden="true"
+          />
           <span>
             <b>{t("tip")}:</b> {t("shift_key_tip")}
           </span>
         </div>
-
-        <Button className="ml-auto" variant="destructive" onClick={submit}>
-          <i className="bi-trash text-xl" />
-          {t("delete")}
-        </Button>
-      </div>
+      </GlazeModalFrame>
     </Modal>
   );
 }

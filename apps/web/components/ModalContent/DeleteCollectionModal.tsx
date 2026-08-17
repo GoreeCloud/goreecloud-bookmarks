@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useTranslation } from "next-i18next";
 import { useDeleteCollection } from "@linkwarden/router/collections";
 import toast from "react-hot-toast";
-import { Separator } from "../ui/separator";
+import GlazeModalFrame from "./GlazeModalFrame";
 
 type Props = {
   onClose: Function;
@@ -39,20 +39,37 @@ export default function DeleteCollectionModal({
     router.push("/collections");
   };
 
+  const canDelete = permissions === true;
+
   return (
     <Modal toggleModal={onClose}>
-      <p className="text-xl font-thin text-red-500">
-        {permissions === true ? t("delete_collection") : t("leave_collection")}
-      </p>
-
-      <Separator className="my-3" />
-
-      <div className="flex flex-col gap-3">
-        {permissions === true ? (
+      <GlazeModalFrame
+        title={canDelete ? t("delete_collection") : t("leave_collection")}
+        icon={canDelete ? "bi-folder-x" : "bi-box-arrow-right"}
+        tone={canDelete ? "destructive" : "default"}
+        footer={
           <>
-            {t("collection_deletion_prompt")}
-            <div role="alert" className="alert alert-warning">
-              <i className="bi-exclamation-triangle text-xl"></i>
+            <Button type="button" variant="ghost" onClick={() => onClose()}>
+              {t("cancel")}
+            </Button>
+            <Button type="button" onClick={submit} variant="destructive">
+              <i className={canDelete ? "bi-trash" : "bi-box-arrow-right"} />
+              {canDelete ? t("delete") : t("leave")}
+            </Button>
+          </>
+        }
+      >
+        {canDelete ? (
+          <>
+            <p>{t("collection_deletion_prompt")}</p>
+            <div
+              role="alert"
+              className="flex items-start gap-3 rounded-xl border border-warning/25 bg-warning/10 p-3"
+            >
+              <i
+                className="bi-exclamation-triangle mt-0.5 text-base text-warning"
+                aria-hidden="true"
+              />
               <span>
                 <b>{t("warning")}: </b>
                 {t("deletion_warning")}
@@ -62,12 +79,7 @@ export default function DeleteCollectionModal({
         ) : (
           <p>{t("leave_prompt")}</p>
         )}
-
-        <Button onClick={submit} variant="destructive" className="ml-auto">
-          <i className="bi-trash text-xl"></i>
-          {permissions === true ? t("delete") : t("leave")}
-        </Button>
-      </div>
+      </GlazeModalFrame>
     </Modal>
   );
 }
