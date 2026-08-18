@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "product": "GoreeCloud Bookmarks",
+  "model": "single unified cross-device bookmark tree",
+  "clients": ["desktop", "mobile", "tablet", "web"],
+  "root": {
+    "id": "root",
+    "label": "Bookmarks",
+    "device_specific": false,
+    "platform_specific": false,
+    "display_name_in_goreecloud_clients": "GoreeCloud Bookmarks"
+  },
+  "hierarchy": {
+    "folders": true,
+    "nested_subfolders": true,
+    "ordering": true,
+    "move_between_folders": true
+  },
+  "prohibited_roots": ["Mobile Bookmarks", "Bookmarks Toolbar", "Bookmarks Menu", "Other Bookmarks"],
+  "import": {
+    "accept_legacy_sources": true,
+    "materialize_legacy_roots_as_structural_roots": false,
+    "convert_legacy_roots_to_normal_folders": true,
+    "preserve_hierarchy": true,
+    "preserve_order": true,
+    "explicit_user_action_required": true
+  },
+  "sync": {
+    "shared_tree_for_all_signed_in_clients": true,
+    "preserve_hierarchy": true,
+    "preserve_order": true,
+    "offline_changes_queue": true,
+    "deterministic_conflict_handling_required": true
+  },
+  "browser_relationship": {
+    "signed_out_browser_store": "Local Bookmarks",
+    "signed_in_browser_store": "GoreeCloud Bookmarks",
+    "automatic_local_upload_on_sign_in": false,
+    "explicit_import_or_move_required": true
+  },
+  "production_approved": false
+}

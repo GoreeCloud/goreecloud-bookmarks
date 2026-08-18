@@ -1,0 +1,21 @@
+import fs from 'node:fs';
+
+const path = new URL('../docs/architecture/unified-bookmarks.json', import.meta.url);
+const data = JSON.parse(fs.readFileSync(path, 'utf8'));
+const forbidden = new Set(['Mobile Bookmarks','Bookmarks Toolbar','Bookmarks Menu','Other Bookmarks']);
+const fail = (m) => { throw new Error(m); };
+if (data.schema_version !== 1) fail('schema_version must be 1');
+if (data.product !== 'GoreeCloud Bookmarks') fail('product identity mismatch');
+if (data.model !== 'single unified cross-device bookmark tree') fail('unified tree model required');
+if (new Set(data.clients).size !== 4 || !['desktop','mobile','tablet','web'].every(x => data.clients.includes(x))) fail('all client classes required');
+if (data.root?.device_specific !== false || data.root?.platform_specific !== false) fail('root must not be device/platform specific');
+if (new Set(data.prohibited_roots).size !== forbidden.size || ![...forbidden].every(x => data.prohibited_roots.includes(x))) fail('legacy Firefox roots must be prohibited');
+if (data.hierarchy?.folders !== true || data.hierarchy?.nested_subfolders !== true || data.hierarchy?.ordering !== true) fail('folder hierarchy and ordering required');
+if (data.import?.accept_legacy_sources !== true || data.import?.materialize_legacy_roots_as_structural_roots !== false || data.import?.convert_legacy_roots_to_normal_folders !== true) fail('legacy imports must become normal folders, never structural roots');
+if (data.import?.preserve_hierarchy !== true || data.import?.preserve_order !== true || data.import?.explicit_user_action_required !== true) fail('legacy import preservation/consent contract incomplete');
+if (data.sync?.shared_tree_for_all_signed_in_clients !== true || data.sync?.preserve_hierarchy !== true || data.sync?.offline_changes_queue !== true) fail('cross-device sync contract incomplete');
+if (data.browser_relationship?.signed_out_browser_store !== 'Local Bookmarks') fail('signed-out Browser store must be local');
+if (data.browser_relationship?.signed_in_browser_store !== 'GoreeCloud Bookmarks') fail('signed-in Browser store must be GoreeCloud Bookmarks');
+if (data.browser_relationship?.automatic_local_upload_on_sign_in !== false || data.browser_relationship?.explicit_import_or_move_required !== true) fail('local bookmarks must not upload automatically');
+if (data.production_approved !== false) fail('source contract cannot approve production');
+console.log('Unified GoreeCloud Bookmarks architecture contract passed');
