@@ -5,7 +5,7 @@ import postLink from "@/lib/api/controllers/links/postLink";
 type ExtensionCaptureRequest = {
   title?: unknown;
   url?: unknown;
-  collection?: unknown;
+  collectionId?: unknown;
   tags?: unknown;
   note?: unknown;
 };
@@ -15,6 +15,13 @@ function cleanString(value: unknown, maxLength: number): string | null {
   const cleaned = value.trim();
   if (!cleaned) return null;
   return cleaned.slice(0, maxLength);
+}
+
+function cleanCollectionId(value: unknown): number | undefined {
+  if (value === null || value === undefined || value === "") return undefined;
+  const parsed = typeof value === "number" ? value : Number(value);
+  if (!Number.isSafeInteger(parsed) || parsed <= 0) return undefined;
+  return parsed;
 }
 
 function cleanTags(value: unknown): string[] {
@@ -50,12 +57,21 @@ export default async function extensionCapture(
   const body = (req.body ?? {}) as ExtensionCaptureRequest;
   const url = cleanString(body.url, 8192);
   const title = cleanString(body.title, 1000);
-  const collection = cleanString(body.collection, 255);
+  const collectionId = cleanCollectionId(body.collectionId);
   const note = cleanString(body.note, 10000);
   const tags = cleanTags(body.tags);
 
   if (!url) {
     return res.status(400).json({ response: "A bookmark URL is required." });
+  }
+
+  if (
+    body.collectionId !== null &&
+    body.collectionId !== undefined &&
+    body.collectionId !== "" &&
+    collectionId === undefined
+  ) {
+    return res.status(400).json({ response: "The collection ID is invalid." });
   }
 
   let parsedUrl: URL;
@@ -65,7 +81,7 @@ export default async function extensionCapture(
     return res.status(400).json({ response: "The bookmark URL is invalid." });
   }
 
-  if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+  if (!["http:", "https:"].includes(parsedUrl.protocol)) {
     return res.status(400).json({
       response: "Only HTTP and HTTPS bookmark URLs are supported.",
     });
@@ -76,7 +92,7 @@ export default async function extensionCapture(
       url: parsedUrl.toString(),
       name: title || parsedUrl.toString(),
       description: note || undefined,
-      collection: collection ? { name: collection } : undefined,
+      collection: collectionId ? { id: collectionId } : undefined,
       tags: tags.map((name) => ({ name })),
     },
     user.id
