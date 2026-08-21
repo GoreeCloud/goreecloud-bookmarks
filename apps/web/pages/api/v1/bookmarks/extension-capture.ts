@@ -26,14 +26,11 @@ function cleanCollectionId(value: unknown): number | undefined {
 
 function cleanTags(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
-  return [
-    ...new Set(
-      value
-        .filter((tag): tag is string => typeof tag === "string")
-        .map((tag) => tag.trim())
-        .filter(Boolean)
-    ),
-  ].slice(0, 30);
+  const normalized = value
+    .filter((tag): tag is string => typeof tag === "string")
+    .map((tag) => tag.trim())
+    .filter(Boolean);
+  return Array.from(new Set(normalized)).slice(0, 30);
 }
 
 export default async function extensionCapture(
