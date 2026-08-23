@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "service": "GoreeCloud Bookmarks",
+  "authoritative_for": [
+    "synchronized bookmarks",
+    "saved pages",
+    "collections",
+    "tags",
+    "read later",
+    "preservation metadata"
+  ],
+  "native_browser_capture": {
+    "endpoint": "/api/v1/bookmarks/capture",
+    "method": "POST",
+    "authentication": "existing authenticated GoreeCloud Bookmarks session or supported revocable bearer token",
+    "required_fields": ["url"],
+    "optional_fields": ["title", "collectionId", "tags", "note"],
+    "url_protocols": ["http", "https"],
+    "collection_authorization": "existing postLink/setCollection authorization path",
+    "duplicate_behavior": "preserve existing postLink duplicate-link behavior",
+    "limits": {
+      "url_characters": 8192,
+      "title_characters": 1000,
+      "note_characters": 10000,
+      "tags": 30
+    }
+  },
+  "compatibility_aliases": [
+    "/api/v1/bookmarks/extension-capture"
+  ],
+  "browser_is_authoritative_store": false,
+  "silent_local_bookmark_upload_allowed": false,
+  "production_approved": false
+}
