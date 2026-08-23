@@ -8,6 +8,11 @@ interface RssSubscriptionWithCollectionName extends RssSubscription {
   };
 }
 
+type RssSubscriptionCreateInput = Pick<RssSubscription, "name" | "url"> & {
+  collectionId?: number;
+  collectionName?: string;
+};
+
 const useRssSubscriptions = () => {
   const { status } = useSession();
 
@@ -28,7 +33,7 @@ const useAddRssSubscription = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (body: Partial<RssSubscription>) => {
+    mutationFn: async (body: RssSubscriptionCreateInput) => {
       const response = await fetch("/api/v1/rss", {
         body: JSON.stringify(body),
         method: "POST",
@@ -42,7 +47,7 @@ const useAddRssSubscription = () => {
 
       return data.response;
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["rss-subscriptions"] });
     },
   });

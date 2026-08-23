@@ -5,7 +5,7 @@ import { useTranslation } from "next-i18next";
 import toast from "react-hot-toast";
 import { RssSubscription } from "@linkwarden/prisma/client";
 import { useDeleteRssSubscription } from "@linkwarden/router/rss";
-import { Separator } from "../ui/separator";
+import GlazeModalFrame from "./GlazeModalFrame";
 
 type Props = {
   onClose: Function;
@@ -19,17 +19,22 @@ export default function DeleteRssSubscriptionModal({
   const { t } = useTranslation();
   const [subscription, setSubscription] =
     useState<RssSubscription>(rssSubscription);
+  const [submitLoader, setSubmitLoader] = useState(false);
   const deleteRssSubscription = useDeleteRssSubscription();
 
   useEffect(() => {
     setSubscription(rssSubscription);
-  }, []);
+  }, [rssSubscription]);
 
   const submit = async () => {
+    if (submitLoader) return;
+
+    setSubmitLoader(true);
     const load = toast.loading(t("deleting"));
 
     await deleteRssSubscription.mutateAsync(subscription.id, {
       onSettled: (_, error) => {
+        setSubmitLoader(false);
         toast.dismiss(load);
 
         if (error) {
@@ -44,18 +49,42 @@ export default function DeleteRssSubscriptionModal({
 
   return (
     <Modal toggleModal={onClose}>
-      <p className="text-xl font-thin text-red-500">{t("delete_link")}</p>
-
-      <Separator className="my-3" />
-
-      <div className="flex flex-col gap-3">
-        <p>{t("rss_deletion_confirmation")}</p>
-
-        <Button className="ml-auto" variant="destructive" onClick={submit}>
-          <i className="bi-trash text-xl" />
-          {t("delete")}
-        </Button>
-      </div>
+      <GlazeModalFrame
+        title={t("rss_subscriptions")}
+        description={t("rss_deletion_confirmation")}
+        icon="bi-rss"
+        tone="destructive"
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => onClose()}
+              disabled={submitLoader}
+            >
+              {t("cancel")}
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={submit}
+              disabled={submitLoader}
+            >
+              <i className="bi-trash" aria-hidden="true" />
+              {t("delete")}
+            </Button>
+          </>
+        }
+      >
+        <div className="rounded-xl border border-error/20 bg-error/5 p-3">
+          <p className="text-xs font-medium text-base-content/60">
+            {t("name")}
+          </p>
+          <p className="mt-1 break-words font-medium text-base-content">
+            {subscription.name}
+          </p>
+        </div>
+      </GlazeModalFrame>
     </Modal>
   );
 }
