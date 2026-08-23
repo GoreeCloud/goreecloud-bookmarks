@@ -1,25 +1,53 @@
-name: Create and publish a container image on release
+name: GoreeCloud Bookmarks RC Container Release
 
 on:
   workflow_dispatch:
   push:
-    tags:
-      - "*"
+    branches:
+      - main
+    paths:
+      - "release/rc.json"
+      - "release/RELEASE_NOTES_*.md"
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: goreecloud/goreecloud-bookmarks
 
 jobs:
-  build-and-push-image:
+  build-and-publish-rc:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       packages: write
 
     steps:
-      - name: Checkout repository
+      - name: Checkout exact release revision
         uses: actions/checkout@v4
+
+      - name: Validate release-candidate manifest
+        id: rc
+        shell: bash
+        run: |
+          set -euo pipefail
+          jq -e '
+            .schema_version == 1 and
+            .product == "GoreeCloud Bookmarks" and
+            .lifecycle == "release-candidate" and
+            .production_approved == false and
+            .stable == false and
+            .release_after_merge == true and
+            (.version | test("^[0-9]+\\.[0-9]+\\.[0-9]+-gc\\.[0-9]+-rc\\.[0-9]+$")) and
+            (.artifact.type == "oci-image") and
+            (.artifact.registry == "ghcr.io") and
+            (.artifact.repository == "goreecloud/goreecloud-bookmarks") and
+            (.artifact.tag == .version)
+          ' release/rc.json >/dev/null
+          version="$(jq -r '.version' release/rc.json)"
+          notes="release/RELEASE_NOTES_${version}.md"
+          test -f "$notes"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "notes=$notes" >> "$GITHUB_OUTPUT"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -27,20 +55,30 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to the Container registry
+      - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata (tags, labels) for Docker
+      - name: Extract immutable RC metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ steps.rc.outputs.version }}
+          labels: |
+            org.opencontainers.image.title=GoreeCloud Bookmarks
+            org.opencontainers.image.version=${{ steps.rc.outputs.version }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            io.goreecloud.lifecycle=release-candidate
+            io.goreecloud.production-approved=false
 
-      - name: Build and push Docker image
+      - name: Build and push multi-platform RC image
+        id: build
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -48,3 +86,70 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          sbom: true
+          provenance: mode=max
+
+      - name: Create immutable release evidence
+        shell: bash
+        env:
+          VERSION: ${{ steps.rc.outputs.version }}
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          set -euo pipefail
+          jq -n \
+            --arg product "GoreeCloud Bookmarks" \
+            --arg version "$VERSION" \
+            --arg source_sha "$GITHUB_SHA" \
+            --arg image "${REGISTRY}/${IMAGE_NAME}:${VERSION}" \
+            --arg digest "$DIGEST" \
+            --arg run_id "$GITHUB_RUN_ID" \
+            '{
+              schema_version: 1,
+              product: $product,
+              lifecycle: "release-candidate",
+              version: $version,
+              source_sha: $source_sha,
+              image: $image,
+              digest: $digest,
+              platforms: ["linux/amd64", "linux/arm64"],
+              workflow_run_id: $run_id,
+              sbom_requested: true,
+              provenance_requested: true,
+              production_approved: false,
+              stable: false
+            }' > release-evidence.json
+          sha256sum release-evidence.json > release-evidence.json.sha256
+
+      - name: Create GitHub prerelease and immutable tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.rc.outputs.version }}
+          NOTES: ${{ steps.rc.outputs.notes }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="bookmarks-${VERSION}"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Release $tag already exists; refusing to rewrite published RC history." >&2
+            exit 1
+          fi
+          gh release create "$tag" \
+            --target "$GITHUB_SHA" \
+            --title "GoreeCloud Bookmarks ${VERSION}" \
+            --notes-file "$NOTES" \
+            --prerelease \
+            release-evidence.json \
+            release-evidence.json.sha256
+
+      - name: Record published identity
+        shell: bash
+        run: |
+          {
+            echo "### GoreeCloud Bookmarks RC published"
+            echo "- Version: ${{ steps.rc.outputs.version }}"
+            echo "- Source: $GITHUB_SHA"
+            echo "- Image: ${REGISTRY}/${IMAGE_NAME}:${{ steps.rc.outputs.version }}"
+            echo "- Digest: ${{ steps.build.outputs.digest }}"
+            echo "- Lifecycle: Release Candidate"
+            echo "- Production approved: false"
+          } >> "$GITHUB_STEP_SUMMARY"
