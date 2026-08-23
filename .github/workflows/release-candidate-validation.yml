@@ -1,0 +1,77 @@
+name: GoreeCloud Bookmarks Release Candidate Validation
+
+on:
+  pull_request:
+    paths:
+      - "release/**"
+      - ".github/workflows/release-container.yml"
+      - ".github/workflows/release-candidate-validation.yml"
+      - "Dockerfile"
+      - "apps/**"
+      - "packages/**"
+      - "yarn.lock"
+      - "package.json"
+
+permissions:
+  contents: read
+
+jobs:
+  validate-rc:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact candidate head
+        uses: actions/checkout@v4
+
+      - name: Validate RC identity and lifecycle
+        shell: bash
+        run: |
+          set -euo pipefail
+          jq -e '
+            .schema_version == 1 and
+            .product == "GoreeCloud Bookmarks" and
+            .lifecycle == "release-candidate" and
+            .production_approved == false and
+            .stable == false and
+            .release_after_merge == true and
+            (.version | test("^[0-9]+\\.[0-9]+\\.[0-9]+-gc\\.[0-9]+-rc\\.[0-9]+$")) and
+            (.artifact.type == "oci-image") and
+            (.artifact.registry == "ghcr.io") and
+            (.artifact.repository == "goreecloud/goreecloud-bookmarks") and
+            (.artifact.tag == .version) and
+            (.artifact.platforms == ["linux/amd64", "linux/arm64"])
+          ' release/rc.json >/dev/null
+          version="$(jq -r '.version' release/rc.json)"
+          test -f "release/RELEASE_NOTES_${version}.md"
+          grep -Fq 'Lifecycle: Release Candidate' "release/RELEASE_NOTES_${version}.md"
+          grep -Fq '`production_approved` remains false.' "release/RELEASE_NOTES_${version}.md"
+
+      - name: Validate release workflow safety boundaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'branches:' .github/workflows/release-container.yml
+          grep -Fq -- '- main' .github/workflows/release-container.yml
+          grep -Fq 'io.goreecloud.lifecycle=release-candidate' .github/workflows/release-container.yml
+          grep -Fq 'io.goreecloud.production-approved=false' .github/workflows/release-container.yml
+          grep -Fq 'sbom: true' .github/workflows/release-container.yml
+          grep -Fq 'provenance: mode=max' .github/workflows/release-container.yml
+          grep -Fq -- '--prerelease' .github/workflows/release-container.yml
+          ! grep -Eq '(^|[[:space:]])latest([[:space:]]|$|,)' .github/workflows/release-container.yml
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build RC container without publishing
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          platforms: linux/amd64
+          tags: goreecloud-bookmarks:rc-validation
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: State acceptance boundary
+        run: |
+          echo 'RC source and container packaging validation passed.'
+          echo 'No image was published, no deployment occurred, and production_approved remains false.'
