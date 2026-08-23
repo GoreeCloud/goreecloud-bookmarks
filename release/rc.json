@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "product": "GoreeCloud Bookmarks",
+  "version": "2.16.0-gc.1-rc.1",
+  "lifecycle": "release-candidate",
+  "upstream_baseline": "2.16.0",
+  "artifact": {
+    "type": "oci-image",
+    "registry": "ghcr.io",
+    "repository": "goreecloud/goreecloud-bookmarks",
+    "tag": "2.16.0-gc.1-rc.1",
+    "platforms": ["linux/amd64", "linux/arm64"]
+  },
+  "production_approved": false,
+  "stable": false,
+  "release_after_merge": true,
+  "notes": "First GoreeCloud Bookmarks application release candidate. Runtime, migration, backup/restore, multi-user, and signed Firefox integration acceptance remain separate gates."
+}
