@@ -1,4 +1,5 @@
 name: Check pull request source branch
+
 on:
   pull_request_target:
     types:
@@ -6,12 +7,28 @@ on:
       - reopened
       - synchronize
       - edited
+
+permissions:
+  contents: read
+
 jobs:
   check-branches:
+    if: github.base_ref == 'main'
     runs-on: ubuntu-latest
     steps:
-      - name: Check branches
-        if: github.head_ref != 'dev' && github.base_ref == 'main'
+      - name: Validate GoreeCloud source branch
+        env:
+          HEAD_REF: ${{ github.head_ref }}
         run: |
-          echo "Merge requests to main branch are only allowed from dev branch. Please rebase your changes to dev branch."
-          exit 1
+          set -euo pipefail
+
+          case "$HEAD_REF" in
+            dev|feature/*|fix/*|security/*|upstream-sync/*|release/*|agent/*|test/*|docs/*)
+              echo "Source branch '$HEAD_REF' follows the GoreeCloud branch model."
+              ;;
+            *)
+              echo "Pull requests to main must use dev or an approved GoreeCloud branch prefix:" >&2
+              echo "feature/, fix/, security/, upstream-sync/, release/, agent/, test/, or docs/." >&2
+              exit 1
+              ;;
+          esac
