@@ -157,6 +157,13 @@ The interface should feel like a focused private library rather than an administ
     - Replaces legacy alert styling in the touched flows with quieter semantic warning/note surfaces and adds explicit cancel actions.
     - Preserves existing mutations, collection permission distinctions, selection cleanup, toast behavior, post-delete routing, and responsive modal behavior.
 
+29. Bulk organization and collection sharing
+    - Aligns `BulkEditLinksModal.tsx` with `GlazeModalFrame`, using clear collection/tag organization panels and explicit cancel/save actions.
+    - Preserves bulk link mutation payloads, collection movement, tag addition, previous-tag removal, selection cleanup, and success/error handling.
+    - Aligns `EditCollectionSharingModal.tsx` with the same Glaze hierarchy for public visibility, shareable links, member addition, role management, removal, and role propagation to subcollections.
+    - Preserves viewer/contributor/admin permission semantics and read-only team presentation for non-managing/public contexts.
+    - Prevents blank member-add submissions, adds clearer touch/accessibility targets, uses stable keyed member rows, and avoids mutating collection member state while sorting for display.
+
 ## Non-goals for this foundation
 
 - No backend, database, API, authentication, or authorization changes.
@@ -171,11 +178,11 @@ The interface should feel like a focused private library rather than an administ
 
 Continue with:
 
-- Remaining bulk-edit, sharing, account, administration, import/export, and other secondary modal content that has not yet adopted the shared Glaze hierarchy.
+- Account, administration, import/export, merge, and other remaining secondary modal content that has not yet adopted the shared Glaze hierarchy.
 - Empty-state consistency beyond the completed dashboard/search/capture/collection/tag surfaces.
 - Broader manual responsive and light/dark visual acceptance on representative phone, tablet, laptop, and desktop widths.
 - Firefox extension visual alignment after the web application shell stabilizes.
 
 ## Validation
 
-Every code-bearing head of these Glaze UI branches must pass the GoreeCloud web build and inherited login regression suite before it is considered for merge into the identity branch. The pre-QA collections/tags head `6d939e5815a27ec23d00f94ae9a47b4152f8873d` passed both required GitHub Actions workflows. Broader responsive, visual, keyboard, touch, and interaction testing remains required before any production release.
+Every code-bearing head of these Glaze UI branches must pass the PostgreSQL-backed GoreeCloud test/build workflow and inherited Playwright login regression suite before it is considered for merge into the identity branch. Broader responsive, visual, keyboard, touch, and interaction testing remains required before any production release.

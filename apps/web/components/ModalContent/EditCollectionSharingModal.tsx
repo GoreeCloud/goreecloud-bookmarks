@@ -24,8 +24,7 @@ import {
   DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { User } from "@linkwarden/prisma/client";
-import { Separator } from "../ui/separator";
+import GlazeModalFrame from "./GlazeModalFrame";
 
 type Props = {
   onClose: Function;
@@ -37,56 +36,25 @@ export default function EditCollectionSharingModal({
   activeCollection,
 }: Props) {
   const { t } = useTranslation();
-
   const [collection, setCollection] =
     useState<CollectionIncludingMembersAndLinkCount>(activeCollection);
-
   const [propagateToSubcollections, setPropagateToSubcollections] =
     useState(false);
-
   const [submitLoader, setSubmitLoader] = useState(false);
-  const updateCollection = useUpdateCollection();
-
-  const submit = async () => {
-    if (!submitLoader) {
-      setSubmitLoader(true);
-      if (!collection) return null;
-
-      setSubmitLoader(true);
-
-      const load = toast.loading(t("updating_collection"));
-
-      await updateCollection.mutateAsync(
-        { ...collection, propagateToSubcollections },
-        {
-          onSettled: (data, error) => {
-            setSubmitLoader(false);
-            toast.dismiss(load);
-
-            if (error) {
-              toast.error(error.message);
-            } else {
-              onClose();
-              toast.success(t("updated"));
-            }
-          },
-        }
-      );
-    }
-  };
-
-  const { data: user } = useUser();
-  const permissions = usePermissions(collection.id as number);
-
-  const currentURL = new URL(document.URL);
-
-  const publicCollectionURL = `${currentURL.origin}/public/collections/${collection.id}`;
-
   const [memberIdentifier, setMemberIdentifier] = useState("");
-
   const [collectionOwner, setCollectionOwner] = useState<
     Partial<AccountSettings>
   >({});
+
+  const updateCollection = useUpdateCollection();
+  const { data: user } = useUser();
+  const permissions = usePermissions(collection.id as number);
+  const router = useRouter();
+  const isPublicRoute = router.pathname.startsWith("/public");
+  const canManageSharing = permissions === true && !isPublicRoute;
+
+  const currentURL = new URL(document.URL);
+  const publicCollectionURL = `${currentURL.origin}/public/collections/${collection.id}`;
 
   useEffect(() => {
     const fetchOwner = async () => {
@@ -95,9 +63,32 @@ export default function EditCollectionSharingModal({
     };
 
     fetchOwner();
-
     setCollection(activeCollection);
   }, []);
+
+  const submit = async () => {
+    if (submitLoader || !collection) return;
+
+    setSubmitLoader(true);
+    const load = toast.loading(t("updating_collection"));
+
+    await updateCollection.mutateAsync(
+      { ...collection, propagateToSubcollections },
+      {
+        onSettled: (data, error) => {
+          setSubmitLoader(false);
+          toast.dismiss(load);
+
+          if (error) {
+            toast.error(error.message);
+          } else {
+            onClose();
+            toast.success(t("updated"));
+          }
+        },
+      }
+    );
+  };
 
   const setMemberState = (newMember: Member) => {
     if (!collection) return null;
@@ -109,25 +100,56 @@ export default function EditCollectionSharingModal({
     setMemberIdentifier("");
   };
 
-  const router = useRouter();
-  const isPublicRoute = router.pathname.startsWith("/public") ? true : false;
+  const addMember = () => {
+    const identifier = memberIdentifier.trim().replace(/^@/, "");
+    if (!identifier) return;
+
+    addMemberToCollection(user as any, identifier, collection, setMemberState, t);
+  };
 
   return (
     <Modal toggleModal={onClose}>
-      <p className="text-xl font-thin">
-        {permissions === true && !isPublicRoute
-          ? t("share_and_collaborate")
-          : t("team")}
-      </p>
-
-      <Separator className="my-3" />
-
-      <div className="flex flex-col gap-3">
-        {permissions === true && !isPublicRoute && (
-          <div>
-            <p>{t("make_collection_public")}</p>
-
-            <label className="label cursor-pointer justify-start gap-2">
+      <GlazeModalFrame
+        title={canManageSharing ? t("share_and_collaborate") : t("team")}
+        icon="bi-people"
+        footer={
+          canManageSharing ? (
+            <>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => onClose()}
+                disabled={submitLoader}
+              >
+                {t("cancel")}
+              </Button>
+              <Button
+                type="button"
+                variant="primary"
+                onClick={submit}
+                disabled={submitLoader}
+              >
+                <i className="bi-check-lg" aria-hidden="true" />
+                {t("save_changes")}
+              </Button>
+            </>
+          ) : undefined
+        }
+      >
+        {canManageSharing && (
+          <section className="rounded-xl border border-base-300 bg-base-200/40 p-3">
+            <div className="flex items-start gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-base-300 bg-base-100 text-primary">
+                <i className="bi-globe2" aria-hidden="true" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-base-content">
+                  {t("make_collection_public")}
+                </p>
+                <p className="mt-0.5 text-xs leading-5 text-base-content/60">
+                  {t("make_collection_public_desc")}
+                </p>
+              </div>
               <input
                 type="checkbox"
                 checked={collection.isPublic}
@@ -137,36 +159,35 @@ export default function EditCollectionSharingModal({
                     isPublic: !collection.isPublic,
                   })
                 }
-                className="checkbox checkbox-primary"
+                className="checkbox checkbox-primary mt-1"
+                aria-label={t("make_collection_public_checkbox")}
               />
-              <span className="label-text">
-                {t("make_collection_public_checkbox")}
-              </span>
-            </label>
-
-            <p className="text-neutral text-sm">
-              {t("make_collection_public_desc")}
-            </p>
-          </div>
+            </div>
+          </section>
         )}
 
         {collection.isPublic && (
-          <div>
-            <p className="mb-2">{t("sharable_link")}</p>
-            <div className="w-full hide-scrollbar overflow-x-auto whitespace-nowrap rounded-md p-2 bg-base-200 border-neutral-content border flex items-center gap-2 justify-between">
-              {publicCollectionURL}
+          <section>
+            <p className="mb-2 text-xs font-medium text-base-content/60">
+              {t("sharable_link")}
+            </p>
+            <div className="flex w-full items-center justify-between gap-2 overflow-x-auto whitespace-nowrap rounded-xl border border-base-300 bg-base-200/50 p-2 pl-3">
+              <span className="min-w-0 overflow-hidden text-ellipsis text-xs">
+                {publicCollectionURL}
+              </span>
               <CopyButton text={publicCollectionURL} />
             </div>
-          </div>
+          </section>
         )}
 
-        {permissions === true && !isPublicRoute && (
-          <Separator className="my-3" />
-        )}
-
-        {permissions === true && !isPublicRoute && (
-          <>
-            <p>{t("members")}</p>
+        {canManageSharing && (
+          <section className="rounded-xl border border-base-300 p-3">
+            <div className="mb-3">
+              <p className="font-medium text-base-content">{t("members")}</p>
+              <p className="mt-0.5 text-xs text-base-content/60">
+                {t("add_member_placeholder")}
+              </p>
+            </div>
 
             <div className="flex items-center gap-2">
               <TextInput
@@ -174,126 +195,127 @@ export default function EditCollectionSharingModal({
                 className="bg-base-200"
                 placeholder={t("add_member_placeholder")}
                 onChange={(e) => setMemberIdentifier(e.target.value)}
-                onKeyDown={(e) =>
-                  e.key === "Enter" &&
-                  addMemberToCollection(
-                    user as any,
-                    memberIdentifier.replace(/^@/, ""),
-                    collection,
-                    setMemberState,
-                    t
-                  )
-                }
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addMember();
+                  }
+                }}
               />
 
               <Button
+                type="button"
                 variant="primary"
                 size="icon"
-                className="h-10 w-10"
-                onClick={() =>
-                  addMemberToCollection(
-                    user as any,
-                    memberIdentifier.replace(/^@/, ""),
-                    collection,
-                    setMemberState,
-                    t
-                  )
-                }
+                className="h-10 w-10 shrink-0"
+                onClick={addMember}
+                disabled={!memberIdentifier.trim()}
+                aria-label={t("members")}
               >
-                <i className="bi-person-add text-xl" />
+                <i className="bi-person-add text-lg" aria-hidden="true" />
               </Button>
             </div>
-          </>
+          </section>
         )}
 
         {collection?.members[0]?.user && (
-          <>
-            <div className="flex flex-col divide-y divide-neutral-content border border-neutral-content rounded-xl bg-base-200">
+          <section>
+            <p className="mb-2 text-xs font-medium text-base-content/60">
+              {t("team")}
+            </p>
+            <div className="overflow-hidden rounded-xl border border-base-300 bg-base-100">
               <div
-                className="relative p-3 bg-base-200 rounded-xl flex gap-2 justify-between"
+                className="flex items-center justify-between gap-3 bg-base-200/50 p-3"
                 title={`@${collectionOwner.username} is the owner of this collection`}
               >
-                <div className={"flex items-center justify-between w-full"}>
-                  <div className={"flex items-center"}>
-                    <div className={"shrink-0"}>
-                      <ProfilePhoto
-                        src={
-                          collectionOwner.image
-                            ? collectionOwner.image
-                            : undefined
-                        }
-                        name={collectionOwner.name}
-                      />
-                    </div>
-                    <div className={"grow ml-2"}>
-                      <p className="text-sm font-semibold">
-                        {collectionOwner.name}
-                      </p>
-                      <p className="text-xs text-neutral">
-                        @{collectionOwner.username}
-                      </p>
-                    </div>
+                <div className="flex min-w-0 items-center">
+                  <div className="shrink-0">
+                    <ProfilePhoto
+                      src={collectionOwner.image || undefined}
+                      name={collectionOwner.name}
+                    />
                   </div>
-                  <div>
-                    <p className="text-sm font-bold">{t("owner")}</p>
+                  <div className="ml-2 min-w-0">
+                    <p className="truncate text-sm font-semibold text-base-content">
+                      {collectionOwner.name}
+                    </p>
+                    <p className="truncate text-xs text-base-content/60">
+                      @{collectionOwner.username}
+                    </p>
                   </div>
                 </div>
+                <span className="rounded-full border border-base-300 bg-base-100 px-2.5 py-1 text-xs font-medium">
+                  {t("owner")}
+                </span>
               </div>
 
-              <Separator />
+              <div className="divide-y divide-base-300">
+                {[...collection.members]
+                  .sort((a, b) => (a.userId as number) - (b.userId as number))
+                  .map((member) => {
+                    const roleKey: "viewer" | "contributor" | "admin" =
+                      !member.canCreate &&
+                      !member.canUpdate &&
+                      !member.canDelete
+                        ? "viewer"
+                        : member.canCreate &&
+                            !member.canUpdate &&
+                            !member.canDelete
+                          ? "contributor"
+                          : "admin";
 
-              {collection.members
-                .sort((a, b) => (a.userId as number) - (b.userId as number))
-                .map((e) => {
-                  const roleKey: "viewer" | "contributor" | "admin" =
-                    !e.canCreate && !e.canUpdate && !e.canDelete
-                      ? "viewer"
-                      : e.canCreate && !e.canUpdate && !e.canDelete
-                        ? "contributor"
-                        : "admin";
+                    const handleRoleChange = (newRole: string) => {
+                      const updatedMember = {
+                        ...member,
+                        canCreate: newRole !== "viewer",
+                        canUpdate: newRole === "admin",
+                        canDelete: newRole === "admin",
+                      };
 
-                  const handleRoleChange = (newRole: string) => {
-                    const updatedMember = {
-                      ...e,
-                      canCreate: newRole !== "viewer",
-                      canUpdate: newRole === "admin",
-                      canDelete: newRole === "admin",
+                      setCollection({
+                        ...collection,
+                        members: collection.members.map((candidate) =>
+                          candidate.userId === member.userId
+                            ? updatedMember
+                            : candidate
+                        ),
+                      });
                     };
-                    setCollection({
-                      ...collection,
-                      members: collection.members.map((m) =>
-                        m.userId === e.userId ? updatedMember : m
-                      ),
-                    });
-                  };
 
-                  return (
-                    <>
+                    return (
                       <div
-                        key={e.userId}
-                        className="relative p-3 bg-base-200 rounded-xl flex gap-2 justify-between border-none"
+                        key={member.userId}
+                        className="flex items-center justify-between gap-3 p-3"
                       >
-                        <div className="flex items-center">
+                        <div className="flex min-w-0 items-center">
                           <ProfilePhoto
-                            src={e.user.image ? e.user.image : undefined}
-                            name={e.user.name}
+                            src={member.user.image || undefined}
+                            name={member.user.name}
                           />
-                          <div className="ml-2">
-                            <p className="text-sm font-semibold">
-                              {e.user.name}
+                          <div className="ml-2 min-w-0">
+                            <p className="truncate text-sm font-semibold text-base-content">
+                              {member.user.name}
                             </p>
-                            <p className="text-xs text-neutral">
-                              @{e.user.username}
+                            <p className="truncate text-xs text-base-content/60">
+                              @{member.user.username}
                             </p>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-2">
-                          {permissions === true && !isPublicRoute ? (
+                        <div className="flex shrink-0 items-center gap-1">
+                          {canManageSharing ? (
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-8">
-                                  {t(roleKey)} <i className="bi-chevron-down" />
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  className="h-9 rounded-lg px-2.5 text-xs"
+                                >
+                                  {t(roleKey)}
+                                  <i
+                                    className="bi-chevron-down text-xs"
+                                    aria-hidden="true"
+                                  />
                                 </Button>
                               </DropdownMenuTrigger>
 
@@ -304,7 +326,7 @@ export default function EditCollectionSharingModal({
                                 >
                                   <DropdownMenuRadioItem value="viewer">
                                     <div>
-                                      <p className="font-bold whitespace-nowrap">
+                                      <p className="whitespace-nowrap font-bold">
                                         {t("viewer")}
                                       </p>
                                       <p className="whitespace-nowrap">
@@ -315,7 +337,7 @@ export default function EditCollectionSharingModal({
 
                                   <DropdownMenuRadioItem value="contributor">
                                     <div>
-                                      <p className="font-bold whitespace-nowrap">
+                                      <p className="whitespace-nowrap font-bold">
                                         {t("contributor")}
                                       </p>
                                       <p className="whitespace-nowrap">
@@ -326,7 +348,7 @@ export default function EditCollectionSharingModal({
 
                                   <DropdownMenuRadioItem value="admin">
                                     <div>
-                                      <p className="font-bold whitespace-nowrap">
+                                      <p className="whitespace-nowrap font-bold">
                                         {t("admin")}
                                       </p>
                                       <p className="whitespace-nowrap">
@@ -338,70 +360,61 @@ export default function EditCollectionSharingModal({
                               </DropdownMenuContent>
                             </DropdownMenu>
                           ) : (
-                            <p className="text-sm text-neutral">{t(roleKey)}</p>
+                            <span className="px-2 text-xs text-base-content/60">
+                              {t(roleKey)}
+                            </span>
                           )}
 
-                          {permissions === true && !isPublicRoute && (
+                          {canManageSharing && (
                             <Button
+                              type="button"
                               variant="ghost"
                               size="icon"
-                              className="text-neutral hover:text-red-500"
+                              className="h-9 w-9 rounded-lg text-base-content/50 hover:bg-error/10 hover:text-error"
                               onClick={() => {
                                 setCollection({
                                   ...collection,
                                   members: collection.members.filter(
-                                    (member) => member.userId !== e.userId
+                                    (candidate) =>
+                                      candidate.userId !== member.userId
                                   ),
                                 });
                               }}
+                              aria-label={t("remove_member")}
                             >
-                              <i
-                                className="bi-x text-xl"
-                                title={t("remove_member")}
-                              />
+                              <i className="bi-x text-lg" aria-hidden="true" />
                             </Button>
                           )}
                         </div>
                       </div>
-                      <Separator className="last:hidden" />
-                    </>
-                  );
-                })}
+                    );
+                  })}
+              </div>
             </div>
-          </>
+          </section>
         )}
 
-        {permissions === true && !isPublicRoute && (
-          <div>
-            <label className="label cursor-pointer justify-start gap-2">
-              <input
-                type="checkbox"
-                checked={propagateToSubcollections}
-                onChange={() =>
-                  setPropagateToSubcollections(!propagateToSubcollections)
-                }
-                className="checkbox checkbox-primary"
-              />
-              <span className="label-text">
+        {canManageSharing && (
+          <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-base-300 bg-base-200/40 p-3">
+            <input
+              type="checkbox"
+              checked={propagateToSubcollections}
+              onChange={() =>
+                setPropagateToSubcollections(!propagateToSubcollections)
+              }
+              className="checkbox checkbox-primary mt-0.5"
+            />
+            <span className="min-w-0">
+              <span className="block font-medium text-base-content">
                 {t("apply_members_roles_to_subcollections")}
               </span>
-            </label>
-            <p className="text-neutral text-sm">
-              {t("apply_members_roles_to_subcollections_desc")}
-            </p>
-          </div>
+              <span className="mt-0.5 block text-xs leading-5 text-base-content/60">
+                {t("apply_members_roles_to_subcollections_desc")}
+              </span>
+            </span>
+          </label>
         )}
-
-        {permissions === true && !isPublicRoute && (
-          <Button
-            variant="primary"
-            className="w-fit ml-auto mt-3"
-            onClick={submit}
-          >
-            {t("save_changes")}
-          </Button>
-        )}
-      </div>
+      </GlazeModalFrame>
     </Modal>
   );
 }
