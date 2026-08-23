@@ -1,24 +1,13 @@
-export default async function getLatestVersion(setShowAnnouncement: Function) {
-  const announcementId = localStorage.getItem("announcementId");
-  const announcementMessage = localStorage.getItem("announcementMessage");
+export default async function getLatestVersion(
+  setShowAnnouncement: Function
+) {
+  // GoreeCloud Bookmarks does not poll the upstream Linkwarden announcement feed.
+  // Remove any announcement metadata left by an earlier upstream-derived session so
+  // stale Linkwarden release messages cannot reappear in the GoreeCloud interface.
+  localStorage.removeItem("announcementId");
+  localStorage.removeItem("announcementMessage");
+  setShowAnnouncement(false);
 
-  const response = await fetch(
-    `https://linkwarden.app/blog/latest-announcement.json`
-  );
-
-  const data = await response.json();
-
-  const latestAnnouncement = data.id;
-  const latestMessage = data.message;
-
-  if (
-    announcementId != latestAnnouncement ||
-    announcementMessage != latestMessage
-  ) {
-    setShowAnnouncement(true);
-    if (latestAnnouncement)
-      localStorage.setItem("announcementId", latestAnnouncement);
-    if (latestMessage)
-      localStorage.setItem("announcementMessage", latestMessage);
-  }
+  // A GoreeCloud-controlled release/announcement source can be added later.
+  return;
 }

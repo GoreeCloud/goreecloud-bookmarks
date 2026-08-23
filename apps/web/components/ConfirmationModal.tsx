@@ -1,15 +1,15 @@
-import React, { ReactNode } from "react";
+import React, { ReactNode, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "next-i18next";
 import Modal from "./Modal";
 import { Separator } from "./ui/separator";
 
 type Props = {
-  toggleModal: Function;
+  toggleModal: (open: boolean) => void;
   className?: string;
   children: ReactNode;
   title: string;
-  onConfirmed: Function;
+  onConfirmed: () => void | Promise<void>;
   dismissible?: boolean;
 };
 
@@ -19,31 +19,61 @@ export default function ConfirmationModal({
   children,
   title,
   onConfirmed,
+  dismissible = true,
 }: Props) {
   const { t } = useTranslation();
+  const [isConfirming, setIsConfirming] = useState(false);
+
+  const closeModal = () => toggleModal(false);
+
+  const handleConfirm = async () => {
+    if (isConfirming) return;
+
+    setIsConfirming(true);
+
+    try {
+      await onConfirmed();
+      closeModal();
+    } finally {
+      setIsConfirming(false);
+    }
+  };
 
   return (
-    <Modal toggleModal={() => toggleModal()} className={className}>
-      <p className="text-xl font-thin">{title}</p>
-      <Separator className="mb-3 mt-1" />
-      {children}
-      <div className="w-full flex items-center justify-end gap-2 mt-3">
-        <Button
-          variant="ghost"
-          className="hover:bg-base-200"
-          onClick={() => toggleModal()}
-        >
-          {t("cancel")}
-        </Button>
-        <Button
-          variant="destructive"
-          onClick={async () => {
-            await onConfirmed();
-            toggleModal();
-          }}
-        >
-          {t("confirm")}
-        </Button>
+    <Modal
+      toggleModal={closeModal}
+      className={className}
+      dismissible={dismissible && !isConfirming}
+    >
+      <div aria-busy={isConfirming}>
+        <h2 className="pr-12 text-xl font-semibold tracking-tight text-base-content">
+          {title}
+        </h2>
+        <Separator className="mb-4 mt-2" />
+
+        <div className="text-sm leading-6 text-base-content/80">{children}</div>
+
+        <div className="mt-5 flex w-full flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-end">
+          <Button
+            variant="ghost"
+            className="w-full hover:bg-base-200 sm:w-auto"
+            onClick={closeModal}
+            disabled={isConfirming}
+          >
+            {t("cancel")}
+          </Button>
+          <Button
+            variant="destructive"
+            className="w-full sm:w-auto"
+            onClick={handleConfirm}
+            disabled={isConfirming}
+          >
+            {isConfirming && (
+              <i className="bi-arrow-repeat animate-spin" aria-hidden="true" />
+            )}
+            {t("confirm")}
+          </Button>
+        </div>
       </div>
     </Modal>
   );

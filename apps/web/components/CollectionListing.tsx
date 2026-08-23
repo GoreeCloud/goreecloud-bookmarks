@@ -35,12 +35,9 @@ const CollectionListing = () => {
   const { t } = useTranslation();
   const updateCollection = useUpdateCollection();
   const { data: collections = [], isLoading } = useCollections();
-
   const { data: user } = useUser();
   const updateUser = useUpdateUser();
-
   const router = useRouter();
-
   const [tree, setTree] = useState<TreeData | undefined>();
 
   const initialTree = useMemo(() => {
@@ -51,7 +48,8 @@ const CollectionListing = () => {
         tree,
         user?.collectionOrder
       );
-    } else return undefined;
+    }
+    return undefined;
   }, [collections, user]);
 
   useEffect(() => {
@@ -60,27 +58,25 @@ const CollectionListing = () => {
 
   useEffect(() => {
     if (user?.username) {
-      // refetch();
       if (
         (!user.collectionOrder || user.collectionOrder.length === 0) &&
         collections.length > 0
-      )
+      ) {
         updateUser.mutate({
           ...user,
           collectionOrder: collections
-            .filter((e) => e.parentId === null)
-            .map((e) => e.id as number),
+            .filter((collection) => collection.parentId === null)
+            .map((collection) => collection.id as number),
         });
-      else {
+      } else {
         const newCollectionOrder: number[] = [...(user.collectionOrder || [])];
-
-        // Start with collections that are in both account.collectionOrder and collections
-        const existingCollectionIds = collections.map((c) => c.id as number);
+        const existingCollectionIds = collections.map(
+          (collection) => collection.id as number
+        );
         const filteredCollectionOrder = user.collectionOrder.filter((id: any) =>
           existingCollectionIds.includes(id)
         );
 
-        // Add new collections that are not in account.collectionOrder and meet the specific conditions
         collections.forEach((collection) => {
           if (
             !filteredCollectionOrder.includes(collection.id as number) &&
@@ -90,7 +86,6 @@ const CollectionListing = () => {
           }
         });
 
-        // check if the newCollectionOrder is the same as the old one
         if (
           JSON.stringify(newCollectionOrder) !==
           JSON.stringify(user.collectionOrder)
@@ -119,66 +114,52 @@ const CollectionListing = () => {
   };
 
   function reorderTreeItems(
-    tree: TreeData,
+    treeData: TreeData,
     movedCollectionId: ItemId,
     source: TreeSourcePosition,
     destination: TreeDestinationPosition
   ) {
-    // Same parent reordering
     if (source.parentId === destination.parentId) {
-      const parent = tree.items[source.parentId];
+      const parent = treeData.items[source.parentId];
       const children = [...parent.children];
-
-      // Remove from source index
       children.splice(source.index, 1);
-      // Insert at destination index
       if (destination.index !== undefined) {
         children.splice(destination.index, 0, movedCollectionId);
       }
-
       parent.children = children;
-      return tree;
+      return treeData;
     }
 
-    // Different parent move
-    const sourceParent = tree.items[source.parentId];
-    const destinationParent = tree.items[destination.parentId];
+    const sourceParent = treeData.items[source.parentId];
+    const destinationParent = treeData.items[destination.parentId];
 
-    // Remove from source parent
     sourceParent.children = sourceParent.children.filter(
       (id) => id !== movedCollectionId
     );
 
-    // Initialize children array if it doesn't exist
     if (!destinationParent.children) {
       destinationParent.children = [];
     }
 
-    // If destination index is not specified, add to the end
     const destinationIndex =
       destination.index !== undefined
         ? destination.index
         : destinationParent.children.length;
 
-    // Add to destination parent
     destinationParent.children.splice(destinationIndex, 0, movedCollectionId);
-
-    // Update destination parent properties
     destinationParent.hasChildren = true;
     destinationParent.isExpanded = true;
+    treeData.items[movedCollectionId].data.parentId = destination.parentId;
 
-    // Update the moved item's parent ID
-    tree.items[movedCollectionId].data.parentId = destination.parentId;
-
-    return tree;
+    return treeData;
   }
 
   function flattenTreeIds(
-    tree: TreeData,
+    treeData: TreeData,
     nodeId: ItemId = "root",
     result: Array<ItemId> = []
   ) {
-    const node = tree.items[nodeId];
+    const node = treeData.items[nodeId];
 
     if (nodeId !== "root") {
       result.push(node.id);
@@ -186,7 +167,7 @@ const CollectionListing = () => {
 
     if (node.children && node.children.length > 0) {
       node.children.forEach((childId) => {
-        flattenTreeIds(tree, childId, result);
+        flattenTreeIds(treeData, childId, result);
       });
     }
 
@@ -197,9 +178,7 @@ const CollectionListing = () => {
     source: TreeSourcePosition,
     destination: TreeDestinationPosition | undefined
   ) => {
-    if (!destination || !tree) {
-      return;
-    }
+    if (!destination || !tree) return;
 
     if (
       source.index === destination.index &&
@@ -211,11 +190,11 @@ const CollectionListing = () => {
     const movedCollectionId = Number(
       tree.items[source.parentId].children[source.index]
     );
-
-    const movedCollection = collections.find((c) => c.id === movedCollectionId);
-
+    const movedCollection = collections.find(
+      (collection) => collection.id === movedCollectionId
+    );
     const destinationCollection = collections.find(
-      (c) => c.id === Number(destination.parentId)
+      (collection) => collection.id === Number(destination.parentId)
     );
 
     if (
@@ -263,32 +242,35 @@ const CollectionListing = () => {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col gap-4">
-        <div className="skeleton h-4 w-full"></div>
-        <div className="skeleton h-4 w-full"></div>
-        <div className="skeleton h-4 w-full"></div>
+      <div className="flex flex-col gap-2 px-1">
+        <div className="skeleton h-10 w-full rounded-lg" />
+        <div className="skeleton h-10 w-11/12 rounded-lg" />
+        <div className="skeleton h-10 w-full rounded-lg" />
       </div>
     );
-  } else if (!tree) {
+  }
+
+  if (!tree) {
     return (
-      <p className="text-neutral text-xs font-semibold truncate w-full px-2">
+      <p className="w-full truncate rounded-lg px-2 py-2 text-xs font-medium text-neutral">
         {t("you_have_no_collections")}
       </p>
     );
-  } else
-    return (
-      <Tree
-        tree={tree}
-        renderItem={(itemProps) =>
-          renderItem({ ...itemProps }, router.asPath, droppableActive)
-        }
-        onExpand={onExpand}
-        onCollapse={onCollapse}
-        onDragEnd={onDragEnd}
-        isDragEnabled
-        isNestingEnabled
-      />
-    );
+  }
+
+  return (
+    <Tree
+      tree={tree}
+      renderItem={(itemProps) =>
+        renderItem({ ...itemProps }, router.asPath, droppableActive)
+      }
+      onExpand={onExpand}
+      onCollapse={onCollapse}
+      onDragEnd={onDragEnd}
+      isDragEnabled
+      isNestingEnabled
+    />
+  );
 };
 
 export default CollectionListing;
@@ -299,6 +281,7 @@ const renderItem = (
   droppableActive: Active | null
 ) => {
   const collection = item.data;
+  const isActive = currentPath === `/collections/${collection.id}`;
 
   return (
     <Droppable
@@ -310,57 +293,61 @@ const renderItem = (
       }}
       className="group"
     >
-      <div
-        ref={provided.innerRef}
-        {...provided.draggableProps}
-        className="mb-1"
-      >
+      <div ref={provided.innerRef} {...provided.draggableProps} className="mb-0.5">
         <div
           className={cn(
-            currentPath === `/collections/${collection.id}`
-              ? "bg-primary/20 is-active"
+            isActive
+              ? "bg-primary/15 is-active"
               : droppableActive
                 ? "select-none"
-                : "hover:bg-neutral/20",
-            "relative duration-100 flex items-center pr-2 rounded-md"
+                : "hover:bg-base-content/5",
+            "relative flex min-h-10 items-center rounded-lg pr-1.5 transition-colors duration-100"
           )}
         >
           {Dropdown(item as ExtendedTreeItem, onExpand, onCollapse)}
 
           <Link
             href={`/collections/${collection.id}`}
-            className="w-full"
+            className="min-w-0 flex-1 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
             {...provided.dragHandleProps}
           >
-            <div
-              className={`cursor-pointer flex items-center gap-2 w-full pl-5 rounded-md`}
-            >
-              {collection.icon ? (
-                <Icon
-                  icon={collection.icon}
-                  size={28}
-                  weight={(collection.iconWeight || "regular") as IconWeight}
-                  color={collection.color}
-                  className="-mr-[0.15rem]"
-                />
-              ) : (
-                <i
-                  className="bi-folder-fill text-lg"
-                  style={{ color: collection.color }}
-                ></i>
-              )}
+            <div className="flex min-w-0 items-center gap-2 py-2 pl-8">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center">
+                {collection.icon ? (
+                  <Icon
+                    icon={collection.icon}
+                    size={18}
+                    weight={(collection.iconWeight || "regular") as IconWeight}
+                    color={collection.color}
+                  />
+                ) : (
+                  <i
+                    className="bi-folder-fill text-sm"
+                    style={{ color: collection.color }}
+                    aria-hidden="true"
+                  />
+                )}
+              </span>
 
-              <p className="truncate w-full text-xs">{collection.name}</p>
+              <p
+                className={cn(
+                  "min-w-0 flex-1 truncate text-xs",
+                  isActive ? "font-semibold text-base-content" : "font-medium"
+                )}
+              >
+                {collection.name}
+              </p>
 
               {collection.isPublic && (
                 <i
-                  className="bi-globe2 text-sm text-black/50 dark:text-white/50 drop-shadow"
+                  className="bi-globe2 shrink-0 text-[11px] text-neutral"
                   title="This collection is being shared publicly."
-                ></i>
+                />
               )}
-              <div className="drop-shadow text-neutral text-xs">
-                {collection._count?.links}
-              </div>
+
+              <span className="min-w-5 shrink-0 rounded-full bg-base-200 px-1.5 py-0.5 text-center text-[10px] tabular-nums text-neutral">
+                {collection._count?.links || 0}
+              </span>
             </div>
           </Link>
         </div>
@@ -374,23 +361,23 @@ const Dropdown = (
   onExpand: (id: ItemId) => void,
   onCollapse: (id: ItemId) => void
 ) => {
-  if (!item.children || item.children.length === 0) {
-    return null;
-  }
+  if (!item.children || item.children.length === 0) return null;
 
-  return item.isExpanded ? (
+  const expanded = item.isExpanded;
+
+  return (
     <button
-      onClick={() => onCollapse(item.id)}
-      className="absolute left-0.5 top-1/2 -translate-y-1/2 flex items-center justify-center"
+      type="button"
+      onClick={() => (expanded ? onCollapse(item.id) : onExpand(item.id))}
+      className="absolute left-0 top-1/2 z-10 flex h-9 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-neutral opacity-70 transition hover:bg-base-content/10 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+      aria-label={expanded ? "Collapse collection" : "Expand collection"}
     >
-      <div className="bi-caret-down-fill opacity-50 hover:opacity-100 duration-200"></div>
-    </button>
-  ) : (
-    <button
-      onClick={() => onExpand(item.id)}
-      className="absolute left-0.5 top-1/2 -translate-y-1/2 flex items-center justify-center"
-    >
-      <div className="bi-caret-right-fill opacity-40 hover:opacity-100 duration-200"></div>
+      <i
+        className={
+          expanded ? "bi-chevron-down text-[10px]" : "bi-chevron-right text-[10px]"
+        }
+        aria-hidden="true"
+      />
     </button>
   );
 };
@@ -409,9 +396,7 @@ const buildTreeFromCollections = (
 
   function getTotalLinkCount(collectionId: number): number {
     const collection = items[collectionId];
-    if (!collection) {
-      return 0;
-    }
+    if (!collection) return 0;
 
     let totalLinkCount = (collection.data as any)._count?.links || 0;
 
@@ -459,7 +444,6 @@ const buildTreeFromCollections = (
     for (const item in items) {
       const collection = items[item];
       if (Number(item) === activeCollectionId && collection.data.parentId) {
-        // get all the parents of the active collection recursively until root and set isExpanded to true
         let parentId = collection.data.parentId || null;
         while (parentId && items[parentId]) {
           items[parentId].isExpanded = true;
@@ -490,10 +474,11 @@ const buildTreeFromCollections = (
     id: rootId,
     children: (collections
       .filter(
-        (c) =>
-          c.parentId === null || !collections.find((i) => i.id === c.parentId)
+        (collection) =>
+          collection.parentId === null ||
+          !collections.find((item) => item.id === collection.parentId)
       )
-      .map((c) => c.id) || "") as unknown as string[],
+      .map((collection) => collection.id) || "") as unknown as string[],
     hasChildren: true,
     isExpanded: true,
     data: { name: "Root" } as Collection,

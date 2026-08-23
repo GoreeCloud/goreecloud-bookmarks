@@ -26,14 +26,20 @@ export default function CenteredForm({
       data-testid={dataTestId}
     >
       <div className="m-auto flex flex-col gap-3 w-full">
-        <Image
-          src={"/icon-small-150x150.png"}
-          width={150}
-          height={150}
-          alt="Linkwarden"
-          className="h-16 w-auto mx-auto"
-          priority
-        />
+        <div className="flex flex-col items-center gap-2">
+          <Image
+            src="/goreecloud-bookmarks.svg"
+            width={64}
+            height={64}
+            alt="GoreeCloud Bookmarks"
+            className="h-16 w-16"
+            priority
+            unoptimized
+          />
+          <span className="text-sm font-semibold tracking-wide text-neutral">
+            GoreeCloud Bookmarks
+          </span>
+        </div>
         {header && (
           <p className="text-2xl text-black dark:text-white text-center font-semibold">
             {header}

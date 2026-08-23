@@ -53,25 +53,15 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
         basePath="/api/v1/auth"
       >
         <Head>
-          <title>Linkwarden</title>
+          <title>GoreeCloud Bookmarks</title>
+          <meta name="application-name" content="GoreeCloud Bookmarks" />
+          <meta name="apple-mobile-web-app-title" content="GoreeCloud Bookmarks" />
           <meta name="viewport" content="width=device-width, initial-scale=1" />
-          <meta name="theme-color" content="#ffffff" />
-          <link
-            rel="apple-touch-icon"
-            sizes="180x180"
-            href="/apple-touch-icon.png"
-          />
+          <meta name="theme-color" content="#0f172a" />
           <link
             rel="icon"
-            type="image/png"
-            sizes="32x32"
-            href="/favicon-32x32.png"
-          />
-          <link
-            rel="icon"
-            type="image/png"
-            sizes="16x16"
-            href="/favicon-16x16.png"
+            type="image/svg+xml"
+            href="/goreecloud-bookmarks.svg"
           />
           <link rel="manifest" href="/site.webmanifest" />
         </Head>

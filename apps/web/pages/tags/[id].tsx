@@ -3,8 +3,6 @@ import { FormEvent, ReactElement, useEffect, useState } from "react";
 import MainLayout from "@/layouts/MainLayout";
 import { Sort, ViewMode } from "@linkwarden/types/global";
 import { useLinks } from "@linkwarden/router/links";
-import BulkDeleteLinksModal from "@/components/ModalContent/BulkDeleteLinksModal";
-import BulkEditLinksModal from "@/components/ModalContent/BulkEditLinksModal";
 import { useTranslation } from "next-i18next";
 import getServerSideProps from "@/lib/client/getServerSideProps";
 import LinkListOptions from "@/components/LinkListOptions";
@@ -39,22 +37,22 @@ const Page: NextPageWithLayout = () => {
   const [sortBy, setSortBy] = useState<Sort>(
     Number(localStorage.getItem("sortBy")) ?? Sort.DateNewestFirst
   );
-
+  const [viewMode, setViewMode] = useState<ViewMode>(
+    (localStorage.getItem("viewMode") as ViewMode) || ViewMode.Card
+  );
   const [renameTag, setRenameTag] = useState(false);
   const [newTagName, setNewTagName] = useState<string>();
-
-  const [bulkDeleteLinksModal, setBulkDeleteLinksModal] = useState(false);
-  const [bulkEditLinksModal, setBulkEditLinksModal] = useState(false);
   const [editMode, setEditMode] = useState(false);
-
-  useEffect(() => {
-    if (editMode) return setEditMode(false);
-  }, [router]);
+  const [submitLoader, setSubmitLoader] = useState(false);
 
   const { links, data } = useLinks({
     sort: sortBy,
     tagId,
   });
+
+  useEffect(() => {
+    if (editMode) setEditMode(false);
+  }, [router]);
 
   useEffect(() => {
     if (!router.isReady || isTagLoading) return;
@@ -65,41 +63,34 @@ const Page: NextPageWithLayout = () => {
     setNewTagName(activeTag?.name);
   }, [activeTag]);
 
-  const [submitLoader, setSubmitLoader] = useState(false);
-
-  const cancelUpdateTag = async () => {
+  const cancelUpdateTag = () => {
     setNewTagName(activeTag?.name);
     setRenameTag(false);
   };
 
-  const submit = async (e?: FormEvent) => {
-    e?.preventDefault();
+  const submit = async (event?: FormEvent) => {
+    event?.preventDefault();
 
     if (activeTag?.name === newTagName) return setRenameTag(false);
-    else if (newTagName === "") {
-      return cancelUpdateTag();
-    }
+    if (!newTagName?.trim()) return cancelUpdateTag();
 
     setSubmitLoader(true);
 
-    if (activeTag && newTagName) {
+    if (activeTag) {
       const load = toast.loading(t("applying_changes"));
 
       await updateTag.mutateAsync(
         {
           ...activeTag,
-          name: newTagName,
+          name: newTagName.trim(),
         },
         {
-          onSettled: (data, error) => {
+          onSettled: (result, error) => {
             setSubmitLoader(false);
             toast.dismiss(load);
 
-            if (error) {
-              toast.error(error.message);
-            } else {
-              toast.success(t("tag_renamed"));
-            }
+            if (error) toast.error(error.message);
+            else toast.success(t("tag_renamed"));
           },
         }
       );
@@ -114,13 +105,12 @@ const Page: NextPageWithLayout = () => {
     if (activeTag?.id) {
       const load = toast.loading(t("applying_changes"));
 
-      await removeTag.mutateAsync(activeTag?.id, {
-        onSettled: (data, error) => {
+      await removeTag.mutateAsync(activeTag.id, {
+        onSettled: (result, error) => {
           toast.dismiss(load);
 
-          if (error) {
-            toast.error(error.message);
-          } else {
+          if (error) toast.error(error.message);
+          else {
             toast.success(t("tag_deleted"));
             router.push("/links");
           }
@@ -132,69 +122,79 @@ const Page: NextPageWithLayout = () => {
     setRenameTag(false);
   };
 
-  const [viewMode, setViewMode] = useState<ViewMode>(
-    (localStorage.getItem("viewMode") as ViewMode) || ViewMode.Card
-  );
-
   return (
-    <div className="p-3 flex flex-col gap-5 w-full h-full">
-      <LinkListOptions
-        t={t}
-        viewMode={viewMode}
-        setViewMode={setViewMode}
-        sortBy={sortBy}
-        setSortBy={setSortBy}
-        editMode={editMode}
-        setEditMode={setEditMode}
-        links={links}
-      >
-        <div className="flex gap-3 items-center">
-          <div className="flex gap-2 items-center font-thin">
-            <i className="bi-hash text-primary text-3xl" />
+    <div className="flex h-full w-full flex-col gap-5 p-3 sm:p-5">
+      <div className="rounded-2xl border border-neutral-content bg-base-100 p-4 shadow-sm sm:p-5">
+        <LinkListOptions
+          t={t}
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+          sortBy={sortBy}
+          setSortBy={setSortBy}
+          editMode={editMode}
+          setEditMode={setEditMode}
+          links={links}
+        >
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-neutral-content bg-base-200 text-primary">
+              <i className="bi-hash text-xl" />
+            </div>
 
-            {renameTag ? (
-              <form onSubmit={submit} className="flex items-center gap-2">
-                <input
-                  type="text"
-                  autoFocus
-                  className="sm:text-3xl text-xl bg-transparent h-10 w-3/4 outline-none border-b border-b-neutral-content"
-                  value={newTagName}
-                  onChange={(e) => setNewTagName(e.target.value)}
-                />
-                <Button variant="ghost" size="icon" onClick={submit}>
-                  <i className="bi-check2 text-neutral text-xl" />
-                </Button>
-                <Button variant="ghost" size="icon" onClick={cancelUpdateTag}>
-                  <i className="bi-x text-neutral text-xl" />
-                </Button>
-              </form>
-            ) : (
-              <>
-                <p className="sm:text-3xl text-xl">{activeTag?.name}</p>
-                <div className="relative">
+            <div className="min-w-0">
+              {renameTag ? (
+                <form onSubmit={submit} className="flex min-w-0 items-center gap-2">
+                  <input
+                    type="text"
+                    autoFocus
+                    className="h-10 min-w-0 flex-1 rounded-lg border border-neutral-content bg-base-200 px-3 text-lg font-semibold outline-none focus:border-primary sm:w-72"
+                    value={newTagName || ""}
+                    onChange={(e) => setNewTagName(e.target.value)}
+                  />
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    size="icon"
+                    disabled={submitLoader || !newTagName?.trim()}
+                    aria-label={t("save_changes")}
+                  >
+                    <i className="bi-check2" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={cancelUpdateTag}
+                    aria-label={t("cancel")}
+                  >
+                    <i className="bi-x text-lg" />
+                  </Button>
+                </form>
+              ) : (
+                <div className="flex min-w-0 items-center gap-1">
+                  <div className="min-w-0">
+                    <h1 className="truncate text-xl font-semibold sm:text-2xl">
+                      {activeTag?.name}
+                    </h1>
+                    <p className="mt-0.5 text-xs text-neutral">
+                      {links.length === 1
+                        ? t("showing_count_result", { count: links.length })
+                        : t("showing_count_results", { count: links.length })}
+                    </p>
+                  </div>
+
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon" title={t("more")}>
-                        <i className="bi-three-dots text-xl text-neutral" />
+                        <i className="bi-three-dots text-lg text-neutral" />
                       </Button>
                     </DropdownMenuTrigger>
 
-                    <DropdownMenuContent
-                      sideOffset={4}
-                      align={
-                        activeTag?.name && activeTag.name.length > 8
-                          ? "end"
-                          : "start"
-                      }
-                      className="bg-base-200 border border-neutral-content rounded-box p-1"
-                    >
+                    <DropdownMenuContent sideOffset={4} align="start">
                       <DropdownMenuItem onClick={() => setRenameTag(true)}>
                         <i className="bi-pencil-square" />
                         {t("rename_tag")}
                       </DropdownMenuItem>
-
                       <DropdownMenuSeparator />
-
                       <DropdownMenuItem onClick={remove} className="text-error">
                         <i className="bi-trash" />
                         {t("delete_tag")}
@@ -202,11 +202,11 @@ const Page: NextPageWithLayout = () => {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
-              </>
-            )}
+              )}
+            </div>
           </div>
-        </div>
-      </LinkListOptions>
+        </LinkListOptions>
+      </div>
 
       <Links
         editMode={editMode}
@@ -215,22 +215,18 @@ const Page: NextPageWithLayout = () => {
         useData={data}
       />
 
-      {!data.isLoading && links && !links[0] && (
-        <div
-          style={{ flex: "1 1 auto" }}
-          className="flex flex-col gap-2 justify-center h-full w-full mx-auto p-10"
-        >
-          <p className="text-center text-xl">{t("this_tag_has_no_links")}</p>
-          <p className="text-center mx-auto max-w-96 w-fit text-neutral text-sm">
-            {t("this_tag_has_no_links_desc")}
-          </p>
+      {!data.isLoading && links.length === 0 && (
+        <div className="flex min-h-[18rem] flex-1 items-center justify-center rounded-2xl border border-dashed border-neutral-content bg-base-200/40 p-8">
+          <div className="max-w-md text-center">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl border border-neutral-content bg-base-100 text-primary">
+              <i className="bi-tag text-xl" />
+            </div>
+            <h2 className="text-lg font-semibold">{t("this_tag_has_no_links")}</h2>
+            <p className="mt-2 text-sm leading-relaxed text-neutral">
+              {t("this_tag_has_no_links_desc")}
+            </p>
+          </div>
         </div>
-      )}
-      {bulkDeleteLinksModal && (
-        <BulkDeleteLinksModal onClose={() => setBulkDeleteLinksModal(false)} />
-      )}
-      {bulkEditLinksModal && (
-        <BulkEditLinksModal onClose={() => setBulkEditLinksModal(false)} />
       )}
     </div>
   );
