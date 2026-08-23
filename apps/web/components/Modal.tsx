@@ -1,8 +1,9 @@
-import React, { MouseEventHandler, ReactNode, useEffect } from "react";
+import React, { MouseEventHandler, ReactNode } from "react";
 import ReactDOM from "react-dom";
 import ClickAwayHandler from "@/components/ClickAwayHandler";
 import { Drawer } from "vaul";
 import useWindowDimensions from "@/hooks/useWindowDimensions";
+import useBodyScrollLock from "@/hooks/useBodyScrollLock";
 import { Button } from "@/components/ui/button";
 
 type Props = {
@@ -23,16 +24,7 @@ export default function Modal({
   const [drawerIsOpen, setDrawerIsOpen] = React.useState(true);
   const { width } = useWindowDimensions();
 
-  useEffect(() => {
-    if (width >= 640) {
-      document.body.style.overflow = "hidden";
-      document.body.style.position = "relative";
-      return () => {
-        document.body.style.overflow = "auto";
-        document.body.style.position = "";
-      };
-    }
-  }, []);
+  useBodyScrollLock(width >= 640);
 
   if (width < 640) {
     return (
@@ -60,39 +52,40 @@ export default function Modal({
         </Drawer.Portal>
       </Drawer.Root>
     );
-  } else {
-    return ReactDOM.createPortal(
-      <div
-        className="fade-in fixed inset-0 z-40 flex items-center justify-center overflow-y-auto bg-black/35 px-4 py-6 backdrop-blur-sm"
-        data-testid="modal-outer"
-      >
-        <ClickAwayHandler
-          onClickOutside={() => dismissible && toggleModal()}
-          className={`m-auto w-full sm:w-11/12 sm:max-w-xl ${className || ""}`}
-        >
-          <div
-            className="slide-up relative m-auto overflow-y-auto rounded-2xl border border-base-300 bg-base-100 p-5 shadow-2xl sm:overflow-y-visible"
-            data-testid="modal-container"
-          >
-            {dismissible && !hideCloseButton && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={toggleModal as MouseEventHandler<HTMLButtonElement>}
-                className="absolute right-3 top-3 z-10 h-10 w-10 rounded-full text-base-content/60 hover:bg-base-200 hover:text-base-content"
-                aria-label="Close dialog"
-              >
-                <i
-                  className="bi-x text-xl"
-                  data-testid="close-modal-button"
-                />
-              </Button>
-            )}
-            {children}
-          </div>
-        </ClickAwayHandler>
-      </div>,
-      document.body
-    );
   }
+
+  return ReactDOM.createPortal(
+    <div
+      className="fade-in fixed inset-0 z-40 flex items-center justify-center overflow-y-auto bg-black/35 px-4 py-6 backdrop-blur-sm"
+      data-testid="modal-outer"
+    >
+      <ClickAwayHandler
+        onClickOutside={() => dismissible && toggleModal()}
+        className={`m-auto w-full sm:w-11/12 sm:max-w-xl ${className || ""}`}
+      >
+        <div
+          className="slide-up relative m-auto overflow-y-auto rounded-2xl border border-base-300 bg-base-100 p-5 shadow-2xl sm:overflow-y-visible"
+          data-testid="modal-container"
+        >
+          {dismissible && !hideCloseButton && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleModal as MouseEventHandler<HTMLButtonElement>}
+              className="absolute right-3 top-3 z-10 h-10 w-10 rounded-full text-base-content/60 hover:bg-base-200 hover:text-base-content"
+              aria-label="Close dialog"
+            >
+              <i
+                className="bi-x text-xl"
+                data-testid="close-modal-button"
+                aria-hidden="true"
+              />
+            </Button>
+          )}
+          {children}
+        </div>
+      </ClickAwayHandler>
+    </div>,
+    document.body
+  );
 }
