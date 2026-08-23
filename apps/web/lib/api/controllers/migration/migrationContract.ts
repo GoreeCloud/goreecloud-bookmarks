@@ -21,8 +21,7 @@ export const getImportLimitMb = (value?: string) => {
 
 export const isSupportedMigrationFormat = (
   format: unknown
-): format is MigrationFormat =>
-  typeof format === "string" && SUPPORTED_MIGRATION_FORMATS.has(format);
+): format is MigrationFormat => SUPPORTED_MIGRATION_FORMATS.has(format);
 
 export const getExportFilename = (date = new Date()) =>
   `goreecloud-bookmarks-export-${date.toISOString().slice(0, 10)}.json`;
