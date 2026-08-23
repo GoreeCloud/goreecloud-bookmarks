@@ -141,16 +141,6 @@ const Page: NextPageWithLayout = () => {
     }
   };
 
-  const stringToArray = (str: string) => {
-    return str?.replace(/\s+/g, "").split(",");
-  };
-
-  const normalizeUserList = (list: string[] = []) =>
-    list
-      .map((value) => value.trim())
-      .filter(Boolean)
-      .sort();
-
   const hasAccountChanges = useMemo(() => {
     if (!account?.id) return false;
 
@@ -317,12 +307,15 @@ const Page: NextPageWithLayout = () => {
 
             <div>
               <p className="mb-2">{t("download_data")}</p>
-              <Link className="w-fit" href="/api/v1/migration">
-                <div className="select-none relative duration-200 rounded-lg text-sm text-center w-fit flex justify-center items-center gap-2 disabled:pointer-events-none disabled:opacity-50 bg-neutral-content text-base-content hover:bg-neutral-content/80 border border-neutral/30 h-10 px-4 py-2">
-                  <i className="bi-cloud-download text-xl duration-100"></i>
-                  <p>{t("export_data")}</p>
-                </div>
-              </Link>
+              <Button asChild variant="metal" className="w-fit">
+                <Link href="/api/v1/migration" prefetch={false}>
+                  <i
+                    className="bi-cloud-download text-xl"
+                    aria-hidden="true"
+                  ></i>
+                  <span>{t("export_data")}</span>
+                </Link>
+              </Button>
             </div>
           </div>
         </div>
