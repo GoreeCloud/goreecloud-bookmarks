@@ -5,8 +5,8 @@ import { FormEvent, useState } from "react";
 import { useTranslation, Trans } from "next-i18next";
 import { useAddUser } from "@linkwarden/router/users";
 import { Button } from "../ui/button";
-import { Separator } from "../ui/separator";
 import { useConfig } from "@linkwarden/router/config";
+import GlazeModalFrame from "./GlazeModalFrame";
 
 type Props = {
   onClose: Function;
@@ -22,8 +22,7 @@ type FormData = {
 export default function NewUserModal({ onClose }: Props) {
   const { t } = useTranslation();
   const { data: config } = useConfig();
-  const emailEnabled = config?.EMAIL_PROVIDER;
-
+  const emailEnabled = Boolean(config?.EMAIL_PROVIDER);
   const addUser = useAddUser();
 
   const [form, setForm] = useState<FormData>({
@@ -34,112 +33,152 @@ export default function NewUserModal({ onClose }: Props) {
   });
   const [submitLoader, setSubmitLoader] = useState(false);
 
+  const normalizedName = form.name.trim();
+  const normalizedUsername = form.username?.trim() || "";
+  const normalizedEmail = form.email?.trim() || "";
+  const requiredIdentity = emailEnabled ? normalizedEmail : normalizedUsername;
+  const canSubmit =
+    Boolean(normalizedName && requiredIdentity && form.password.length >= 8) &&
+    !submitLoader;
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!submitLoader) {
-      if (form.password.length < 8)
-        return toast.error(t("password_length_error"));
+    if (submitLoader) return;
 
-      const checkFields = () => {
-        if (emailEnabled) {
-          return form.name !== "" && form.email !== "" && form.password !== "";
-        } else {
-          return (
-            form.name !== "" && form.username !== "" && form.password !== ""
-          );
-        }
-      };
-
-      if (checkFields()) {
-        setSubmitLoader(true);
-
-        await addUser.mutateAsync(form, {
-          onSuccess: () => {
-            onClose();
-          },
-          onSettled: () => {
-            setSubmitLoader(false);
-          },
-        });
-      } else {
-        toast.error(t("fill_all_fields_error"));
-      }
+    if (form.password.length < 8) {
+      toast.error(t("password_length_error"));
+      return;
     }
+
+    if (!normalizedName || !requiredIdentity) {
+      toast.error(t("fill_all_fields_error"));
+      return;
+    }
+
+    setSubmitLoader(true);
+
+    await addUser.mutateAsync(
+      {
+        ...form,
+        name: normalizedName,
+        username: normalizedUsername || undefined,
+        email: emailEnabled ? normalizedEmail : undefined,
+      },
+      {
+        onSuccess: () => {
+          onClose();
+        },
+        onSettled: () => {
+          setSubmitLoader(false);
+        },
+      }
+    );
   }
 
   return (
     <Modal toggleModal={onClose}>
-      <p className="text-xl font-thin">{t("create_new_user")}</p>
-
-      <Separator className="my-3" />
-
-      <form onSubmit={submit}>
-        <div className="grid sm:grid-cols-2 gap-3">
-          <div>
-            <p className="mb-2">{t("display_name")}</p>
-            <TextInput
-              placeholder={t("placeholder_johnny")}
-              className="bg-base-200"
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              value={form.name}
-            />
-          </div>
-
-          {emailEnabled && (
-            <div>
-              <p className="mb-2">{t("email")}</p>
+      <GlazeModalFrame
+        title={t("create_new_user")}
+        icon="bi-person-plus"
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => onClose()}
+              disabled={submitLoader}
+            >
+              {t("cancel")}
+            </Button>
+            <Button
+              type="submit"
+              form="create-user-form"
+              variant="primary"
+              disabled={!canSubmit}
+            >
+              <i className="bi-person-plus" aria-hidden="true" />
+              {t("create_user")}
+            </Button>
+          </>
+        }
+      >
+        <form id="create-user-form" onSubmit={submit}>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-xl border border-base-300 bg-base-200/50 p-3">
+              <label className="mb-2 block text-xs font-medium text-base-content/60">
+                {t("display_name")}
+              </label>
               <TextInput
-                placeholder={t("placeholder_email")}
-                className="bg-base-200"
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                value={form.email}
+                placeholder={t("placeholder_johnny")}
+                className="bg-base-100"
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                value={form.name}
               />
             </div>
-          )}
 
-          <div>
-            <p className="mb-2">
-              {t("username")}{" "}
-              {emailEnabled && (
-                <span className="text-xs text-neutral">{t("optional")}</span>
-              )}
-            </p>
-            <TextInput
-              placeholder={t("placeholder_john")}
-              className="bg-base-200"
-              onChange={(e) => setForm({ ...form, username: e.target.value })}
-              value={form.username}
-            />
+            {emailEnabled && (
+              <div className="rounded-xl border border-base-300 bg-base-200/50 p-3">
+                <label className="mb-2 block text-xs font-medium text-base-content/60">
+                  {t("email")}
+                </label>
+                <TextInput
+                  type="email"
+                  placeholder={t("placeholder_email")}
+                  className="bg-base-100"
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  value={form.email}
+                />
+              </div>
+            )}
+
+            <div className="rounded-xl border border-base-300 bg-base-200/50 p-3">
+              <label className="mb-2 block text-xs font-medium text-base-content/60">
+                {t("username")}{" "}
+                {emailEnabled && (
+                  <span className="font-normal">({t("optional")})</span>
+                )}
+              </label>
+              <TextInput
+                placeholder={t("placeholder_john")}
+                className="bg-base-100"
+                onChange={(e) => setForm({ ...form, username: e.target.value })}
+                value={form.username}
+              />
+            </div>
+
+            <div className="rounded-xl border border-base-300 bg-base-200/50 p-3">
+              <label className="mb-2 block text-xs font-medium text-base-content/60">
+                {t("password")}
+              </label>
+              <TextInput
+                type="password"
+                autoComplete="new-password"
+                placeholder="••••••••••••••"
+                className="bg-base-100"
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                value={form.password}
+              />
+            </div>
           </div>
 
-          <div>
-            <p className="mb-2">{t("password")}</p>
-            <TextInput
-              placeholder="••••••••••••••"
-              className="bg-base-200"
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
-              value={form.password}
+          <div
+            role="note"
+            className="mt-3 flex items-start gap-3 rounded-xl border border-base-300 bg-base-200/50 p-3 text-sm"
+          >
+            <i
+              className="bi-info-circle mt-0.5 text-primary"
+              aria-hidden="true"
             />
+            <span>
+              <Trans
+                i18nKey="password_change_note"
+                components={[<b key={0} />]}
+              />
+            </span>
           </div>
-        </div>
-
-        <div role="note" className="alert alert-note mt-5">
-          <i className="bi-exclamation-triangle text-xl" />
-          <span>
-            <Trans
-              i18nKey="password_change_note"
-              components={[<b key={0} />]}
-            />
-          </span>
-        </div>
-
-        <div className="flex justify-between items-center mt-5">
-          <Button variant="primary" className="ml-auto" type="submit">
-            {t("create_user")}
-          </Button>
-        </div>
-      </form>
+        </form>
+      </GlazeModalFrame>
     </Modal>
   );
 }
