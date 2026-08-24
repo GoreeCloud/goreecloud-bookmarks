@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"os"
@@ -27,12 +28,30 @@ type identityError struct{ message string }
 func (e *identityError) Error() string { return e.message }
 
 type server struct {
-	store    *bookmarkcore.Store
-	identity identityResolver
+	bookmarks *bookmarkcore.Service
+	identity  identityResolver
+	storeMode string
+}
+
+func newServer(repository bookmarkcore.Repository, identity identityResolver, storeMode string) (server, error) {
+	if identity == nil {
+		return server{}, errors.New("identity resolver is required")
+	}
+	service, err := bookmarkcore.NewService(repository)
+	if err != nil {
+		return server{}, err
+	}
+	if storeMode == "" {
+		storeMode = "unspecified"
+	}
+	return server{bookmarks: service, identity: identity, storeMode: storeMode}, nil
 }
 
 func main() {
-	app := server{store: bookmarkcore.NewStore(), identity: unavailableIdentity{}}
+	app, err := newServer(bookmarkcore.NewMemoryRepository(nil), unavailableIdentity{}, "memory-development")
+	if err != nil {
+		log.Fatal(err)
+	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", app.health)
 	mux.HandleFunc("GET /api/v1/bookmarks", app.list)
@@ -55,11 +74,12 @@ func main() {
 
 func (s server) health(w http.ResponseWriter, _ *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{
-		"service":                  "goreecloud-bookmarks",
-		"implementation":           "native-development-foundation",
-		"identity_adapter_ready":   false,
-		"persistent_store_ready":   false,
-		"production_approved":      false,
+		"service":                "goreecloud-bookmarks",
+		"implementation":         "native-development-foundation",
+		"identity_adapter_ready": false,
+		"persistent_store_ready": false,
+		"store_mode":             s.storeMode,
+		"production_approved":    false,
 	})
 }
 
@@ -69,7 +89,16 @@ func (s server) list(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "authenticated identity integration is not available"})
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"bookmarks": s.store.List(ownerID)})
+	items, err := s.bookmarks.List(r.Context(), ownerID)
+	if err != nil {
+		if errors.Is(err, bookmarkcore.ErrOwnerIdentityRequired) {
+			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "authenticated owner identity is required"})
+			return
+		}
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "bookmark storage is unavailable"})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"bookmarks": items})
 }
 
 func securityHeaders(next http.Handler) http.Handler {
