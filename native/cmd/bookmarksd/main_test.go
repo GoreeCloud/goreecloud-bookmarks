@@ -81,6 +81,65 @@ func TestListFailsClosedWithoutUsableIdentity(t *testing.T) {
 	}
 }
 
+func TestCreateUsesResolvedOwnerAndNormalizesInput(t *testing.T) {
+	repository := bookmarkcore.NewMemoryRepository(nil)
+	app, err := newServer(repository, fixedIdentity{owner: "owner-a"}, "memory-development")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	request := httptest.NewRequest(http.MethodPost, "/api/v1/bookmarks", strings.NewReader(`{"url":"https://example.com/page#fragment","title":" Example ","tags":["Cloud","cloud"," search "]}`))
+	response := httptest.NewRecorder()
+	app.create(response, request)
+	if response.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d: %s", response.Code, response.Body.String())
+	}
+	body := response.Body.String()
+	for _, expected := range []string{`"ownerId":"owner-a"`, `"url":"https://example.com/page"`, `"title":"Example"`, `"tags":["Cloud","search"]`} {
+		if !strings.Contains(body, expected) {
+			t.Fatalf("create response missing %s: %s", expected, body)
+		}
+	}
+}
+
+func TestCreateRejectsMalformedAndUnknownJSON(t *testing.T) {
+	app, err := newServer(bookmarkcore.NewMemoryRepository(nil), fixedIdentity{owner: "owner-a"}, "memory-development")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, body := range []string{
+		`{"url":"https://example.com","unexpected":true}`,
+		`{"url":"https://example.com"} {"url":"https://example.org"}`,
+		`{"url":`,
+	} {
+		request := httptest.NewRequest(http.MethodPost, "/api/v1/bookmarks", strings.NewReader(body))
+		response := httptest.NewRecorder()
+		app.create(response, request)
+		if response.Code != http.StatusBadRequest {
+			t.Fatalf("expected invalid JSON to return 400, got %d for %q", response.Code, body)
+		}
+		if strings.Contains(response.Body.String(), "unexpected") {
+			t.Fatal("decoder internals leaked to client")
+		}
+	}
+}
+
+func TestCreateFailsClosedWithoutIdentity(t *testing.T) {
+	app, err := newServer(bookmarkcore.NewMemoryRepository(nil), fixedIdentity{err: errors.New("backend details")}, "memory-development")
+	if err != nil {
+		t.Fatal(err)
+	}
+	request := httptest.NewRequest(http.MethodPost, "/api/v1/bookmarks", strings.NewReader(`{"url":"https://example.com"}`))
+	response := httptest.NewRecorder()
+	app.create(response, request)
+	if response.Code != http.StatusServiceUnavailable {
+		t.Fatalf("expected 503, got %d", response.Code)
+	}
+	if strings.Contains(response.Body.String(), "backend details") {
+		t.Fatal("identity backend details leaked to client")
+	}
+}
+
 func TestHealthDoesNotClaimPersistentReadiness(t *testing.T) {
 	app, err := newServer(bookmarkcore.NewMemoryRepository(nil), fixedIdentity{owner: "owner"}, "memory-development")
 	if err != nil {
