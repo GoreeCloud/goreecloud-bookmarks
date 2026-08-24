@@ -65,6 +65,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", app.health)
 	mux.HandleFunc("GET /api/v1/bookmarks", app.list)
+	mux.HandleFunc("GET /api/v1/bookmarks/{id}", app.get)
 	mux.HandleFunc("POST /api/v1/bookmarks", app.create)
 
 	addr := os.Getenv("GOREECLOUD_BOOKMARKS_ADDR")
@@ -109,6 +110,27 @@ func (s server) list(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"bookmarks": items})
+}
+
+func (s server) get(w http.ResponseWriter, r *http.Request) {
+	ownerID, ok := s.resolveOwner(w, r)
+	if !ok {
+		return
+	}
+	bookmark, found, err := s.bookmarks.Get(r.Context(), ownerID, r.PathValue("id"))
+	if err != nil {
+		if errors.Is(err, bookmarkcore.ErrOwnerIdentityRequired) {
+			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "authenticated owner identity is required"})
+			return
+		}
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "bookmark storage is unavailable"})
+		return
+	}
+	if !found {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "bookmark not found"})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"bookmark": bookmark})
 }
 
 func (s server) create(w http.ResponseWriter, r *http.Request) {
