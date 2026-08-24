@@ -56,6 +56,62 @@ func TestListUsesResolvedOwnerThroughService(t *testing.T) {
 	}
 }
 
+func TestGetUsesResolvedOwnerAndMasksCrossOwner(t *testing.T) {
+	repository := bookmarkcore.NewMemoryRepository(nil)
+	service, err := bookmarkcore.NewService(repository)
+	if err != nil {
+		t.Fatal(err)
+	}
+	created, err := service.Create(t.Context(), "owner-a", bookmarkcore.CreateInput{URL: "https://example.com/private"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ownerApp, err := newServer(repository, fixedIdentity{owner: "owner-a"}, "memory-development")
+	if err != nil {
+		t.Fatal(err)
+	}
+	request := httptest.NewRequest(http.MethodGet, "/api/v1/bookmarks/"+created.ID, nil)
+	request.SetPathValue("id", created.ID)
+	response := httptest.NewRecorder()
+	ownerApp.get(response, request)
+	if response.Code != http.StatusOK || !strings.Contains(response.Body.String(), "https://example.com/private") {
+		t.Fatalf("owner lookup failed: status=%d body=%s", response.Code, response.Body.String())
+	}
+
+	otherApp, err := newServer(repository, fixedIdentity{owner: "owner-b"}, "memory-development")
+	if err != nil {
+		t.Fatal(err)
+	}
+	request = httptest.NewRequest(http.MethodGet, "/api/v1/bookmarks/"+created.ID, nil)
+	request.SetPathValue("id", created.ID)
+	response = httptest.NewRecorder()
+	otherApp.get(response, request)
+	if response.Code != http.StatusNotFound {
+		t.Fatalf("cross-owner lookup must be masked as 404, got %d", response.Code)
+	}
+	if strings.Contains(response.Body.String(), "owner-a") || strings.Contains(response.Body.String(), "private") {
+		t.Fatalf("cross-owner lookup leaked bookmark data: %s", response.Body.String())
+	}
+}
+
+func TestGetFailsClosedWithoutUsableIdentity(t *testing.T) {
+	app, err := newServer(bookmarkcore.NewMemoryRepository(nil), fixedIdentity{err: errors.New("identity backend details")}, "memory-development")
+	if err != nil {
+		t.Fatal(err)
+	}
+	request := httptest.NewRequest(http.MethodGet, "/api/v1/bookmarks/missing", nil)
+	request.SetPathValue("id", "missing")
+	response := httptest.NewRecorder()
+	app.get(response, request)
+	if response.Code != http.StatusServiceUnavailable {
+		t.Fatalf("expected unavailable identity to return 503, got %d", response.Code)
+	}
+	if strings.Contains(response.Body.String(), "backend details") {
+		t.Fatal("identity backend details leaked to client")
+	}
+}
+
 func TestListFailsClosedWithoutUsableIdentity(t *testing.T) {
 	repository := bookmarkcore.NewMemoryRepository(nil)
 
