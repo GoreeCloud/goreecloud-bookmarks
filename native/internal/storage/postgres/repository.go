@@ -4,13 +4,42 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/GoreeCloud/goreecloud-bookmarks/native/internal/bookmarks"
 )
 
 const uniqueViolationSQLState = "23505"
+
+const insertBookmarkQuery = `
+INSERT INTO native_bookmarks (id, owner_id, canonical_url, title, note, created_at, updated_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
+`
+
+const insertTagQuery = `
+INSERT INTO native_bookmark_tags (bookmark_id, owner_id, tag)
+VALUES ($1, $2, $3)
+`
+
+const listBookmarksQuery = `
+SELECT id, owner_id, canonical_url, title, note, created_at, updated_at
+FROM native_bookmarks
+WHERE owner_id = $1
+ORDER BY created_at DESC, id DESC
+`
+
+const getBookmarkQuery = `
+SELECT id, owner_id, canonical_url, title, note, created_at, updated_at
+FROM native_bookmarks
+WHERE owner_id = $1 AND id = $2
+`
+
+const listTagsQuery = `
+SELECT tag
+FROM native_bookmark_tags
+WHERE owner_id = $1 AND bookmark_id = $2
+ORDER BY lower(tag), tag
+`
 
 var ErrBookmarkAlreadyExists = errors.New("bookmark already exists for owner")
 
@@ -38,11 +67,10 @@ func (r *Repository) Create(ctx context.Context, ownerID string, input bookmarks
 	}
 	defer func() { _ = tx.Rollback() }()
 
-	_, err = tx.ExecContext(ctx, `
-INSERT INTO native_bookmarks (id, owner_id, canonical_url, title, note, created_at, updated_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7)
-`, bookmark.ID, bookmark.OwnerID, bookmark.URL, bookmark.Title, bookmark.Note, bookmark.CreatedAt, bookmark.UpdatedAt)
-	if err != nil {
+	if _, err := tx.ExecContext(ctx, insertBookmarkQuery,
+		bookmark.ID, bookmark.OwnerID, bookmark.URL, bookmark.Title, bookmark.Note,
+		bookmark.CreatedAt, bookmark.UpdatedAt,
+	); err != nil {
 		if isUniqueViolation(err) {
 			return bookmarks.Bookmark{}, ErrBookmarkAlreadyExists
 		}
@@ -50,10 +78,7 @@ VALUES ($1, $2, $3, $4, $5, $6, $7)
 	}
 
 	for _, tag := range bookmark.Tags {
-		if _, err := tx.ExecContext(ctx, `
-INSERT INTO native_bookmark_tags (bookmark_id, owner_id, tag)
-VALUES ($1, $2, $3)
-`, bookmark.ID, bookmark.OwnerID, tag); err != nil {
+		if _, err := tx.ExecContext(ctx, insertTagQuery, bookmark.ID, bookmark.OwnerID, tag); err != nil {
 			return bookmarks.Bookmark{}, errors.New("create bookmark tags failed")
 		}
 	}
@@ -65,12 +90,7 @@ VALUES ($1, $2, $3)
 }
 
 func (r *Repository) List(ctx context.Context, ownerID string) ([]bookmarks.Bookmark, error) {
-	rows, err := r.db.QueryContext(ctx, `
-SELECT id, owner_id, canonical_url, title, note, created_at, updated_at
-FROM native_bookmarks
-WHERE owner_id = $1
-ORDER BY created_at DESC, id DESC
-`, ownerID)
+	rows, err := r.db.QueryContext(ctx, listBookmarksQuery, ownerID)
 	if err != nil {
 		return nil, errors.New("list bookmarks failed")
 	}
@@ -99,13 +119,7 @@ ORDER BY created_at DESC, id DESC
 }
 
 func (r *Repository) Get(ctx context.Context, ownerID, id string) (bookmarks.Bookmark, bool, error) {
-	row := r.db.QueryRowContext(ctx, `
-SELECT id, owner_id, canonical_url, title, note, created_at, updated_at
-FROM native_bookmarks
-WHERE owner_id = $1 AND id = $2
-`, ownerID, id)
-
-	item, err := scanBookmark(row)
+	item, err := scanBookmark(r.db.QueryRowContext(ctx, getBookmarkQuery, ownerID, id))
 	if errors.Is(err, sql.ErrNoRows) {
 		return bookmarks.Bookmark{}, false, nil
 	}
@@ -121,12 +135,7 @@ WHERE owner_id = $1 AND id = $2
 }
 
 func (r *Repository) listTags(ctx context.Context, ownerID, bookmarkID string) ([]string, error) {
-	rows, err := r.db.QueryContext(ctx, `
-SELECT tag
-FROM native_bookmark_tags
-WHERE owner_id = $1 AND bookmark_id = $2
-ORDER BY lower(tag), tag
-`, ownerID, bookmarkID)
+	rows, err := r.db.QueryContext(ctx, listTagsQuery, ownerID, bookmarkID)
 	if err != nil {
 		return nil, errors.New("list bookmark tags failed")
 	}
@@ -172,7 +181,3 @@ func isUniqueViolation(err error) bool {
 }
 
 var _ bookmarks.Repository = (*Repository)(nil)
-
-func (r *Repository) String() string {
-	return fmt.Sprintf("postgres.Repository(schema=%d)", SchemaVersion)
-}
