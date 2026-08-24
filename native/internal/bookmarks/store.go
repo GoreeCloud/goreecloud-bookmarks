@@ -47,42 +47,19 @@ func NewStore() *Store {
 }
 
 func (s *Store) Create(ownerID string, input CreateInput) (Bookmark, error) {
-	ownerID = strings.TrimSpace(ownerID)
-	if ownerID == "" {
-		return Bookmark{}, errors.New("owner identity is required")
-	}
-	cleanURL, err := normalizeURL(input.URL)
+	bookmark, err := NewBookmark(ownerID, input, s.now())
 	if err != nil {
 		return Bookmark{}, err
 	}
-	title := strings.TrimSpace(input.Title)
-	note := strings.TrimSpace(input.Note)
-	if len([]rune(title)) > MaxTitleRunes {
-		return Bookmark{}, errors.New("title exceeds maximum length")
-	}
-	if len([]rune(note)) > MaxNoteRunes {
-		return Bookmark{}, errors.New("note exceeds maximum length")
-	}
-	tags, err := normalizeTags(input.Tags)
-	if err != nil {
-		return Bookmark{}, err
-	}
-
-	id, err := newID()
-	if err != nil {
-		return Bookmark{}, err
-	}
-	now := s.now()
-	bookmark := Bookmark{ID: id, OwnerID: ownerID, URL: cleanURL, Title: title, Note: note, Tags: tags, CreatedAt: now, UpdatedAt: now}
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	for _, existing := range s.items {
-		if existing.OwnerID == ownerID && existing.URL == cleanURL {
+		if existing.OwnerID == bookmark.OwnerID && existing.URL == bookmark.URL {
 			return Bookmark{}, errors.New("bookmark already exists for owner")
 		}
 	}
-	s.items[id] = bookmark
+	s.items[bookmark.ID] = bookmark
 	return bookmark, nil
 }
 
