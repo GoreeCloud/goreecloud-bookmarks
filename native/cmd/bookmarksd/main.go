@@ -11,14 +11,18 @@ import (
 	"time"
 
 	bookmarkcore "github.com/GoreeCloud/goreecloud-bookmarks/native/internal/bookmarks"
+	identitycore "github.com/GoreeCloud/goreecloud-bookmarks/native/internal/identity"
 )
 
 const (
-	maxCreateBodyBytes     = 16 * 1024
-	defaultRepositoryMode  = "memory-development"
-	postgresRepositoryMode = "postgres-development"
-	repositoryModeEnv      = "GOREECLOUD_BOOKMARKS_STORE"
-	postgresDatabaseURLEnv = "GOREECLOUD_BOOKMARKS_DATABASE_URL"
+	maxCreateBodyBytes      = 16 * 1024
+	defaultRepositoryMode   = "memory-development"
+	postgresRepositoryMode  = "postgres-development"
+	repositoryModeEnv       = "GOREECLOUD_BOOKMARKS_STORE"
+	postgresDatabaseURLEnv  = "GOREECLOUD_BOOKMARKS_DATABASE_URL"
+	identityModeEnv         = "GOREECLOUD_BOOKMARKS_IDENTITY"
+	unavailableIdentityMode = "unavailable"
+	developmentIdentityMode = "development-header"
 )
 
 type identityResolver interface {
@@ -85,12 +89,37 @@ func selectRuntimeRepository(getenv func(string) string) (bookmarkcore.Repositor
 	}
 }
 
+func selectRuntimeIdentity(getenv func(string) string, storeMode string) (identityResolver, string, error) {
+	if getenv == nil {
+		return nil, "", errors.New("environment reader is required")
+	}
+	mode := strings.ToLower(strings.TrimSpace(getenv(identityModeEnv)))
+	if mode == "" {
+		mode = unavailableIdentityMode
+	}
+	switch mode {
+	case unavailableIdentityMode:
+		return unavailableIdentity{}, unavailableIdentityMode, nil
+	case developmentIdentityMode:
+		if storeMode != defaultRepositoryMode {
+			return nil, "", errors.New("development header identity requires memory-development repository mode")
+		}
+		return identitycore.DevelopmentHeaderResolver{}, developmentIdentityMode, nil
+	default:
+		return nil, "", errors.New("unsupported bookmark identity mode")
+	}
+}
+
 func main() {
 	repository, storeMode, err := selectRuntimeRepository(os.Getenv)
 	if err != nil {
 		log.Fatal(err)
 	}
-	app, err := newServer(repository, unavailableIdentity{}, storeMode)
+	identity, identityMode, err := selectRuntimeIdentity(os.Getenv, storeMode)
+	if err != nil {
+		log.Fatal(err)
+	}
+	app, err := newServer(repository, identity, storeMode)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -113,7 +142,7 @@ func main() {
 		WriteTimeout:      15 * time.Second,
 		IdleTimeout:       60 * time.Second,
 	}
-	log.Printf("GoreeCloud Bookmarks native development service listening on %s", addr)
+	log.Printf("GoreeCloud Bookmarks native development service listening on %s with identity mode %s", addr, identityMode)
 	log.Fatal(httpServer.ListenAndServe())
 }
 
