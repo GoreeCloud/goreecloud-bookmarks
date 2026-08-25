@@ -30,7 +30,7 @@ func TestDevelopmentHeaderResolverReturnsBoundedOwner(t *testing.T) {
 func TestDevelopmentHeaderResolverRejectsWhitespaceAndControls(t *testing.T) {
 	for _, ownerID := range []string{"owner a", "owner\ta", "owner\na"} {
 		request := httptest.NewRequest("GET", "/", nil)
-		request.Header[DevelopmentOwnerHeader] = []string{ownerID}
+		request.Header.Set(DevelopmentOwnerHeader, ownerID)
 		if _, err := (DevelopmentHeaderResolver{}).Resolve(request); !errors.Is(err, ErrOwnerInvalid) {
 			t.Fatalf("expected invalid owner failure for %q, got %v", ownerID, err)
 		}
