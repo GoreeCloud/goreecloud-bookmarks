@@ -36,7 +36,7 @@
       <section class="bookmark-grid" aria-label="Bookmarks">
         {{range .Bookmarks}}
         <article class="bookmark-card">
-          <div class="preview" aria-hidden="true"><span>{{if .Title}}{{slice .Title 0 1}}{{else}}↗{{end}}</span></div>
+          <div class="preview" aria-hidden="true"><span>↗</span></div>
           <div class="bookmark-body">
             <div class="bookmark-heading"><a href="{{.URL}}" rel="noreferrer">{{if .Title}}{{.Title}}{{else}}{{.URL}}{{end}}</a><span>Saved {{.CreatedAt.Format "Jan 2"}}</span></div>
             <p class="url">{{.URL}}</p>
