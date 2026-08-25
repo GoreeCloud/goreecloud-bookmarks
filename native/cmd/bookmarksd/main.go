@@ -25,25 +25,9 @@ const (
 	developmentIdentityMode = "development-header"
 )
 
-type identityResolver interface {
-	Resolve(*http.Request) (string, error)
-}
-
-type unavailableIdentity struct{}
-
-func (unavailableIdentity) Resolve(*http.Request) (string, error) {
-	return "", errIdentityUnavailable
-}
-
-var errIdentityUnavailable = &identityError{"production identity adapter is not integrated"}
-
-type identityError struct{ message string }
-
-func (e *identityError) Error() string { return e.message }
-
 type server struct {
 	bookmarks *bookmarkcore.Service
-	identity  identityResolver
+	identity  identitycore.Resolver
 	storeMode string
 }
 
@@ -54,7 +38,7 @@ type createBookmarkRequest struct {
 	Tags  []string `json:"tags"`
 }
 
-func newServer(repository bookmarkcore.Repository, identity identityResolver, storeMode string) (server, error) {
+func newServer(repository bookmarkcore.Repository, identity identitycore.Resolver, storeMode string) (server, error) {
 	if identity == nil {
 		return server{}, errors.New("identity resolver is required")
 	}
@@ -89,7 +73,7 @@ func selectRuntimeRepository(getenv func(string) string) (bookmarkcore.Repositor
 	}
 }
 
-func selectRuntimeIdentity(getenv func(string) string, storeMode string) (identityResolver, string, error) {
+func selectRuntimeIdentity(getenv func(string) string, storeMode string) (identitycore.Resolver, string, error) {
 	if getenv == nil {
 		return nil, "", errors.New("environment reader is required")
 	}
@@ -99,7 +83,7 @@ func selectRuntimeIdentity(getenv func(string) string, storeMode string) (identi
 	}
 	switch mode {
 	case unavailableIdentityMode:
-		return unavailableIdentity{}, unavailableIdentityMode, nil
+		return identitycore.UnavailableResolver{}, unavailableIdentityMode, nil
 	case developmentIdentityMode:
 		if storeMode != defaultRepositoryMode {
 			return nil, "", errors.New("development header identity requires memory-development repository mode")
