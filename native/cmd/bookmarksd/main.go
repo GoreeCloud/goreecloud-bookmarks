@@ -14,11 +14,11 @@ import (
 )
 
 const (
-	maxCreateBodyBytes      = 16 * 1024
-	defaultRepositoryMode   = "memory-development"
-	postgresRepositoryMode  = "postgres-development"
-	repositoryModeEnv       = "GOREECLOUD_BOOKMARKS_STORE"
-	postgresDatabaseURLEnv  = "GOREECLOUD_BOOKMARKS_DATABASE_URL"
+	maxCreateBodyBytes     = 16 * 1024
+	defaultRepositoryMode  = "memory-development"
+	postgresRepositoryMode = "postgres-development"
+	repositoryModeEnv      = "GOREECLOUD_BOOKMARKS_STORE"
+	postgresDatabaseURLEnv = "GOREECLOUD_BOOKMARKS_DATABASE_URL"
 )
 
 type identityResolver interface {
@@ -96,6 +96,7 @@ func main() {
 	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", app.health)
+	mux.HandleFunc("GET /readyz", app.ready)
 	mux.HandleFunc("GET /api/v1/bookmarks", app.list)
 	mux.HandleFunc("GET /api/v1/bookmarks/{id}", app.get)
 	mux.HandleFunc("POST /api/v1/bookmarks", app.create)
