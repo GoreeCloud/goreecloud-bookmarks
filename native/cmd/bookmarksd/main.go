@@ -38,6 +38,13 @@ type createBookmarkRequest struct {
 	Tags  []string `json:"tags"`
 }
 
+type updateBookmarkRequest struct {
+	URL   string   `json:"url"`
+	Title string   `json:"title"`
+	Note  string   `json:"note"`
+	Tags  []string `json:"tags"`
+}
+
 func newServer(repository bookmarkcore.Repository, identity identitycore.Resolver, storeMode string) (server, error) {
 	if identity == nil {
 		return server{}, errors.New("identity resolver is required")
@@ -113,6 +120,8 @@ func main() {
 	mux.HandleFunc("GET /api/v1/bookmarks", app.list)
 	mux.HandleFunc("GET /api/v1/bookmarks/{id}", app.get)
 	mux.HandleFunc("POST /api/v1/bookmarks", app.create)
+	mux.HandleFunc("PATCH /api/v1/bookmarks/{id}", app.update)
+	mux.HandleFunc("DELETE /api/v1/bookmarks/{id}", app.delete)
 
 	addr := os.Getenv("GOREECLOUD_BOOKMARKS_ADDR")
 	if addr == "" {
@@ -186,13 +195,7 @@ func (s server) create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var input createBookmarkRequest
-	decoder := json.NewDecoder(http.MaxBytesReader(w, r.Body, maxCreateBodyBytes))
-	decoder.DisallowUnknownFields()
-	if err := decoder.Decode(&input); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "bookmark request is invalid"})
-		return
-	}
-	if err := ensureJSONEOF(decoder); err != nil {
+	if err := decodeBookmarkJSON(w, r, &input); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "bookmark request is invalid"})
 		return
 	}
@@ -211,6 +214,58 @@ func (s server) create(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, map[string]any{"bookmark": bookmark})
 }
 
+func (s server) update(w http.ResponseWriter, r *http.Request) {
+	ownerID, ok := s.resolveOwner(w, r)
+	if !ok {
+		return
+	}
+
+	var input updateBookmarkRequest
+	if err := decodeBookmarkJSON(w, r, &input); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "bookmark request is invalid"})
+		return
+	}
+
+	bookmark, found, err := s.bookmarks.Update(r.Context(), ownerID, r.PathValue("id"), bookmarkcore.UpdateInput{
+		URL: input.URL, Title: input.Title, Note: input.Note, Tags: input.Tags,
+	})
+	if err != nil {
+		if errors.Is(err, bookmarkcore.ErrOwnerIdentityRequired) {
+			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "authenticated owner identity is required"})
+			return
+		}
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "bookmark input is invalid"})
+		return
+	}
+	if !found {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "bookmark not found"})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"bookmark": bookmark})
+}
+
+func (s server) delete(w http.ResponseWriter, r *http.Request) {
+	ownerID, ok := s.resolveOwner(w, r)
+	if !ok {
+		return
+	}
+
+	deleted, err := s.bookmarks.Delete(r.Context(), ownerID, r.PathValue("id"))
+	if err != nil {
+		if errors.Is(err, bookmarkcore.ErrOwnerIdentityRequired) {
+			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "authenticated owner identity is required"})
+			return
+		}
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "bookmark request is invalid"})
+		return
+	}
+	if !deleted {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "bookmark not found"})
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (s server) resolveOwner(w http.ResponseWriter, r *http.Request) (string, bool) {
 	ownerID, err := s.identity.Resolve(r)
 	if err != nil {
@@ -218,6 +273,15 @@ func (s server) resolveOwner(w http.ResponseWriter, r *http.Request) (string, bo
 		return "", false
 	}
 	return ownerID, true
+}
+
+func decodeBookmarkJSON(w http.ResponseWriter, r *http.Request, target any) error {
+	decoder := json.NewDecoder(http.MaxBytesReader(w, r.Body, maxCreateBodyBytes))
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(target); err != nil {
+		return err
+	}
+	return ensureJSONEOF(decoder)
 }
 
 func ensureJSONEOF(decoder *json.Decoder) error {
