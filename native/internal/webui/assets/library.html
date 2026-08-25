@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>GoreeCloud Bookmarks</title>
+  <link rel="stylesheet" href="/assets/library.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Bookmark navigation">
+      <a class="brand" href="/"><span class="brand-mark" aria-hidden="true">B</span><span><strong>GoreeCloud</strong><small>Bookmarks</small></span></a>
+      <nav>
+        <a class="active" href="/">All bookmarks</a>
+        <span>Favorites <em>Planned</em></span>
+        <span>Unsorted <em>Planned</em></span>
+        <span>Read Later <em>Planned</em></span>
+        <span>Archive <em>Planned</em></span>
+        <span>Trash <em>Planned</em></span>
+      </nav>
+      <div class="sidebar-section"><strong>Collections</strong><p>Collection hierarchy remains a later native slice.</p></div>
+      <div class="sidebar-section"><strong>Tags</strong><p>Existing bookmark tags appear on cards without inventing a second taxonomy.</p></div>
+      <footer>Native development · {{.StoreMode}} · Production approval not granted</footer>
+    </aside>
+
+    <main class="workspace">
+      <header class="workspace-header">
+        <div><span class="eyebrow">Library</span><h1>Your saved web.</h1><p>Private, owner-scoped bookmarks from the native GoreeCloud service.</p></div>
+        <div class="view-controls" aria-label="Library view"><span class="active">Cards</span><span>Grid · planned</span><span>List · planned</span></div>
+      </header>
+
+      {{if .Error}}
+      <section class="state-card" role="status"><span class="eyebrow">Identity required</span><h2>Bookmark library unavailable</h2><p>{{.Error}}</p><p class="boundary">This shell does not accept caller-supplied credentials or bypass the configured identity resolver.</p></section>
+      {{else if .Bookmarks}}
+      <section class="bookmark-grid" aria-label="Bookmarks">
+        {{range .Bookmarks}}
+        <article class="bookmark-card">
+          <div class="preview" aria-hidden="true"><span>{{if .Title}}{{slice .Title 0 1}}{{else}}↗{{end}}</span></div>
+          <div class="bookmark-body">
+            <div class="bookmark-heading"><a href="{{.URL}}" rel="noreferrer">{{if .Title}}{{.Title}}{{else}}{{.URL}}{{end}}</a><span>Saved {{.CreatedAt.Format "Jan 2"}}</span></div>
+            <p class="url">{{.URL}}</p>
+            {{if .Note}}<p class="note">{{.Note}}</p>{{end}}
+            {{if .Tags}}<div class="tags">{{range .Tags}}<span>{{.}}</span>{{end}}</div>{{end}}
+          </div>
+        </article>
+        {{end}}
+      </section>
+      {{else}}
+      <section class="state-card"><span class="eyebrow">Empty library</span><h2>Save your first bookmark.</h2><p>The native owner-scoped API is ready for development capture. Creation UI, collections, favorites, Read Later, and preservation remain separate reviewed slices.</p></section>
+      {{end}}
+    </main>
+
+    <aside class="details" aria-label="Bookmark details">
+      <span class="eyebrow">Details</span><h2>Context stays close.</h2><p>Selectable details, notes, tags, preservation state, sharing, and timestamps will live here as those native models are implemented.</p>
+      <div class="boundary-card"><strong>Privacy Shield</strong><p>Private owner isolation remains server-side, not a visual convention.</p></div>
+      <div class="boundary-card"><strong>Wardveil Security</strong><p>External saved content remains untrusted and cannot gain privileged application context.</p></div>
+      <div class="boundary-card"><strong>Everkeep</strong><p>Portability and recovery remain Stable gates; this shell does not claim them complete.</p></div>
+    </aside>
+  </div>
+</body>
+</html>
