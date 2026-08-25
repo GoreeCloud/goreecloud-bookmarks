@@ -37,7 +37,7 @@ export default function ProfileDropdown({
   const { t } = useTranslation();
   const updateUserPreference = useUpdateUserPreference();
   const { data: user } = useUser();
-  const LINKWARDEN_VERSION = process.env.version;
+  const GOREECLOUD_BOOKMARKS_VERSION = process.env.version;
 
   const { data: config } = useConfig();
 
@@ -169,7 +169,7 @@ export default function ProfileDropdown({
             <DropdownMenuSubContent>
               <DropdownMenuItem asChild>
                 <Link
-                  href="https://docs.linkwarden.app"
+                  href="https://github.com/GoreeCloud/goreecloud-bookmarks"
                   target="_blank"
                   className="whitespace-nowrap"
                 >
@@ -177,17 +177,6 @@ export default function ProfileDropdown({
                   {t("documentation")}
                 </Link>
               </DropdownMenuItem>
-              {config?.STRIPE_ENABLED && (
-                <DropdownMenuItem asChild>
-                  <Link
-                    href="mailto:support@linkwarden.app"
-                    className="whitespace-nowrap"
-                  >
-                    <i className="bi-envelope"></i>
-                    {t("contact_support")}
-                  </Link>
-                </DropdownMenuItem>
-              )}
             </DropdownMenuSubContent>
           </DropdownMenuPortal>
         </DropdownMenuSub>
@@ -200,11 +189,11 @@ export default function ProfileDropdown({
         </DropdownMenuItem>
 
         <Link
-          href="https://github.com/linkwarden/linkwarden/releases"
+          href="https://github.com/GoreeCloud/goreecloud-bookmarks/releases"
           target="_blank"
           className="block px-2 py-1.5 text-xs text-neutral hover:opacity-50 duration-100"
         >
-          {t("linkwarden_version", { version: LINKWARDEN_VERSION })}
+          GoreeCloud Bookmarks {GOREECLOUD_BOOKMARKS_VERSION}
         </Link>
       </DropdownMenuContent>
     </DropdownMenu>

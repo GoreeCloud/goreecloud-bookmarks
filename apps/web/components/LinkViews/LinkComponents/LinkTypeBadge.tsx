@@ -30,23 +30,27 @@ function LinkTypeBadge({
     }
   };
 
+  const badgeClassName =
+    "inline-flex max-w-full w-fit items-center gap-1.5 rounded-md bg-base-content/[0.055] px-2 py-1 text-[11px] font-medium leading-none text-base-content/55 ring-1 ring-inset ring-base-content/[0.06] transition-colors";
+
   return link.url && url ? (
     <Link
       href={link.url || ""}
       target="_blank"
+      rel="noreferrer"
       title={link.url || ""}
       onClick={(e) => {
         e.stopPropagation();
       }}
-      className="flex gap-1 item-center select-none text-neutral hover:opacity-70 duration-100 max-w-full w-fit"
+      className={`${badgeClassName} hover:bg-base-content/[0.09] hover:text-base-content/75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50`}
     >
-      <i className="bi-link-45deg text-lg leading-none"></i>
-      <p className="text-xs truncate">{url}</p>
+      <i className="bi-globe2 shrink-0 text-[10px]" aria-hidden="true" />
+      <span className="truncate">{url}</span>
     </Link>
   ) : (
-    <div className="flex gap-1 item-center select-none text-neutral duration-100 max-w-full w-fit">
-      <i className={typeIcon() + ` text-md leading-none`}></i>
-      <p className="text-xs truncate">{link.type}</p>
+    <div className={badgeClassName}>
+      <i className={`${typeIcon()} shrink-0 text-[10px]`} aria-hidden="true" />
+      <span className="truncate capitalize">{link.type}</span>
     </div>
   );
 }

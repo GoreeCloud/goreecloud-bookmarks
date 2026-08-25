@@ -31,63 +31,62 @@ export default function SidebarHighlightLink({
   return (
     <TooltipProvider>
       <Tooltip>
-        <TooltipTrigger asChild>
-          <Link
-            href={href}
-            title={title}
-            target={external ? "_blank" : undefined}
-          >
-            <div
+        <div
+          className={cn(
+            "group flex items-center transition-colors",
+            active ? "bg-primary/20" : "hover:bg-neutral/20",
+            sidebarIsCollapsed
+              ? "h-11 w-11 justify-center rounded-xl"
+              : "min-h-10 rounded-lg"
+          )}
+        >
+          <TooltipTrigger asChild>
+            <Link
+              href={href}
+              title={title}
+              target={external ? "_blank" : undefined}
+              rel={external ? "noreferrer" : undefined}
               className={cn(
-                active ? "bg-primary/20" : "hover:bg-neutral/20",
-                "group transition-colors cursor-pointer flex items-center gap-2 capitalize",
-                sidebarIsCollapsed ? "rounded-md h-8 w-8" : "rounded-lg px-3"
+                "flex min-w-0 items-center gap-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
+                sidebarIsCollapsed
+                  ? "h-11 w-11 justify-center"
+                  : "min-h-10 flex-1 px-3"
               )}
             >
-              {sidebarIsCollapsed ? (
-                <i
-                  className={cn(
-                    icon,
-                    "text-primary text-lg drop-shadow w-full text-center"
-                  )}
-                ></i>
-              ) : (
-                <span className="relative flex items-center shrink-0">
-                  <i
-                    className={cn(
-                      icon,
-                      "text-primary text-lg drop-shadow",
-                      showToggle && "group-hover:opacity-0 duration-100"
-                    )}
-                  ></i>
-                  {showToggle && (
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        onToggleExpand?.();
-                      }}
-                      aria-expanded={expanded}
-                      className="absolute inset-0 hidden group-hover:flex items-center justify-center"
-                    >
-                      <i
-                        className={cn(
-                          expanded
-                            ? "bi-caret-down-fill"
-                            : "bi-caret-right-fill",
-                          "opacity-50 hover:opacity-100 duration-200"
-                        )}
-                      ></i>
-                    </button>
-                  )}
-                </span>
-              )}
+              <i
+                className={cn(
+                  icon,
+                  "shrink-0 text-lg text-primary drop-shadow"
+                )}
+                aria-hidden="true"
+              />
               {!sidebarIsCollapsed && (
-                <p className="truncate w-full font-bold text-xs">{title}</p>
+                <p className="min-w-0 flex-1 truncate text-xs font-bold capitalize">
+                  {title}
+                </p>
               )}
-            </div>
-          </Link>
-        </TooltipTrigger>
+            </Link>
+          </TooltipTrigger>
+
+          {showToggle && (
+            <button
+              type="button"
+              onClick={onToggleExpand}
+              aria-expanded={expanded}
+              aria-label={`${expanded ? "Collapse" : "Expand"} ${title}`}
+              className="mr-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-base-content/50 transition-colors hover:bg-base-content/10 hover:text-base-content focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+            >
+              <i
+                className={cn(
+                  expanded ? "bi-chevron-down" : "bi-chevron-right",
+                  "text-[10px]"
+                )}
+                aria-hidden="true"
+              />
+            </button>
+          )}
+        </div>
+
         {sidebarIsCollapsed && (
           <TooltipContent side="right">{title}</TooltipContent>
         )}

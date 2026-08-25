@@ -15,6 +15,7 @@ const InstallApp = (props: Props) => {
           xmlns="http://www.w3.org/2000/svg"
           className="w-8 h-8"
           viewBox="0 0 50 50"
+          aria-hidden="true"
         >
           <path
             fill="currentColor"
@@ -28,19 +29,25 @@ const InstallApp = (props: Props) => {
         </svg>
         <p className="w-4/5 text-[0.92rem]">
           <Trans
-            i18nKey="pwa_install_prompt"
+            i18nKey="goreecloud_pwa_install_prompt"
+            defaults="Install GoreeCloud Bookmarks to your home screen for faster access and an app-like experience. <0>Learn more</0>"
             components={[
               <a
                 className="underline"
                 target="_blank"
-                href="https://docs.linkwarden.app/getting-started/pwa-installation"
+                href="https://github.com/GoreeCloud/goreecloud-bookmarks"
                 key={0}
               />,
             ]}
           />
         </p>
-        <Button onClick={() => setIsOpen(false)} variant="ghost" size="icon">
-          <i className="bi-x text-xl"></i>
+        <Button
+          onClick={() => setIsOpen(false)}
+          variant="ghost"
+          size="icon"
+          aria-label="Dismiss install prompt"
+        >
+          <i className="bi-x text-xl" aria-hidden="true"></i>
         </Button>
       </div>
     </div>

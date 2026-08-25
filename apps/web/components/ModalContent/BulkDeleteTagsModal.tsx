@@ -3,8 +3,8 @@ import Modal from "../Modal";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "next-i18next";
 import toast from "react-hot-toast";
-import { Separator } from "../ui/separator";
 import { useBulkTagDeletion } from "@linkwarden/router/tags";
+import GlazeModalFrame from "./GlazeModalFrame";
 
 type Props = {
   onClose: Function;
@@ -46,15 +46,26 @@ export default function BulkDeleteTagsModal({
 
   return (
     <Modal toggleModal={onClose}>
-      <p className="text-xl font-thin text-red-500">
-        {selectedTags.length === 1
-          ? t("delete_tag")
-          : t("delete_tags", { count: selectedTags.length })}
-      </p>
-
-      <Separator className="my-3" />
-
-      <div className="flex flex-col gap-3">
+      <GlazeModalFrame
+        title={
+          selectedTags.length === 1
+            ? t("delete_tag")
+            : t("delete_tags", { count: selectedTags.length })
+        }
+        icon="bi-tags"
+        tone="destructive"
+        footer={
+          <>
+            <Button type="button" variant="ghost" onClick={() => onClose()}>
+              {t("cancel")}
+            </Button>
+            <Button type="button" variant="destructive" onClick={deleteTag}>
+              <i className="bi-trash" />
+              {t("delete")}
+            </Button>
+          </>
+        }
+      >
         <p>
           {selectedTags.length === 1
             ? t("tag_deletion_confirmation_message")
@@ -62,12 +73,7 @@ export default function BulkDeleteTagsModal({
                 count: selectedTags.length,
               })}
         </p>
-
-        <Button className="ml-auto" variant="destructive" onClick={deleteTag}>
-          <i className="bi-trash text-xl" />
-          {t("delete")}
-        </Button>
-      </div>
+      </GlazeModalFrame>
     </Modal>
   );
 }

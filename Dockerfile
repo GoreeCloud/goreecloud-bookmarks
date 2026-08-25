@@ -22,6 +22,7 @@ RUN corepack enable
 # Copy only structure first for optimized caching
 COPY package.json yarn.lock .yarnrc.yml ./
 COPY apps/web/package.json ./apps/web/
+COPY apps/web/scripts/install-playwright-browsers.mjs ./apps/web/scripts/
 COPY apps/worker/package.json ./apps/worker/
 COPY packages/filesystem/package.json ./packages/filesystem/
 COPY packages/lib/package.json ./packages/lib/

@@ -5,6 +5,7 @@ import getLatestVersion from "@/lib/client/getLatestVersion";
 import DragNDrop from "@/components/DragNDrop";
 import { LinkIncludingShortenedCollectionAndTags } from "@linkwarden/types/global";
 import useSidebarCollapse from "@/hooks/useSidebarCollapse";
+import { cn } from "@/lib/utils";
 
 interface Props {
   children: ReactNode;
@@ -36,7 +37,10 @@ export default function MainLayout({ children }: Props) {
 
   return (
     <DragNDrop activeLink={activeLink} setActiveLink={setActiveLink}>
-      <div className="flex" data-testid="dashboard-wrapper">
+      <div
+        className="flex min-h-screen bg-base-200/50"
+        data-testid="dashboard-wrapper"
+      >
         {showAnnouncement && (
           <Announcement toggleAnnouncementBar={toggleAnnouncementBar} />
         )}
@@ -45,13 +49,16 @@ export default function MainLayout({ children }: Props) {
           sidebarIsCollapsed={sidebarIsCollapsed}
         />
 
-        <div
-          className={`${
-            sidebarIsCollapsed ? "" : "lg:w-[calc(100%-288px)]"
-          } w-[calc(100%-56px)] sm:pb-0 pb-20 flex flex-col h-screen overflow-y-auto`}
+        <main
+          className={cn(
+            "h-screen w-[calc(100%-64px)] min-w-0 overflow-hidden p-0 lg:py-2 lg:pr-2",
+            !sidebarIsCollapsed && "lg:w-[calc(100%-288px)]"
+          )}
         >
-          {children}
-        </div>
+          <div className="h-full overflow-y-auto bg-base-100 pb-20 sm:pb-0 lg:rounded-2xl lg:border lg:border-base-content/10 lg:shadow-sm">
+            {children}
+          </div>
+        </main>
       </div>
     </DragNDrop>
   );
