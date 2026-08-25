@@ -7,12 +7,19 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	bookmarkcore "github.com/GoreeCloud/goreecloud-bookmarks/native/internal/bookmarks"
 )
 
-const maxCreateBodyBytes = 16 * 1024
+const (
+	maxCreateBodyBytes      = 16 * 1024
+	defaultRepositoryMode   = "memory-development"
+	postgresRepositoryMode  = "postgres-development"
+	repositoryModeEnv       = "GOREECLOUD_BOOKMARKS_STORE"
+	postgresDatabaseURLEnv  = "GOREECLOUD_BOOKMARKS_DATABASE_URL"
+)
 
 type identityResolver interface {
 	Resolve(*http.Request) (string, error)
@@ -57,8 +64,33 @@ func newServer(repository bookmarkcore.Repository, identity identityResolver, st
 	return server{bookmarks: service, identity: identity, storeMode: storeMode}, nil
 }
 
+func selectRuntimeRepository(getenv func(string) string) (bookmarkcore.Repository, string, error) {
+	if getenv == nil {
+		return nil, "", errors.New("environment reader is required")
+	}
+	mode := strings.ToLower(strings.TrimSpace(getenv(repositoryModeEnv)))
+	if mode == "" {
+		mode = defaultRepositoryMode
+	}
+	switch mode {
+	case defaultRepositoryMode:
+		return bookmarkcore.NewMemoryRepository(nil), defaultRepositoryMode, nil
+	case postgresRepositoryMode:
+		if strings.TrimSpace(getenv(postgresDatabaseURLEnv)) == "" {
+			return nil, "", errors.New("postgres development mode requires an explicit database URL")
+		}
+		return nil, "", errors.New("postgres development runtime driver is not integrated")
+	default:
+		return nil, "", errors.New("unsupported bookmark repository mode")
+	}
+}
+
 func main() {
-	app, err := newServer(bookmarkcore.NewMemoryRepository(nil), unavailableIdentity{}, "memory-development")
+	repository, storeMode, err := selectRuntimeRepository(os.Getenv)
+	if err != nil {
+		log.Fatal(err)
+	}
+	app, err := newServer(repository, unavailableIdentity{}, storeMode)
 	if err != nil {
 		log.Fatal(err)
 	}

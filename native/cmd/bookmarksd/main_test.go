@@ -209,3 +209,55 @@ func TestHealthDoesNotClaimPersistentReadiness(t *testing.T) {
 		t.Fatalf("health response overstated readiness: %s", body)
 	}
 }
+
+func TestRuntimeRepositoryDefaultsToMemoryDevelopment(t *testing.T) {
+	repository, mode, err := selectRuntimeRepository(func(string) string { return "" })
+	if err != nil {
+		t.Fatal(err)
+	}
+	if repository == nil || mode != defaultRepositoryMode {
+		t.Fatalf("unexpected default repository selection: mode=%q repository=%T", mode, repository)
+	}
+}
+
+func TestRuntimeRepositoryRejectsUnknownMode(t *testing.T) {
+	_, _, err := selectRuntimeRepository(func(key string) string {
+		if key == repositoryModeEnv {
+			return "sqlite"
+		}
+		return ""
+	})
+	if err == nil || !strings.Contains(err.Error(), "unsupported bookmark repository mode") {
+		t.Fatalf("expected bounded unsupported-mode error, got %v", err)
+	}
+}
+
+func TestPostgresDevelopmentSelectionFailsClosed(t *testing.T) {
+	_, _, err := selectRuntimeRepository(func(key string) string {
+		if key == repositoryModeEnv {
+			return postgresRepositoryMode
+		}
+		return ""
+	})
+	if err == nil || !strings.Contains(err.Error(), "requires an explicit database URL") {
+		t.Fatalf("expected missing database URL failure, got %v", err)
+	}
+
+	secretURL := "postgres://user:secret@example.invalid/bookmarks"
+	_, _, err = selectRuntimeRepository(func(key string) string {
+		switch key {
+		case repositoryModeEnv:
+			return postgresRepositoryMode
+		case postgresDatabaseURLEnv:
+			return secretURL
+		default:
+			return ""
+		}
+	})
+	if err == nil || !strings.Contains(err.Error(), "driver is not integrated") {
+		t.Fatalf("expected unavailable driver failure, got %v", err)
+	}
+	if strings.Contains(err.Error(), secretURL) || strings.Contains(err.Error(), "secret") {
+		t.Fatalf("database URL leaked through configuration error: %v", err)
+	}
+}
