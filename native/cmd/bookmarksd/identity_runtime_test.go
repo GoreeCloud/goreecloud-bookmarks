@@ -17,7 +17,7 @@ func TestRuntimeIdentityDefaultsUnavailable(t *testing.T) {
 	if mode != unavailableIdentityMode {
 		t.Fatalf("unexpected identity mode: %q", mode)
 	}
-	if _, ok := resolver.(unavailableIdentity); !ok {
+	if _, ok := resolver.(identitycore.UnavailableResolver); !ok {
 		t.Fatalf("default identity must remain unavailable, got %T", resolver)
 	}
 }
