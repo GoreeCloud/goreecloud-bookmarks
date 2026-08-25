@@ -12,6 +12,8 @@ type Repository interface {
 	Create(context.Context, string, CreateInput) (Bookmark, error)
 	List(context.Context, string) ([]Bookmark, error)
 	Get(context.Context, string, string) (Bookmark, bool, error)
+	Update(context.Context, string, string, UpdateInput) (Bookmark, bool, error)
+	Delete(context.Context, string, string) (bool, error)
 }
 
 type Service struct {
@@ -42,15 +44,27 @@ func (s *Service) List(ctx context.Context, ownerID string) ([]Bookmark, error) 
 }
 
 func (s *Service) Get(ctx context.Context, ownerID, id string) (Bookmark, bool, error) {
-	ownerID, err := normalizeOwnerID(ownerID)
+	ownerID, id, err := normalizeMutationIdentity(ownerID, id)
 	if err != nil {
 		return Bookmark{}, false, err
 	}
-	id = strings.TrimSpace(id)
-	if id == "" {
-		return Bookmark{}, false, errors.New("bookmark id is required")
-	}
 	return s.repository.Get(ctx, ownerID, id)
+}
+
+func (s *Service) Update(ctx context.Context, ownerID, id string, input UpdateInput) (Bookmark, bool, error) {
+	ownerID, id, err := normalizeMutationIdentity(ownerID, id)
+	if err != nil {
+		return Bookmark{}, false, err
+	}
+	return s.repository.Update(ctx, ownerID, id, input)
+}
+
+func (s *Service) Delete(ctx context.Context, ownerID, id string) (bool, error) {
+	ownerID, id, err := normalizeMutationIdentity(ownerID, id)
+	if err != nil {
+		return false, err
+	}
+	return s.repository.Delete(ctx, ownerID, id)
 }
 
 func normalizeOwnerID(ownerID string) (string, error) {
@@ -59,4 +73,16 @@ func normalizeOwnerID(ownerID string) (string, error) {
 		return "", ErrOwnerIdentityRequired
 	}
 	return ownerID, nil
+}
+
+func normalizeMutationIdentity(ownerID, id string) (string, string, error) {
+	ownerID, err := normalizeOwnerID(ownerID)
+	if err != nil {
+		return "", "", err
+	}
+	id = strings.TrimSpace(id)
+	if id == "" {
+		return "", "", errors.New("bookmark id is required")
+	}
+	return ownerID, id, nil
 }
