@@ -25,3 +25,11 @@ func (r *MemoryRepository) Get(_ context.Context, ownerID, id string) (Bookmark,
 	bookmark, ok := r.store.Get(ownerID, id)
 	return bookmark, ok, nil
 }
+
+func (r *MemoryRepository) Update(_ context.Context, ownerID, id string, input UpdateInput) (Bookmark, bool, error) {
+	return r.store.Update(ownerID, id, input)
+}
+
+func (r *MemoryRepository) Delete(_ context.Context, ownerID, id string) (bool, error) {
+	return r.store.Delete(ownerID, id)
+}
