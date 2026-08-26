@@ -77,8 +77,9 @@ func SignedBookmarkEnvelope(item ItemRecord, revision uint64, identity DeviceIde
 type HTTPDoer interface{ Do(*http.Request) (*http.Response, error) }
 
 type SubmissionClient struct {
-	BaseURL string
-	Client  HTTPDoer
+	BaseURL     string
+	BearerToken string
+	Client      HTTPDoer
 }
 
 func (c SubmissionClient) SubmitBookmark(ctx context.Context, envelope Envelope, proof RecordProof) error {
@@ -98,6 +99,9 @@ func (c SubmissionClient) SubmitBookmark(ctx context.Context, envelope Envelope,
 	}
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("Accept", "application/json")
+	if token := strings.TrimSpace(c.BearerToken); token != "" {
+		request.Header.Set("Authorization", "Bearer "+token)
+	}
 	response, err := c.Client.Do(request)
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrSyncSubmissionFailed, err)
