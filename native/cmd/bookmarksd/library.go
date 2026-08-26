@@ -9,6 +9,11 @@ import (
 )
 
 func (s server) library(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path == "/api/v1/sync/capabilities" {
+		s.syncCapabilities(w, r)
+		return
+	}
+
 	ownerID, err := s.identity.Resolve(r)
 	if err != nil {
 		webui.RenderLibrary(w, http.StatusServiceUnavailable, webui.LibraryPageData{
