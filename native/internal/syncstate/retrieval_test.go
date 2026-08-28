@@ -37,9 +37,28 @@ func TestFetchBookmarksUsesAuthenticatedSessionAndValidatesDataset(t *testing.T)
 	}
 }
 
-func TestFetchBookmarksRejectsCrossDatasetResponse(t *testing.T) {
+func TestFetchBookmarksRequiresBearerBeforeTransport(t *testing.T) {
+	called := false
 	client := RetrievalClient{
 		BaseURL: "https://sync.invalid",
+		Client: retrievalDoerFunc(func(*http.Request) (*http.Response, error) {
+			called = true
+			return nil, nil
+		}),
+	}
+
+	if _, err := client.FetchBookmarks(context.Background()); err == nil {
+		t.Fatal("missing bearer session must fail closed")
+	}
+	if called {
+		t.Fatal("transport must not be called without an authenticated Sync session")
+	}
+}
+
+func TestFetchBookmarksRejectsCrossDatasetResponse(t *testing.T) {
+	client := RetrievalClient{
+		BaseURL:     "https://sync.invalid",
+		BearerToken: "fixture",
 		Client: retrievalDoerFunc(func(*http.Request) (*http.Response, error) {
 			body := `{"dataset":"bookmarks.items","count":1,"records":[{"dataset":"search.history","schemaVersion":1,"recordId":"query-1","revision":1,"updatedAt":"2026-08-26T23:35:00Z","originDevice":"device-1","deleted":false,"payload":{}}]}`
 			return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(body)), Header: make(http.Header)}, nil
@@ -48,5 +67,35 @@ func TestFetchBookmarksRejectsCrossDatasetResponse(t *testing.T) {
 
 	if _, err := client.FetchBookmarks(context.Background()); err == nil {
 		t.Fatal("cross-dataset retrieval response must fail closed")
+	}
+}
+
+func TestFetchBookmarksRejectsTrailingJSON(t *testing.T) {
+	client := RetrievalClient{
+		BaseURL:     "https://sync.invalid",
+		BearerToken: "fixture",
+		Client: retrievalDoerFunc(func(*http.Request) (*http.Response, error) {
+			body := `{"dataset":"bookmarks.items","count":0,"records":[]} {}`
+			return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(body)), Header: make(http.Header)}, nil
+		}),
+	}
+
+	if _, err := client.FetchBookmarks(context.Background()); err == nil {
+		t.Fatal("trailing JSON document must fail closed")
+	}
+}
+
+func TestFetchBookmarksRejectsOversizedResponse(t *testing.T) {
+	client := RetrievalClient{
+		BaseURL:     "https://sync.invalid",
+		BearerToken: "fixture",
+		Client: retrievalDoerFunc(func(*http.Request) (*http.Response, error) {
+			body := strings.Repeat(" ", maxRetrievalBodyBytes+1)
+			return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(body)), Header: make(http.Header)}, nil
+		}),
+	}
+
+	if _, err := client.FetchBookmarks(context.Background()); err == nil {
+		t.Fatal("oversized retrieval response must fail closed")
 	}
 }
