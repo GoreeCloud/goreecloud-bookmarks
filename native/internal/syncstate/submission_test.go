@@ -34,10 +34,14 @@ func TestSignedBookmarkEnvelopeAndSubmission(t *testing.T) {
 	}
 
 	client := SubmissionClient{
-		BaseURL: "https://sync.internal",
+		BaseURL:     "https://sync.internal",
+		BearerToken: "session-token",
 		Client: doerFunc(func(request *http.Request) (*http.Response, error) {
 			if request.URL.Path != "/api/v1/sync/bookmarks/items" {
 				t.Fatalf("unexpected path: %s", request.URL.Path)
+			}
+			if got := request.Header.Get("Authorization"); got != "Bearer session-token" {
+				t.Fatalf("Authorization = %q", got)
 			}
 			var payload struct {
 				Record Envelope    `json:"record"`
@@ -57,5 +61,35 @@ func TestSignedBookmarkEnvelopeAndSubmission(t *testing.T) {
 	}
 	if err := client.SubmitBookmark(context.Background(), envelope, proof); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestSignedBookmarkEnvelopeRejectsOversizedRecordID(t *testing.T) {
+	publicKey, privateKey, _ := ed25519.GenerateKey(rand.Reader)
+	item := ItemRecord{
+		ID: strings.Repeat("b", maxSyncRecordIDBytes+1), URL: "https://example.com",
+		CreatedAt: time.Unix(100, 0).UTC(), UpdatedAt: time.Unix(101, 0).UTC(),
+	}
+	if _, _, err := SignedBookmarkEnvelope(item, 1, DeviceIdentity{
+		DeviceID: "device-a", PublicKey: publicKey, PrivateKey: privateKey,
+	}); err == nil {
+		t.Fatal("oversized record ID must fail before signing")
+	}
+}
+
+func TestSubmitBookmarkRequiresBearerBeforeTransport(t *testing.T) {
+	called := false
+	client := SubmissionClient{
+		BaseURL: "https://sync.internal",
+		Client: doerFunc(func(*http.Request) (*http.Response, error) {
+			called = true
+			return nil, nil
+		}),
+	}
+	if err := client.SubmitBookmark(context.Background(), Envelope{RecordID: "bookmark-1"}, RecordProof{}); err == nil {
+		t.Fatal("missing bearer session must fail closed")
+	}
+	if called {
+		t.Fatal("transport must not be called without an authenticated Sync session")
 	}
 }

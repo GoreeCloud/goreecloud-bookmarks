@@ -21,6 +21,8 @@ var (
 	ErrSyncSubmissionFailed  = errors.New("bookmark sync submission failed")
 )
 
+const maxSyncRecordIDBytes = 512
+
 type Envelope struct {
 	Dataset       string         `json:"dataset"`
 	SchemaVersion int            `json:"schemaVersion"`
@@ -45,7 +47,7 @@ type DeviceIdentity struct {
 }
 
 func SignedBookmarkEnvelope(item ItemRecord, revision uint64, identity DeviceIdentity) (Envelope, RecordProof, error) {
-	if strings.TrimSpace(item.ID) == "" || strings.TrimSpace(item.URL) == "" || item.UpdatedAt.IsZero() || revision == 0 {
+	if strings.TrimSpace(item.ID) == "" || len(item.ID) > maxSyncRecordIDBytes || strings.TrimSpace(item.URL) == "" || item.UpdatedAt.IsZero() || revision == 0 {
 		return Envelope{}, RecordProof{}, ErrInvalidBookmarkItem
 	}
 	if strings.TrimSpace(identity.DeviceID) == "" || len(identity.PublicKey) != ed25519.PublicKeySize || len(identity.PrivateKey) != ed25519.PrivateKeySize {
@@ -83,7 +85,8 @@ type SubmissionClient struct {
 }
 
 func (c SubmissionClient) SubmitBookmark(ctx context.Context, envelope Envelope, proof RecordProof) error {
-	if strings.TrimSpace(c.BaseURL) == "" || c.Client == nil {
+	token := strings.TrimSpace(c.BearerToken)
+	if strings.TrimSpace(c.BaseURL) == "" || token == "" || c.Client == nil || envelope.RecordID == "" || len(envelope.RecordID) > maxSyncRecordIDBytes {
 		return ErrSyncSubmissionFailed
 	}
 	body, err := json.Marshal(struct {
@@ -99,9 +102,7 @@ func (c SubmissionClient) SubmitBookmark(ctx context.Context, envelope Envelope,
 	}
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("Accept", "application/json")
-	if token := strings.TrimSpace(c.BearerToken); token != "" {
-		request.Header.Set("Authorization", "Bearer "+token)
-	}
+	request.Header.Set("Authorization", "Bearer "+token)
 	response, err := c.Client.Do(request)
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrSyncSubmissionFailed, err)
