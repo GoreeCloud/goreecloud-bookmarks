@@ -129,6 +129,22 @@ func TestFetchBookmarksRejectsCrossDatasetResponse(t *testing.T) {
 	}
 }
 
+func TestFetchBookmarksRejectsOversizedRecordID(t *testing.T) {
+	oversized := strings.Repeat("b", maxSyncRecordIDBytes+1)
+	client := RetrievalClient{
+		BaseURL:     "https://sync.invalid",
+		BearerToken: "fixture",
+		Client: retrievalDoerFunc(func(*http.Request) (*http.Response, error) {
+			body := `{"dataset":"bookmarks.items","count":1,"records":[{"dataset":"bookmarks.items","schemaVersion":1,"recordId":"` + oversized + `","revision":1,"updatedAt":"2026-08-26T23:35:00Z","originDevice":"device-1","deleted":false,"payload":{"url":"https://one.invalid"}}],"nextAfter":"` + oversized + `"}`
+			return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(body)), Header: make(http.Header)}, nil
+		}),
+	}
+
+	if _, err := client.FetchBookmarks(context.Background()); err == nil {
+		t.Fatal("oversized record ID and continuation must fail closed")
+	}
+}
+
 func TestFetchBookmarksRejectsTrailingJSON(t *testing.T) {
 	client := RetrievalClient{
 		BaseURL:     "https://sync.invalid",
