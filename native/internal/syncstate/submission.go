@@ -88,7 +88,7 @@ type SubmissionClient struct {
 
 func (c SubmissionClient) SubmitBookmark(ctx context.Context, envelope Envelope, proof RecordProof) error {
 	token := strings.TrimSpace(c.BearerToken)
-	if strings.TrimSpace(c.BaseURL) == "" || token == "" || c.Client == nil || !validBookmarkEnvelope(envelope) {
+	if strings.TrimSpace(c.BaseURL) == "" || token == "" || c.Client == nil || !canSubmitBookmarkEnvelope(envelope) {
 		return ErrSyncSubmissionFailed
 	}
 	body, err := json.Marshal(struct {
