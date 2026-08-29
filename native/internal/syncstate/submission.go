@@ -45,7 +45,8 @@ type DeviceIdentity struct {
 }
 
 func SignedBookmarkEnvelope(item ItemRecord, revision uint64, identity DeviceIdentity) (Envelope, RecordProof, error) {
-	if strings.TrimSpace(item.ID) == "" || len(item.ID) > maxSyncRecordIDBytes || strings.TrimSpace(item.URL) == "" || item.UpdatedAt.IsZero() || revision == 0 {
+	capability, ok := bookmarksItemsCapability()
+	if !ok || !capability.Write || strings.TrimSpace(item.ID) == "" || len(item.ID) > maxSyncRecordIDBytes || strings.TrimSpace(item.URL) == "" || item.UpdatedAt.IsZero() || revision == 0 {
 		return Envelope{}, RecordProof{}, ErrInvalidBookmarkItem
 	}
 	if strings.TrimSpace(identity.DeviceID) == "" || len(identity.PublicKey) != ed25519.PublicKeySize || len(identity.PrivateKey) != ed25519.PrivateKeySize {
@@ -58,7 +59,7 @@ func SignedBookmarkEnvelope(item ItemRecord, revision uint64, identity DeviceIde
 		"updatedAt": item.UpdatedAt.UTC().Format(time.RFC3339Nano),
 	}
 	envelope := Envelope{
-		Dataset: bookmarksItemsDataset, SchemaVersion: bookmarksItemsSchemaVersion, RecordID: item.ID,
+		Dataset: capability.Dataset, SchemaVersion: capability.SchemaVersion, RecordID: item.ID,
 		Revision: revision, UpdatedAt: item.UpdatedAt.UTC(), OriginDevice: identity.DeviceID,
 		Payload: payload,
 	}
