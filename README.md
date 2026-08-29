@@ -1,152 +1,83 @@
-<div align="center">
-  <img src="./assets/logo.png" width="100px" />
-  <h1>Linkwarden</h1>
-  <h3>Bookmarks, Evolved</h3>
+# GoreeCloud Bookmarks
 
-<a href="https://trendshift.io/repositories/4006" target="_blank"><img src="https://trendshift.io/api/badge/repositories/4006" alt="linkwarden%2Flinkwarden | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+GoreeCloud Bookmarks is the first-party bookmark collection, organization, preservation, and synchronization application for GoreeCloud. The long-term application is original GoreeCloud-owned native software. The inherited Linkwarden application tree is transitional and remains only where it is still required for continuity, compatibility, migration, feature preservation, and upstream security maintenance.
 
-<a href="https://discord.com/invite/CtuYV47nuJ"><img src="https://img.shields.io/discord/1117993124669702164?logo=discord&style=flat" alt="Discord"></a>
-<a href="https://twitter.com/LinkwardenHQ"><img src="https://img.shields.io/twitter/follow/linkwarden" alt="Twitter"></a> <a href="https://news.ycombinator.com/item?id=43856801"><img src="https://img.shields.io/badge/Hacker%20News-301-%23FF6600"></img></a>
+## Lifecycle status
 
-<a href="https://github.com/linkwarden/linkwarden/releases"><img alt="GitHub release" src="https://img.shields.io/github/v/release/linkwarden/linkwarden"></a>
-<a href="https://crowdin.com/project/linkwarden">
-<img src="https://badges.crowdin.net/linkwarden/localized.svg" alt="Crowdin" /></a>
-<a href="https://opencollective.com/linkwarden"><img src="https://img.shields.io/opencollective/all/linkwarden" alt="Open Collective"></a>
+**Native migration in progress — not Stable.**
 
-</div>
+This repository currently contains both the inherited Linkwarden-based compatibility surface and a growing native GoreeCloud Bookmarks implementation. Passing source tests or retaining the inherited runtime does not make the application Stable and does not authorize retirement of migration or recovery paths.
 
-<div align='center'>
+Stable remains blocked until the native application has completed the applicable functional, data-migration, accessibility, runtime, backup/restore, and real-environment acceptance work and has current validated integration with Glaze UI, Wardveil Security, Privacy Shield, and Everkeep.
 
-[« LAUNCH DEMO »](https://demo.linkwarden.app)
+## Native implementation
 
-[Cloud](https://cloud.linkwarden.app) · [Website](https://linkwarden.app) · [Self-Host](https://docs.linkwarden.app/self-hosting/installation) · [Docs](https://docs.linkwarden.app)
+The GoreeCloud-owned native application lives under `native/` and is implemented as a Go service.
 
-<img src="./assets/linkwarden-hero.png" />
+Current source areas include:
 
-</div>
+- `native/cmd/bookmarksd` — native service entry point.
+- `native/internal/bookmarks` — first-party bookmark records and application behavior.
+- `native/internal/collections` — native collection organization boundaries.
+- `native/internal/identity` — application identity/session integration boundaries.
+- `native/internal/storage` — native persistence interfaces and state handling.
+- `native/internal/webui` — GoreeCloud-owned web presentation.
+- `native/internal/syncstate` — GoreeCloud Sync capability, signing, authenticated submission, retrieval, deletion, and validation logic.
 
-## Intro & motivation
+The native Sync client advertises its application capability explicitly, requires exact negotiated schema conformance, bounds record and continuation identifiers, requires an authenticated session before transport, and preserves Privacy Shield data minimization by keeping deletion tombstones free of application payload.
 
-**Linkwarden is a self-hosted, open-source collaborative bookmark manager to collect, read, annotate, and fully preserve what matters, all in one place.**
+## Transitional Linkwarden boundary
 
-The objective is to organize useful webpages and articles you find across the web in one place, and since useful webpages can go away (see the inevitability of [Link Rot](https://en.wikipedia.org/wiki/Link_rot)), Linkwarden also saves a copy of each webpage as a Screenshot and PDF, ensuring accessibility even if the original content is no longer available.
+The inherited Linkwarden application is a migration dependency, not the target GoreeCloud product architecture. It may continue to provide retained functionality while equivalent or improved native behavior is implemented, migrated, and accepted.
 
-In addition to preservation, Linkwarden provides a user-friendly reading and annotation experience that blends the simplicity of a “read-it-later” tool with the reliability of a web archive. Whether you’re highlighting key ideas, jotting down thoughts, or revisiting content long after it’s disappeared from the web, Linkwarden keeps your knowledge accessible and organized.
+Inherited capabilities must not disappear silently during migration. Data ownership, collection relationships, preserved content, import/export behavior, and other retained workflows require explicit migration or retirement decisions before the inherited runtime is removed.
 
-Linkwarden is also designed with collaboration in mind, enabling you to share links with the public and/or collaborate seamlessly with multiple users.
+Required upstream copyright, license, source-availability, and attribution obligations remain in force for retained Linkwarden-derived code. Upstream branding and hosted-service marketing do not define GoreeCloud Bookmarks identity or lifecycle status.
 
-> [!TIP]  
-> Our official [Cloud](https://linkwarden.app/#pricing) offering provides the simplest way to begin using Linkwarden and it's the preferred choice for many due to its time-saving benefits. <br> Your subscription supports our hosting infrastructure and ongoing development. <br> Alternatively, if you prefer self-hosting Linkwarden, you can do so by following our [Installation documentation](https://docs.linkwarden.app/self-hosting/installation).
+## Mandatory platform gates
 
-## Features
+GoreeCloud Bookmarks must continuously conform to the current approved contracts for:
 
-- 📸 Auto capture a screenshot, PDF, and single html file of each webpage
-- 📖 Reader view of the webpage, with the ability to highlight and annotate text
-- 🏛️ Send your webpage to Wayback Machine ([archive.org](https://archive.org)) for a snapshot (optional)
-- ✨ Local AI Tagging to automatically tag your links based on their content (optional)
-- 📂 Organize links by collection, sub-collection, name, description and multiple tags
-- 👥 Collaborate on gathering links in a collection
-- 🎛️ Customize the permissions of each member
-- 🌐 Share your collected links and preserved formats with the world
-- 📱 Native iOS and android mobile apps
-- 🔍 Full text search, filter and sort for easy retrieval
-- 🌓 Dark/Light mode support
-- 🧩 Browser extension (star it [here](https://github.com/linkwarden/browser-extension)!)
-- 🔄 Browser Synchronization (using [Floccus](https://floccus.org)!)
-- ⬆️ Upload from SingleFile (check out the [guide](https://docs.linkwarden.app/Usage/upload-from-singlefile))
-- 🔐 SSO integration (Enterprise and Self-hosted users only)
-- 🍎 iOS Shortcut to save links to Linkwarden
-- 🔑 API keys
-- ✅ Bulk actions
-- 👥 User administration
-- 🌐 Support for other languages (i18n)
-- 📁 Image and PDF uploads
-- 🎨 Custom icons for links and collections
-- 🔔 RSS feed subscription
-- ✨ And many more features (literally!)
+- **Glaze UI** — first-party responsive presentation, accessibility, interaction, appearance, and adaptive layouts.
+- **Wardveil Security** — safe content handling, application protection state, diagnostics, and security integration where applicable.
+- **Privacy Shield** — data minimization, privacy-preserving synchronization, retained-data controls, and application privacy boundaries.
+- **Everkeep** — preserved-content continuity, portability, backup/restore, migration, and recovery requirements.
 
-## Get Our Official Mobile App
+Missing, materially outdated, or unvalidated mandatory integration keeps the application non-Stable.
 
-<img src="./assets/mobile_apps.png" alt="Different screens (iPad, Pixel, and iPhone)" width="400" />
+## Validation
 
-> [!IMPORTANT]
-> To use the app you’ll first need a Linkwarden account.
+The repository currently uses both native and transitional validation while migration is in progress. Relevant workflows include:
 
-To create an account, you can choose between:
+- GoreeCloud Bookmarks Native Foundation
+- GoreeCloud Bookmarks CI
+- Linkwarden Playwright Tests
 
-- [**Linkwarden Cloud**](https://linkwarden.app/#pricing) – instant setup, and your subscription directly supports ongoing development.
-- [**Self-hosted Linkwarden**](https://docs.linkwarden.app/self-hosting/installation) – free, but you’ll need to deploy and maintain a Linkwarden instance on a server.
+The native foundation gate validates GoreeCloud-owned Go source and contracts. The broader inherited application tests remain useful migration and regression evidence while the compatibility surface exists. Neither class of source validation substitutes for production migration, backup/restore, recovery, platform-system acceptance, or Stable approval.
 
-After creating an account, download the app from your preferred store:
+For the native Go module:
 
-[![Download on the App Store](./assets/app_store.png)](https://apps.apple.com/app/linkwarden/id6752550960)
-[![Get it on Google Play](./assets/google_play.png)](https://play.google.com/store/apps/details?id=app.linkwarden)
+```bash
+cd native
+go test ./...
+go build ./cmd/bookmarksd
+```
 
-(To get the app as an APK outside Google Play, check out our [builds](https://github.com/linkwarden/builds) repository.)
+These commands validate the native source locally; they do not deploy or migrate production data.
 
-## Like what we're doing? Give us a Star ⭐
+## Branding
 
-![Star Us](https://raw.githubusercontent.com/linkwarden/linkwarden/main/assets/star_repo.gif)
+Canonical GoreeCloud Bookmarks artwork is owned by `GoreeCloud/goreecloud-branding-assets`. See `BRANDING.md` for the repository consumer boundary. Synchronized artwork retained here is not the branding authority.
 
-## We're building our Community 🌐
+## Repository structure
 
-Join and follow us in the following platforms to stay up to date about the most recent features and for support:
+- `native/` — original GoreeCloud Bookmarks implementation.
+- `apps/`, `pages/`, `packages/`, and other inherited application paths — transitional Linkwarden-derived runtime and compatibility surface where still present.
+- `BRANDING.md` — canonical branding ownership and synchronization rule.
+- `LICENSE.md` — licensing terms for inherited and retained source.
 
-<a href="https://discord.com/invite/CtuYV47nuJ"><img src="https://img.shields.io/discord/1117993124669702164?logo=discord&style=flat" alt="Discord"></a>
+## Development rule
 
-<a href="https://twitter.com/LinkwardenHQ"><img src="https://img.shields.io/twitter/follow/linkwarden" alt="Twitter"></a>
+New GoreeCloud Bookmarks product work belongs in the native application architecture unless a narrowly scoped inherited or third-party foundation is technically necessary. The inherited complete-product architecture must not be expanded as the long-term GoreeCloud implementation.
 
-<a href="https://fosstodon.org/@linkwarden"><img src="https://img.shields.io/mastodon/follow/110748840237143200?domain=https%3A%2F%2Ffosstodon.org" alt="Mastodon"></a>
-
-## Suggestions
-
-We _usually_ go after the [popular suggestions](https://github.com/linkwarden/linkwarden/issues?q=is%3Aissue%20is%3Aopen%20sort%3Areactions-%2B1-desc). Feel free to open a [new issue](https://github.com/linkwarden/linkwarden/issues/new?assignees=&labels=enhancement&projects=&template=feature_request.md&title=) to suggest one - others might be interested too! :)
-
-## Roadmap
-
-Make sure to check out our [public roadmap](https://github.com/orgs/linkwarden/projects/1).
-
-## Community Projects
-
-Here are some awesome community-maintained projects that are built around Linkwarden, be sure to star all of them!
-
-- [My Links](https://apps.apple.com/ca/app/my-links-for-linkwarden/id6504573402) - Native iOS and MacOS App, [source code](https://github.com/JGeek00/my-links).
-- [LinkDroid](https://fossdroid.com/a/linkdroid-for-linkwarden.html) - Android App with share sheet integration, [source code](https://github.com/Dacid99/LinkDroid-for-Linkwarden).
-- [LinkGuardian](https://github.com/Elbullazul/LinkGuardian) - An Android client for Linkwarden. Built with Kotlin and Jetpack compose.
-- [StarWarden](https://github.com/rtuszik/starwarden) - A browser extension to save your starred GitHub repositories to Linkwarden.
-- [link-my-harmony](https://github.com/xiebaiyuan/link-my-harmony) - HarmonyOS Next client for Linkwarden (鸿笺 / Folio), built with ArkTS and ArkUI.
-
-## Development
-
-If you want to contribute, Thanks! Start by choosing one of our [popular suggestions](https://github.com/linkwarden/linkwarden/issues?q=is%3Aissue%20is%3Aopen%20sort%3Areactions-%2B1-desc), just please stay in touch with [@daniel31x13](https://github.com/daniel31x13) before starting.
-
-# Translations
-
-If you want to help us translate Linkwarden to your language, please check out our [Crowdin page](https://crowdin.com/project/linkwarden) and start translating. We would love to have your help!
-
-To start translating a new language, please create an issue so we can set it up for you. New languages will be added once they reach at least 50% translation completion.
-
-<a href="https://crowdin.com/project/linkwarden">
-<img src="https://badges.crowdin.net/linkwarden/localized.svg" alt="Crowdin" /></a>
-
-## Security
-
-If you found a security vulnerability, please do **not** create a public issue, instead send an email to [security@linkwarden.app](mailto:security@linkwarden.app) stating the vulnerability. Thanks!
-
-## Support <3
-
-Other than using our official [Cloud](https://linkwarden.app/#pricing) offering, any [donations](https://opencollective.com/linkwarden) are highly appreciated as well!
-
-Here are the other ways to support/cheer this project:
-
-- Starring this repository.
-- Joining us on [Discord](https://discord.com/invite/CtuYV47nuJ).
-- Referring Linkwarden to a friend.
-
-If you did any of the above, Thanksss! Otherwise thanks.
-
-## Thanks to All the Contributors 💪
-
-Huge thanks to these guys for spending their time helping Linkwarden grow. They rock! ⚡️
-
-<img src="https://contributors-img.web.app/image?repo=linkwarden/linkwarden" alt="Contributors"/>
+Changes must preserve migration, user data, security, privacy, recoverability, and required upstream licensing while moving application-defining behavior into GoreeCloud-owned native source.
