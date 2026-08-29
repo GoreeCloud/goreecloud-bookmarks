@@ -17,6 +17,10 @@ type doerFunc func(*http.Request) (*http.Response, error)
 func (f doerFunc) Do(request *http.Request) (*http.Response, error) { return f(request) }
 
 func TestSignedBookmarkEnvelopeAndSubmission(t *testing.T) {
+	capability, ok := bookmarksItemsCapability()
+	if !ok {
+		t.Fatal("bookmarks.items capability missing")
+	}
 	publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
 	if err != nil {
 		t.Fatal(err)
@@ -29,7 +33,7 @@ func TestSignedBookmarkEnvelopeAndSubmission(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if envelope.Dataset != "bookmarks.items" || envelope.RecordID != "bookmark-1" || proof.Signature == "" {
+	if envelope.Dataset != capability.Dataset || envelope.SchemaVersion != capability.SchemaVersion || envelope.RecordID != "bookmark-1" || proof.Signature == "" {
 		t.Fatalf("unexpected signed bookmark: envelope=%+v proof=%+v", envelope, proof)
 	}
 
@@ -91,5 +95,45 @@ func TestSubmitBookmarkRequiresBearerBeforeTransport(t *testing.T) {
 	}
 	if called {
 		t.Fatal("transport must not be called without an authenticated Sync session")
+	}
+}
+
+func TestSubmitBookmarkRejectsNonconformingEnvelopeBeforeTransport(t *testing.T) {
+	capability, ok := bookmarksItemsCapability()
+	if !ok {
+		t.Fatal("bookmarks.items capability missing")
+	}
+	base := Envelope{
+		Dataset: capability.Dataset, SchemaVersion: capability.SchemaVersion,
+		RecordID: "bookmark-1", Revision: 1, UpdatedAt: time.Unix(101, 0).UTC(),
+		OriginDevice: "device-a", Payload: map[string]any{"url": "https://example.com"},
+	}
+	tests := []struct {
+		name   string
+		mutate func(*Envelope)
+	}{
+		{name: "unnegotiated schema", mutate: func(envelope *Envelope) { envelope.SchemaVersion++ }},
+		{name: "tombstone payload", mutate: func(envelope *Envelope) { envelope.Deleted = true }},
+		{name: "live record without payload", mutate: func(envelope *Envelope) { envelope.Payload = nil }},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			envelope := base
+			test.mutate(&envelope)
+			called := false
+			client := SubmissionClient{
+				BaseURL: "https://sync.internal", BearerToken: "session-token",
+				Client: doerFunc(func(*http.Request) (*http.Response, error) {
+					called = true
+					return nil, nil
+				}),
+			}
+			if err := client.SubmitBookmark(context.Background(), envelope, RecordProof{}); err == nil {
+				t.Fatal("nonconforming envelope must fail closed")
+			}
+			if called {
+				t.Fatal("transport must not receive a nonconforming envelope")
+			}
+		})
 	}
 }

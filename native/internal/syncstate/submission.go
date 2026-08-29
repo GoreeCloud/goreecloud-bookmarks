@@ -21,8 +21,6 @@ var (
 	ErrSyncSubmissionFailed  = errors.New("bookmark sync submission failed")
 )
 
-const maxSyncRecordIDBytes = 512
-
 type Envelope struct {
 	Dataset       string         `json:"dataset"`
 	SchemaVersion int            `json:"schemaVersion"`
@@ -47,7 +45,8 @@ type DeviceIdentity struct {
 }
 
 func SignedBookmarkEnvelope(item ItemRecord, revision uint64, identity DeviceIdentity) (Envelope, RecordProof, error) {
-	if strings.TrimSpace(item.ID) == "" || len(item.ID) > maxSyncRecordIDBytes || strings.TrimSpace(item.URL) == "" || item.UpdatedAt.IsZero() || revision == 0 {
+	capability, ok := bookmarksItemsCapability()
+	if !ok || !capability.Write || strings.TrimSpace(item.ID) == "" || len(item.ID) > maxSyncRecordIDBytes || strings.TrimSpace(item.URL) == "" || item.UpdatedAt.IsZero() || revision == 0 {
 		return Envelope{}, RecordProof{}, ErrInvalidBookmarkItem
 	}
 	if strings.TrimSpace(identity.DeviceID) == "" || len(identity.PublicKey) != ed25519.PublicKeySize || len(identity.PrivateKey) != ed25519.PrivateKeySize {
@@ -60,9 +59,12 @@ func SignedBookmarkEnvelope(item ItemRecord, revision uint64, identity DeviceIde
 		"updatedAt": item.UpdatedAt.UTC().Format(time.RFC3339Nano),
 	}
 	envelope := Envelope{
-		Dataset: "bookmarks.items", SchemaVersion: 1, RecordID: item.ID,
+		Dataset: capability.Dataset, SchemaVersion: capability.SchemaVersion, RecordID: item.ID,
 		Revision: revision, UpdatedAt: item.UpdatedAt.UTC(), OriginDevice: identity.DeviceID,
 		Payload: payload,
+	}
+	if !validBookmarkEnvelope(envelope) {
+		return Envelope{}, RecordProof{}, ErrInvalidBookmarkItem
 	}
 	message, err := proofMessage(envelope)
 	if err != nil {
@@ -86,7 +88,7 @@ type SubmissionClient struct {
 
 func (c SubmissionClient) SubmitBookmark(ctx context.Context, envelope Envelope, proof RecordProof) error {
 	token := strings.TrimSpace(c.BearerToken)
-	if strings.TrimSpace(c.BaseURL) == "" || token == "" || c.Client == nil || envelope.RecordID == "" || len(envelope.RecordID) > maxSyncRecordIDBytes {
+	if strings.TrimSpace(c.BaseURL) == "" || token == "" || c.Client == nil || !canSubmitBookmarkEnvelope(envelope) {
 		return ErrSyncSubmissionFailed
 	}
 	body, err := json.Marshal(struct {
