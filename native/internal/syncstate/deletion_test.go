@@ -9,6 +9,10 @@ import (
 )
 
 func TestSignedBookmarkTombstoneIsPayloadFree(t *testing.T) {
+	capability, ok := bookmarksItemsCapability()
+	if !ok {
+		t.Fatal("bookmarks.items capability missing")
+	}
 	publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
 	if err != nil {
 		t.Fatal(err)
@@ -19,7 +23,7 @@ func TestSignedBookmarkTombstoneIsPayloadFree(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !envelope.Deleted || envelope.Payload != nil || envelope.Dataset != bookmarksItemsDataset || envelope.SchemaVersion != bookmarksItemsSchemaVersion {
+	if !envelope.Deleted || envelope.Payload != nil || envelope.Dataset != capability.Dataset || envelope.SchemaVersion != capability.SchemaVersion {
 		t.Fatalf("unexpected tombstone: %+v", envelope)
 	}
 	if proof.DeviceID != "device-b" || proof.Signature == "" {
