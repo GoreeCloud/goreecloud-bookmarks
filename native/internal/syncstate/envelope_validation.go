@@ -16,8 +16,8 @@ func bookmarksItemsCapability() (Capability, bool) {
 	return Capability{}, false
 }
 
-// validBookmarkEnvelope enforces Bookmarks' negotiated Sync envelope boundary.
-// Tombstones deliberately carry no application payload; live records must.
+// validBookmarkEnvelope validates the direction-neutral negotiated envelope
+// shape. Read/write/delete permissions are enforced at the operation boundary.
 func validBookmarkEnvelope(envelope Envelope) bool {
 	capability, ok := bookmarksItemsCapability()
 	if !ok || envelope.Dataset != capability.Dataset ||
@@ -27,8 +27,18 @@ func validBookmarkEnvelope(envelope Envelope) bool {
 		strings.TrimSpace(envelope.OriginDevice) == "" {
 		return false
 	}
-	if envelope.Deleted {
-		return capability.Delete && envelope.Payload == nil
+	// Privacy Shield data minimization: tombstones carry no application payload;
+	// live records carry application state.
+	return envelope.Deleted ? envelope.Payload == nil : envelope.Payload != nil
+}
+
+func canSubmitBookmarkEnvelope(envelope Envelope) bool {
+	capability, ok := bookmarksItemsCapability()
+	if !ok || !validBookmarkEnvelope(envelope) {
+		return false
 	}
-	return capability.Write && envelope.Payload != nil
+	if envelope.Deleted {
+		return capability.Delete
+	}
+	return capability.Write
 }
