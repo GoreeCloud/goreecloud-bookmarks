@@ -11,16 +11,19 @@ import (
 // identity remains in authenticated Sync/account context rather than payload.
 func SignedBookmarkTombstone(recordID string, revision uint64, updatedAt time.Time, identity DeviceIdentity) (Envelope, RecordProof, error) {
 	recordID = strings.TrimSpace(recordID)
-	if recordID == "" || revision == 0 || updatedAt.IsZero() {
+	if recordID == "" || len(recordID) > maxSyncRecordIDBytes || revision == 0 || updatedAt.IsZero() {
 		return Envelope{}, RecordProof{}, ErrInvalidBookmarkItem
 	}
 	if strings.TrimSpace(identity.DeviceID) == "" || len(identity.PublicKey) != ed25519.PublicKeySize || len(identity.PrivateKey) != ed25519.PrivateKeySize {
 		return Envelope{}, RecordProof{}, ErrInvalidDeviceIdentity
 	}
 	envelope := Envelope{
-		Dataset: "bookmarks.items", SchemaVersion: 1, RecordID: recordID,
+		Dataset: bookmarksItemsDataset, SchemaVersion: bookmarksItemsSchemaVersion, RecordID: recordID,
 		Revision: revision, UpdatedAt: updatedAt.UTC(), OriginDevice: identity.DeviceID,
 		Deleted: true,
+	}
+	if !validBookmarkEnvelope(envelope) {
+		return Envelope{}, RecordProof{}, ErrInvalidBookmarkItem
 	}
 	message, err := proofMessage(envelope)
 	if err != nil {
