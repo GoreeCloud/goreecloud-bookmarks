@@ -72,7 +72,7 @@ Canonical GoreeCloud Bookmarks artwork is owned by `GoreeCloud/goreecloud-brandi
 ## Repository structure
 
 - `native/` — original GoreeCloud Bookmarks implementation.
-- `apps/`, `pages/`, `packages/`, and other inherited application paths — transitional Linkwarden-derived runtime and compatibility surface where still present.
+- `apps/` and the remaining inherited web-application paths — transitional Linkwarden-derived runtime and compatibility surface where still present.
 - `BRANDING.md` — canonical branding ownership and synchronization rule.
 - `LICENSE.md` — licensing terms for inherited and retained source.
 
