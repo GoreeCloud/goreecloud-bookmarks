@@ -21,8 +21,6 @@ var (
 	ErrSyncSubmissionFailed  = errors.New("bookmark sync submission failed")
 )
 
-const maxSyncRecordIDBytes = 512
-
 type Envelope struct {
 	Dataset       string         `json:"dataset"`
 	SchemaVersion int            `json:"schemaVersion"`
@@ -60,9 +58,12 @@ func SignedBookmarkEnvelope(item ItemRecord, revision uint64, identity DeviceIde
 		"updatedAt": item.UpdatedAt.UTC().Format(time.RFC3339Nano),
 	}
 	envelope := Envelope{
-		Dataset: "bookmarks.items", SchemaVersion: 1, RecordID: item.ID,
+		Dataset: bookmarksItemsDataset, SchemaVersion: bookmarksItemsSchemaVersion, RecordID: item.ID,
 		Revision: revision, UpdatedAt: item.UpdatedAt.UTC(), OriginDevice: identity.DeviceID,
 		Payload: payload,
+	}
+	if !validBookmarkEnvelope(envelope) {
+		return Envelope{}, RecordProof{}, ErrInvalidBookmarkItem
 	}
 	message, err := proofMessage(envelope)
 	if err != nil {
@@ -86,7 +87,7 @@ type SubmissionClient struct {
 
 func (c SubmissionClient) SubmitBookmark(ctx context.Context, envelope Envelope, proof RecordProof) error {
 	token := strings.TrimSpace(c.BearerToken)
-	if strings.TrimSpace(c.BaseURL) == "" || token == "" || c.Client == nil || envelope.RecordID == "" || len(envelope.RecordID) > maxSyncRecordIDBytes {
+	if strings.TrimSpace(c.BaseURL) == "" || token == "" || c.Client == nil || !validBookmarkEnvelope(envelope) {
 		return ErrSyncSubmissionFailed
 	}
 	body, err := json.Marshal(struct {
