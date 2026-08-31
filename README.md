@@ -16,13 +16,15 @@ The GoreeCloud-owned native application lives under `native/` and is implemented
 
 Current source areas include:
 
-- `native/cmd/bookmarksd` — native service entry point.
+- `native/cmd/bookmarksd` — native service entry point and development HTTP surface.
 - `native/internal/bookmarks` — first-party bookmark records and application behavior.
-- `native/internal/collections` — native collection organization boundaries.
+- `native/internal/collections` — native owner-scoped collection organization and bookmark-assignment foundations.
 - `native/internal/identity` — application identity/session integration boundaries.
 - `native/internal/storage` — native persistence interfaces and state handling.
 - `native/internal/webui` — GoreeCloud-owned web presentation.
 - `native/internal/syncstate` — GoreeCloud Sync capability, signing, authenticated submission, retrieval, deletion, and validation logic.
+
+The native development service exposes owner-scoped bookmark CRUD and, in memory-development mode, collection list/read/create/move routes under `/api/v1/collections`. Collection names, parent ownership, duplicate siblings, and hierarchy cycles are validated. Cross-owner collection lookups fail as not found. Collection persistence, sharing, production identity, bookmark-assignment HTTP behavior, and Linkwarden migration are not complete.
 
 The native Sync client advertises its application capability explicitly, requires exact negotiated schema conformance, bounds record and continuation identifiers, requires an authenticated session before transport, and preserves Privacy Shield data minimization by keeping deletion tombstones free of application payload.
 
@@ -68,6 +70,15 @@ These commands validate the native source locally; they do not deploy or migrate
 ## Branding
 
 Canonical GoreeCloud Bookmarks artwork is owned by `GoreeCloud/goreecloud-branding-assets`. See `BRANDING.md` for the repository consumer boundary. Synchronized artwork retained here is not the branding authority.
+
+## Repository documentation
+
+- `README.md` — repository entry point and current lifecycle state.
+- `SPECIFICATIONS.md` — current native product, identity, collection, Sync, platform, and migration contracts.
+- `FEATURES.md` — implemented, development-only, and planned capability inventory.
+- `BENEFITS.md` — user, administrative, continuity, and platform value.
+- `COMPETITIVE-OBJECTIVES.md` — benchmark expectations and GoreeCloud differentiation goals.
+- `USER-MANUAL.md` — current native development behavior and operating guidance.
 
 ## Repository structure
 

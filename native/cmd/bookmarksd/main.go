@@ -11,6 +11,7 @@ import (
 	"time"
 
 	bookmarkcore "github.com/GoreeCloud/goreecloud-bookmarks/native/internal/bookmarks"
+	collectioncore "github.com/GoreeCloud/goreecloud-bookmarks/native/internal/collections"
 	identitycore "github.com/GoreeCloud/goreecloud-bookmarks/native/internal/identity"
 )
 
@@ -26,9 +27,10 @@ const (
 )
 
 type server struct {
-	bookmarks *bookmarkcore.Service
-	identity  identitycore.Resolver
-	storeMode string
+	bookmarks   *bookmarkcore.Service
+	collections *collectioncore.Store
+	identity    identitycore.Resolver
+	storeMode   string
 }
 
 type createBookmarkRequest struct {
@@ -45,6 +47,15 @@ type updateBookmarkRequest struct {
 	Tags  []string `json:"tags"`
 }
 
+type createCollectionRequest struct {
+	Name     string `json:"name"`
+	ParentID string `json:"parentId"`
+}
+
+type moveCollectionRequest struct {
+	ParentID string `json:"parentId"`
+}
+
 func newServer(repository bookmarkcore.Repository, identity identitycore.Resolver, storeMode string) (server, error) {
 	if identity == nil {
 		return server{}, errors.New("identity resolver is required")
@@ -56,7 +67,12 @@ func newServer(repository bookmarkcore.Repository, identity identitycore.Resolve
 	if storeMode == "" {
 		storeMode = "unspecified"
 	}
-	return server{bookmarks: service, identity: identity, storeMode: storeMode}, nil
+	return server{
+		bookmarks:   service,
+		collections: collectioncore.NewStore(),
+		identity:    identity,
+		storeMode:   storeMode,
+	}, nil
 }
 
 func selectRuntimeRepository(getenv func(string) string) (bookmarkcore.Repository, string, error) {
@@ -124,6 +140,10 @@ func main() {
 	mux.HandleFunc("POST /api/v1/bookmarks", app.create)
 	mux.HandleFunc("PATCH /api/v1/bookmarks/{id}", app.update)
 	mux.HandleFunc("DELETE /api/v1/bookmarks/{id}", app.delete)
+	mux.HandleFunc("GET /api/v1/collections", app.listCollections)
+	mux.HandleFunc("GET /api/v1/collections/{id}", app.getCollection)
+	mux.HandleFunc("POST /api/v1/collections", app.createCollection)
+	mux.HandleFunc("PATCH /api/v1/collections/{id}", app.moveCollection)
 
 	addr := os.Getenv("GOREECLOUD_BOOKMARKS_ADDR")
 	if addr == "" {
@@ -197,7 +217,7 @@ func (s server) create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var input createBookmarkRequest
-	if err := decodeBookmarkJSON(w, r, &input); err != nil {
+	if err := decodeRequestJSON(w, r, &input); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "bookmark request is invalid"})
 		return
 	}
@@ -223,7 +243,7 @@ func (s server) update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var input updateBookmarkRequest
-	if err := decodeBookmarkJSON(w, r, &input); err != nil {
+	if err := decodeRequestJSON(w, r, &input); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "bookmark request is invalid"})
 		return
 	}
@@ -268,6 +288,77 @@ func (s server) delete(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+func (s server) listCollections(w http.ResponseWriter, r *http.Request) {
+	ownerID, ok := s.resolveOwner(w, r)
+	if !ok {
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"collections": s.collections.List(ownerID)})
+}
+
+func (s server) getCollection(w http.ResponseWriter, r *http.Request) {
+	ownerID, ok := s.resolveOwner(w, r)
+	if !ok {
+		return
+	}
+	collection, found := s.collections.Get(ownerID, r.PathValue("id"))
+	if !found {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "collection not found"})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"collection": collection})
+}
+
+func (s server) createCollection(w http.ResponseWriter, r *http.Request) {
+	ownerID, ok := s.resolveOwner(w, r)
+	if !ok {
+		return
+	}
+	var input createCollectionRequest
+	if err := decodeRequestJSON(w, r, &input); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "collection request is invalid"})
+		return
+	}
+	collection, err := s.collections.Create(ownerID, input.Name, input.ParentID)
+	if err != nil {
+		switch {
+		case errors.Is(err, collectioncore.ErrDuplicateSibling):
+			writeJSON(w, http.StatusConflict, map[string]string{"error": "collection name already exists under parent"})
+		case errors.Is(err, collectioncore.ErrParentNotFound):
+			writeJSON(w, http.StatusNotFound, map[string]string{"error": "collection parent not found"})
+		default:
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "collection input is invalid"})
+		}
+		return
+	}
+	writeJSON(w, http.StatusCreated, map[string]any{"collection": collection})
+}
+
+func (s server) moveCollection(w http.ResponseWriter, r *http.Request) {
+	ownerID, ok := s.resolveOwner(w, r)
+	if !ok {
+		return
+	}
+	var input moveCollectionRequest
+	if err := decodeRequestJSON(w, r, &input); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "collection request is invalid"})
+		return
+	}
+	collection, err := s.collections.Move(ownerID, r.PathValue("id"), input.ParentID)
+	if err != nil {
+		switch {
+		case errors.Is(err, collectioncore.ErrCollectionNotFound), errors.Is(err, collectioncore.ErrParentNotFound):
+			writeJSON(w, http.StatusNotFound, map[string]string{"error": "collection or parent not found"})
+		case errors.Is(err, collectioncore.ErrDuplicateSibling), errors.Is(err, collectioncore.ErrHierarchyCycle):
+			writeJSON(w, http.StatusConflict, map[string]string{"error": "collection move conflicts with hierarchy"})
+		default:
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "collection move is invalid"})
+		}
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"collection": collection})
+}
+
 func (s server) resolveOwner(w http.ResponseWriter, r *http.Request) (string, bool) {
 	ownerID, err := s.identity.Resolve(r)
 	if err != nil {
@@ -277,7 +368,7 @@ func (s server) resolveOwner(w http.ResponseWriter, r *http.Request) (string, bo
 	return ownerID, true
 }
 
-func decodeBookmarkJSON(w http.ResponseWriter, r *http.Request, target any) error {
+func decodeRequestJSON(w http.ResponseWriter, r *http.Request, target any) error {
 	decoder := json.NewDecoder(http.MaxBytesReader(w, r.Body, maxCreateBodyBytes))
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(target); err != nil {
