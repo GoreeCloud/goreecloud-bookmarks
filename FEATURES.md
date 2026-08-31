@@ -13,6 +13,7 @@ This file records current functionality without treating source scaffolding, CI 
 - Collection create, list, read, and parent-move behavior.
 - Duplicate sibling-name rejection and hierarchy-cycle protection.
 - Development HTTP collection routes for create/list/read/move.
+- Owner-scoped development HTTP bookmark↔collection assignment get/replace/remove routes; bookmark deletion removes its in-memory assignment.
 - Strict JSON mutation decoding with unknown-field and trailing-value rejection.
 - Explicit identity resolver boundary with fail-closed default runtime identity.
 - Development-only owner-header identity seam restricted to the memory-development repository mode.
@@ -22,10 +23,9 @@ This file records current functionality without treating source scaffolding, CI 
 ## Development-only / partial capabilities
 
 - `memory-development` bookmark repository.
-- In-memory collection state.
+- In-memory collection and bookmark↔collection assignment state.
 - Development-header identity testing.
 - PostgreSQL repository contract/scaffolding without an accepted production runtime driver.
-- Collection-to-bookmark assignment source foundation without the full user-facing/persistent HTTP product surface.
 - Transitional Linkwarden runtime retained for migration and feature continuity.
 - Sync source integration without completed production identity/storage/deployment acceptance.
 

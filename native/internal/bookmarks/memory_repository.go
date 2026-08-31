@@ -33,3 +33,10 @@ func (r *MemoryRepository) Update(_ context.Context, ownerID, id string, input U
 func (r *MemoryRepository) Delete(_ context.Context, ownerID, id string) (bool, error) {
 	return r.store.Delete(ownerID, id)
 }
+
+// Exists implements the owner-scoped lookup required by the in-memory
+// collection-assignment development surface. Cross-owner records remain
+// indistinguishable from missing records through Store.Exists.
+func (r *MemoryRepository) Exists(ownerID, id string) bool {
+	return r.store.Exists(ownerID, id)
+}

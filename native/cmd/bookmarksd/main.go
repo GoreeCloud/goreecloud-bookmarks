@@ -29,6 +29,7 @@ const (
 type server struct {
 	bookmarks   *bookmarkcore.Service
 	collections *collectioncore.Store
+	assignments *collectioncore.AssignmentStore
 	identity    identitycore.Resolver
 	storeMode   string
 }
@@ -56,6 +57,10 @@ type moveCollectionRequest struct {
 	ParentID string `json:"parentId"`
 }
 
+type assignBookmarkCollectionRequest struct {
+	CollectionID string `json:"collectionId"`
+}
+
 func newServer(repository bookmarkcore.Repository, identity identitycore.Resolver, storeMode string) (server, error) {
 	if identity == nil {
 		return server{}, errors.New("identity resolver is required")
@@ -67,9 +72,15 @@ func newServer(repository bookmarkcore.Repository, identity identitycore.Resolve
 	if storeMode == "" {
 		storeMode = "unspecified"
 	}
+	collections := collectioncore.NewStore()
+	var assignments *collectioncore.AssignmentStore
+	if lookup, ok := repository.(collectioncore.BookmarkLookup); ok {
+		assignments = collectioncore.NewAssignmentStore(collections, lookup)
+	}
 	return server{
 		bookmarks:   service,
-		collections: collectioncore.NewStore(),
+		collections: collections,
+		assignments: assignments,
 		identity:    identity,
 		storeMode:   storeMode,
 	}, nil
@@ -140,6 +151,9 @@ func main() {
 	mux.HandleFunc("POST /api/v1/bookmarks", app.create)
 	mux.HandleFunc("PATCH /api/v1/bookmarks/{id}", app.update)
 	mux.HandleFunc("DELETE /api/v1/bookmarks/{id}", app.delete)
+	mux.HandleFunc("GET /api/v1/bookmarks/{id}/collection", app.getBookmarkCollection)
+	mux.HandleFunc("PUT /api/v1/bookmarks/{id}/collection", app.assignBookmarkCollection)
+	mux.HandleFunc("DELETE /api/v1/bookmarks/{id}/collection", app.removeBookmarkCollection)
 	mux.HandleFunc("GET /api/v1/collections", app.listCollections)
 	mux.HandleFunc("GET /api/v1/collections/{id}", app.getCollection)
 	mux.HandleFunc("POST /api/v1/collections", app.createCollection)
@@ -163,12 +177,13 @@ func main() {
 
 func (s server) health(w http.ResponseWriter, _ *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{
-		"service":                "goreecloud-bookmarks",
-		"implementation":         "native-development-foundation",
-		"identity_adapter_ready": false,
-		"persistent_store_ready": false,
-		"store_mode":             s.storeMode,
-		"production_approved":    false,
+		"service":                     "goreecloud-bookmarks",
+		"implementation":              "native-development-foundation",
+		"identity_adapter_ready":      false,
+		"persistent_store_ready":      false,
+		"collection_assignment_ready": s.assignments != nil,
+		"store_mode":                  s.storeMode,
+		"production_approved":         false,
 	})
 }
 
@@ -272,7 +287,8 @@ func (s server) delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	deleted, err := s.bookmarks.Delete(r.Context(), ownerID, r.PathValue("id"))
+	bookmarkID := r.PathValue("id")
+	deleted, err := s.bookmarks.Delete(r.Context(), ownerID, bookmarkID)
 	if err != nil {
 		if errors.Is(err, bookmarkcore.ErrOwnerIdentityRequired) {
 			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "authenticated owner identity is required"})
@@ -283,6 +299,69 @@ func (s server) delete(w http.ResponseWriter, r *http.Request) {
 	}
 	if !deleted {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "bookmark not found"})
+		return
+	}
+	if s.assignments != nil {
+		s.assignments.Remove(ownerID, bookmarkID)
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (s server) getBookmarkCollection(w http.ResponseWriter, r *http.Request) {
+	ownerID, ok := s.resolveOwner(w, r)
+	if !ok {
+		return
+	}
+	if s.assignments == nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "collection assignment storage is unavailable"})
+		return
+	}
+	assignment, found := s.assignments.Get(ownerID, r.PathValue("id"))
+	if !found {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "bookmark collection assignment not found"})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"assignment": assignment})
+}
+
+func (s server) assignBookmarkCollection(w http.ResponseWriter, r *http.Request) {
+	ownerID, ok := s.resolveOwner(w, r)
+	if !ok {
+		return
+	}
+	if s.assignments == nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "collection assignment storage is unavailable"})
+		return
+	}
+	var input assignBookmarkCollectionRequest
+	if err := decodeRequestJSON(w, r, &input); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "collection assignment request is invalid"})
+		return
+	}
+	assignment, err := s.assignments.Assign(ownerID, r.PathValue("id"), input.CollectionID)
+	if err != nil {
+		switch {
+		case errors.Is(err, collectioncore.ErrBookmarkNotFound), errors.Is(err, collectioncore.ErrCollectionNotFound):
+			writeJSON(w, http.StatusNotFound, map[string]string{"error": "bookmark or collection not found"})
+		default:
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "collection assignment is invalid"})
+		}
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"assignment": assignment})
+}
+
+func (s server) removeBookmarkCollection(w http.ResponseWriter, r *http.Request) {
+	ownerID, ok := s.resolveOwner(w, r)
+	if !ok {
+		return
+	}
+	if s.assignments == nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "collection assignment storage is unavailable"})
+		return
+	}
+	if !s.assignments.Remove(ownerID, r.PathValue("id")) {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "bookmark collection assignment not found"})
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)

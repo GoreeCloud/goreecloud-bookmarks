@@ -110,11 +110,29 @@ Collection rules:
 - self-parenting and hierarchy cycles are rejected;
 - another owner's collection is reported as not found rather than exposed.
 
-Collection state is currently in-memory development state. It is lost when the native development service restarts.
+## Bookmark-to-collection assignment
+
+In the current `memory-development` service, one bookmark can be assigned to one collection at a time through these owner-scoped routes:
+
+- `GET /api/v1/bookmarks/{id}/collection`
+- `PUT /api/v1/bookmarks/{id}/collection`
+- `DELETE /api/v1/bookmarks/{id}/collection`
+
+Assign or move a bookmark to a collection:
+
+```json
+{
+  "collectionId": "<collection-id>"
+}
+```
+
+`PUT` replaces the bookmark's current assignment. A bookmark and target collection must belong to the same resolved owner; another owner's bookmark, collection, or assignment is represented as not found rather than disclosed. Deleting a bookmark removes its in-memory collection assignment.
+
+Collection hierarchy and assignment state are currently in-memory development state. They are lost when the native development service restarts. Persistent relationship storage, collection deletion/cascade policy, multi-collection assignment, sharing, and migration semantics are not production-ready.
 
 ## Transitional Linkwarden surface
 
-The inherited Linkwarden-derived application may still be required for workflows not yet migrated into native GoreeCloud Bookmarks. Do not interpret the presence of native bookmark or collection routes as authorization to remove the inherited runtime or migrate production data.
+The inherited Linkwarden-derived application may still be required for workflows not yet migrated into native GoreeCloud Bookmarks. Do not interpret the presence of native bookmark, collection, or assignment routes as authorization to remove the inherited runtime or migrate production data.
 
 ## Sync
 
@@ -131,9 +149,9 @@ The in-memory native development service is not a backup system. Everkeep is the
 ## What is not yet production-ready
 
 - production GoreeCloud Identity authentication;
-- durable native bookmark and collection persistence;
+- durable native bookmark, collection, and assignment persistence;
+- collection deletion/cascade semantics;
 - shared collections and permissions;
-- complete bookmark/collection assignment product behavior;
 - retained Linkwarden data migration;
 - accepted import/export and preserved-content migration;
 - production Sync operation;
@@ -146,4 +164,6 @@ If bookmark or collection requests return an identity-integration error, confirm
 
 If a collection move returns a conflict, verify that the requested parent does not create a cycle or duplicate the collection name under that parent.
 
-If a collection is missing after restarting the service, that is expected in the current in-memory development mode.
+If a bookmark-to-collection assignment returns not found, verify that both IDs exist under the same development owner identity.
+
+If a collection or assignment is missing after restarting the service, that is expected in the current in-memory development mode.
