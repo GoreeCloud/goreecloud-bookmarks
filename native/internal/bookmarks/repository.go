@@ -51,6 +51,14 @@ func (s *Service) Get(ctx context.Context, ownerID, id string) (Bookmark, bool, 
 	return s.repository.Get(ctx, ownerID, id)
 }
 
+// Exists is the minimal owner-scoped lookup used by cross-domain relationships
+// such as collection assignment. It preserves repository failures so callers
+// can fail closed instead of silently converting storage errors into not-found.
+func (s *Service) Exists(ctx context.Context, ownerID, id string) (bool, error) {
+	_, found, err := s.Get(ctx, ownerID, id)
+	return found, err
+}
+
 func (s *Service) Update(ctx context.Context, ownerID, id string, input UpdateInput) (Bookmark, bool, error) {
 	ownerID, id, err := normalizeMutationIdentity(ownerID, id)
 	if err != nil {
