@@ -1,18 +1,38 @@
 package collections
 
 import (
+	"context"
+	"errors"
 	"testing"
 	"time"
 
 	"github.com/GoreeCloud/goreecloud-bookmarks/native/internal/bookmarks"
 )
 
-func TestAssignmentStoreEnforcesOwnerScopedBookmarkAndCollection(t *testing.T) {
-	bookmarkStore := bookmarks.NewStore()
-	collectionStore := NewStore()
-	assignmentStore := NewAssignmentStore(collectionStore, bookmarkStore)
+type failingBookmarkLookup struct {
+	err error
+}
 
-	bookmark, err := bookmarkStore.Create("owner-a", bookmarks.CreateInput{URL: "https://example.com/a"})
+func (lookup failingBookmarkLookup) Exists(context.Context, string, string) (bool, error) {
+	return false, lookup.err
+}
+
+func newAssignmentBookmarkService(t *testing.T) *bookmarks.Service {
+	t.Helper()
+	service, err := bookmarks.NewService(bookmarks.NewMemoryRepository(nil))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return service
+}
+
+func TestAssignmentStoreEnforcesOwnerScopedBookmarkAndCollection(t *testing.T) {
+	ctx := context.Background()
+	bookmarkService := newAssignmentBookmarkService(t)
+	collectionStore := NewStore()
+	assignmentStore := NewAssignmentStore(collectionStore, bookmarkService)
+
+	bookmark, err := bookmarkService.Create(ctx, "owner-a", bookmarks.CreateInput{URL: "https://example.com/a"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -21,18 +41,18 @@ func TestAssignmentStoreEnforcesOwnerScopedBookmarkAndCollection(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if _, err := assignmentStore.Assign("owner-b", bookmark.ID, collection.ID); err != ErrBookmarkNotFound {
+	if _, err := assignmentStore.Assign(ctx, "owner-b", bookmark.ID, collection.ID); err != ErrBookmarkNotFound {
 		t.Fatalf("cross-owner bookmark must be masked as not found, got %v", err)
 	}
 	otherCollection, err := collectionStore.Create("owner-b", "Research", "")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := assignmentStore.Assign("owner-a", bookmark.ID, otherCollection.ID); err != ErrCollectionNotFound {
+	if _, err := assignmentStore.Assign(ctx, "owner-a", bookmark.ID, otherCollection.ID); err != ErrCollectionNotFound {
 		t.Fatalf("cross-owner collection must be masked as not found, got %v", err)
 	}
 
-	assigned, err := assignmentStore.Assign("owner-a", bookmark.ID, collection.ID)
+	assigned, err := assignmentStore.Assign(ctx, "owner-a", bookmark.ID, collection.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -45,19 +65,23 @@ func TestAssignmentStoreEnforcesOwnerScopedBookmarkAndCollection(t *testing.T) {
 }
 
 func TestAssignmentStoreReassignsAndRemovesWithoutCrossOwnerLeakage(t *testing.T) {
-	bookmarkStore := bookmarks.NewStore()
+	ctx := context.Background()
+	bookmarkService := newAssignmentBookmarkService(t)
 	collectionStore := NewStore()
-	assignmentStore := NewAssignmentStore(collectionStore, bookmarkStore)
+	assignmentStore := NewAssignmentStore(collectionStore, bookmarkService)
 	assignmentStore.now = func() time.Time { return time.Unix(123, 0).UTC() }
 
-	bookmark, _ := bookmarkStore.Create("owner-a", bookmarks.CreateInput{URL: "https://example.com/a"})
+	bookmark, err := bookmarkService.Create(ctx, "owner-a", bookmarks.CreateInput{URL: "https://example.com/a"})
+	if err != nil {
+		t.Fatal(err)
+	}
 	first, _ := collectionStore.Create("owner-a", "First", "")
 	second, _ := collectionStore.Create("owner-a", "Second", "")
 
-	if _, err := assignmentStore.Assign("owner-a", bookmark.ID, first.ID); err != nil {
+	if _, err := assignmentStore.Assign(ctx, "owner-a", bookmark.ID, first.ID); err != nil {
 		t.Fatal(err)
 	}
-	reassigned, err := assignmentStore.Assign("owner-a", bookmark.ID, second.ID)
+	reassigned, err := assignmentStore.Assign(ctx, "owner-a", bookmark.ID, second.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -79,14 +103,24 @@ func TestAssignmentStoreReassignsAndRemovesWithoutCrossOwnerLeakage(t *testing.T
 }
 
 func TestAssignmentStoreRejectsMissingIdentifiers(t *testing.T) {
-	store := NewAssignmentStore(NewStore(), bookmarks.NewStore())
-	if _, err := store.Assign("", "bookmark", "collection"); err != ErrOwnerRequired {
+	ctx := context.Background()
+	store := NewAssignmentStore(NewStore(), newAssignmentBookmarkService(t))
+	if _, err := store.Assign(ctx, "", "bookmark", "collection"); err != ErrOwnerRequired {
 		t.Fatalf("expected owner required, got %v", err)
 	}
-	if _, err := store.Assign("owner", "", "collection"); err != ErrBookmarkRequired {
+	if _, err := store.Assign(ctx, "owner", "", "collection"); err != ErrBookmarkRequired {
 		t.Fatalf("expected bookmark required, got %v", err)
 	}
-	if _, err := store.Assign("owner", "bookmark", ""); err != ErrCollectionNotFound {
+	if _, err := store.Assign(ctx, "owner", "bookmark", ""); err != ErrCollectionNotFound {
 		t.Fatalf("expected collection not found, got %v", err)
+	}
+}
+
+func TestAssignmentStorePropagatesBookmarkLookupFailure(t *testing.T) {
+	lookupErr := errors.New("bookmark storage unavailable")
+	store := NewAssignmentStore(NewStore(), failingBookmarkLookup{err: lookupErr})
+	_, err := store.Assign(context.Background(), "owner", "bookmark", "collection")
+	if !errors.Is(err, lookupErr) {
+		t.Fatalf("bookmark lookup failure = %v, want %v", err, lookupErr)
 	}
 }
