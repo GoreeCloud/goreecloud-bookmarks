@@ -1,6 +1,7 @@
 package collections
 
 import (
+	"context"
 	"errors"
 	"strings"
 	"sync"
@@ -15,8 +16,9 @@ var (
 // BookmarkLookup is the minimum owner-scoped bookmark contract required by
 // collection assignment. Implementations must return false for cross-owner
 // lookups so assignment never needs access to another owner's bookmark data.
+// Storage failures remain errors and must not be collapsed into not-found.
 type BookmarkLookup interface {
-	Exists(ownerID, bookmarkID string) bool
+	Exists(context.Context, string, string) (bool, error)
 }
 
 type Assignment struct {
@@ -43,7 +45,7 @@ func NewAssignmentStore(collections *Store, bookmarks BookmarkLookup) *Assignmen
 	}
 }
 
-func (s *AssignmentStore) Assign(ownerID, bookmarkID, collectionID string) (Assignment, error) {
+func (s *AssignmentStore) Assign(ctx context.Context, ownerID, bookmarkID, collectionID string) (Assignment, error) {
 	ownerID = strings.TrimSpace(ownerID)
 	bookmarkID = strings.TrimSpace(bookmarkID)
 	collectionID = strings.TrimSpace(collectionID)
@@ -56,7 +58,14 @@ func (s *AssignmentStore) Assign(ownerID, bookmarkID, collectionID string) (Assi
 	if collectionID == "" {
 		return Assignment{}, ErrCollectionNotFound
 	}
-	if s.bookmarks == nil || !s.bookmarks.Exists(ownerID, bookmarkID) {
+	if s.bookmarks == nil {
+		return Assignment{}, ErrBookmarkNotFound
+	}
+	found, err := s.bookmarks.Exists(ctx, ownerID, bookmarkID)
+	if err != nil {
+		return Assignment{}, err
+	}
+	if !found {
 		return Assignment{}, ErrBookmarkNotFound
 	}
 	if s.collections == nil {

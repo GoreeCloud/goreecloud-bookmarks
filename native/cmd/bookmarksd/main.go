@@ -29,6 +29,7 @@ const (
 type server struct {
 	bookmarks   *bookmarkcore.Service
 	collections *collectioncore.Store
+	assignments *collectioncore.AssignmentStore
 	identity    identitycore.Resolver
 	storeMode   string
 }
@@ -67,9 +68,11 @@ func newServer(repository bookmarkcore.Repository, identity identitycore.Resolve
 	if storeMode == "" {
 		storeMode = "unspecified"
 	}
+	collections := collectioncore.NewStore()
 	return server{
 		bookmarks:   service,
-		collections: collectioncore.NewStore(),
+		collections: collections,
+		assignments: collectioncore.NewAssignmentStore(collections, service),
 		identity:    identity,
 		storeMode:   storeMode,
 	}, nil
@@ -140,6 +143,9 @@ func main() {
 	mux.HandleFunc("POST /api/v1/bookmarks", app.create)
 	mux.HandleFunc("PATCH /api/v1/bookmarks/{id}", app.update)
 	mux.HandleFunc("DELETE /api/v1/bookmarks/{id}", app.delete)
+	mux.HandleFunc("GET /api/v1/bookmarks/{id}/collection", app.getBookmarkCollection)
+	mux.HandleFunc("PUT /api/v1/bookmarks/{id}/collection", app.assignBookmarkCollection)
+	mux.HandleFunc("DELETE /api/v1/bookmarks/{id}/collection", app.removeBookmarkCollection)
 	mux.HandleFunc("GET /api/v1/collections", app.listCollections)
 	mux.HandleFunc("GET /api/v1/collections/{id}", app.getCollection)
 	mux.HandleFunc("POST /api/v1/collections", app.createCollection)
@@ -272,7 +278,8 @@ func (s server) delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	deleted, err := s.bookmarks.Delete(r.Context(), ownerID, r.PathValue("id"))
+	bookmarkID := r.PathValue("id")
+	deleted, err := s.bookmarks.Delete(r.Context(), ownerID, bookmarkID)
 	if err != nil {
 		if errors.Is(err, bookmarkcore.ErrOwnerIdentityRequired) {
 			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "authenticated owner identity is required"})
@@ -284,6 +291,9 @@ func (s server) delete(w http.ResponseWriter, r *http.Request) {
 	if !deleted {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "bookmark not found"})
 		return
+	}
+	if s.assignments != nil {
+		s.assignments.Remove(ownerID, bookmarkID)
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
