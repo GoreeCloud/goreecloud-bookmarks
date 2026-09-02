@@ -27,8 +27,12 @@ func (s server) getBookmarkCollection(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "bookmark storage is unavailable"})
 		return
 	}
-	if !found || s.assignments == nil {
+	if !found {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "bookmark collection assignment not found"})
+		return
+	}
+	if s.assignments == nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "bookmark collection storage is unavailable"})
 		return
 	}
 	assignment, found := s.assignments.Get(ownerID, bookmarkID)
@@ -85,7 +89,15 @@ func (s server) removeBookmarkCollection(w http.ResponseWriter, r *http.Request)
 		writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "bookmark storage is unavailable"})
 		return
 	}
-	if !found || s.assignments == nil || !s.assignments.Remove(ownerID, bookmarkID) {
+	if !found {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "bookmark collection assignment not found"})
+		return
+	}
+	if s.assignments == nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "bookmark collection storage is unavailable"})
+		return
+	}
+	if !s.assignments.Remove(ownerID, bookmarkID) {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "bookmark collection assignment not found"})
 		return
 	}
