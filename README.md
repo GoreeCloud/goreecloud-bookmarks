@@ -1,9 +1,9 @@
 # GoreeCloud Bookmarks
 
-GoreeCloud Bookmarks is the planned GoreeCloud bookmarking, web-archiving, read-later, annotation, and personal web-memory platform.
+GoreeCloud Bookmarks is the GoreeCloud bookmarking, web-archiving, read-later, annotation, and personal web-memory project.
 
-> **Release lifecycle:** Concept  
-> **Current capability state:** Documentation only. No GoreeCloud Bookmarks application or service implementation is currently verified.
+> **Release lifecycle:** Experimental  
+> **Current capability state:** Minimal Go service foundation only. No end-user bookmarking workflow or persistent Bookmarks data layer is implemented.
 
 ## Product direction
 
@@ -17,78 +17,115 @@ The preferred workflow is:
 
 > **Capture instantly → enrich automatically → organize when useful → preserve when important → rediscover when relevant.**
 
+## Current experimental implementation
+
+The repository contains the first executable service foundation:
+
+- Go `1.27.1` toolchain baseline.
+- Standard-library HTTP service entry point under `cmd/bookmarks`.
+- `GET /api/v1/health` returning bounded process-health JSON.
+- `GET /api/v1/ready` returning HTTP `503` and `ready: false` until the required Bookmarks data layer exists.
+- Loopback-only development default `127.0.0.1:8080`, with optional `GOREECLOUD_BOOKMARKS_LISTEN_ADDR` override.
+- HTTP timeouts and graceful SIGINT/SIGTERM shutdown.
+- Unit tests and GitHub validation for formatting, vetting, tests, and build.
+
+No bookmark persistence, PostgreSQL schema, authentication, authorization, collections, tags, search, synchronization, archival, web UI, desktop/mobile client, Docker deployment, or accepted Integral Platform System integration is implemented yet.
+
+## Development
+
+The pinned development toolchain is Go `1.27.1`.
+
+Validate the source with:
+
+```bash
+go version
+gofmt -w ./cmd ./internal
+go vet ./...
+go test ./...
+go build -o ./build/goreecloud-bookmarks ./cmd/bookmarks
+```
+
+The repository validation workflow separately verifies formatting without modifying files, vets, tests, and builds the exact candidate revision.
+
+For local experimental execution:
+
+```bash
+go run ./cmd/bookmarks
+```
+
+The default listener is `127.0.0.1:8080`. An explicit local override may be provided with `GOREECLOUD_BOOKMARKS_LISTEN_ADDR`. This environment variable is not a secret and the service does not automatically load a `.env` file.
+
+Current engineering probes:
+
+```text
+GET /api/v1/health
+GET /api/v1/ready
+```
+
+Readiness is intentionally non-passing while the authoritative Bookmarks data layer is absent. This service is not a production deployment target at the current lifecycle state.
+
 ## Repository documentation
 
-- [`SPECIFICATIONS.md`](SPECIFICATIONS.md) — planned product requirements and architecture.
-- [`ARCHITECTURE.md`](ARCHITECTURE.md) — selected implementation architecture and technology direction; not runtime evidence.
+- [`SPECIFICATIONS.md`](SPECIFICATIONS.md) — planned product requirements.
+- [`ARCHITECTURE.md`](ARCHITECTURE.md) — selected architecture plus current implementation boundary.
 - [`CAPABILITIES.md`](CAPABILITIES.md) — current verified capability state.
-- [`FEATURES.md`](FEATURES.md) — planned feature catalog.
-- [`FEATURE-ROADMAP.md`](FEATURE-ROADMAP.md) — phased implementation roadmap.
+- [`FEATURES.md`](FEATURES.md) — current experimental foundation and planned feature catalog.
+- [`FEATURE-ROADMAP.md`](FEATURE-ROADMAP.md) — phased implementation roadmap and current milestone state.
 - [`BENEFITS.md`](BENEFITS.md) — intended user and platform benefits.
-- [`COMPETITIVE-OBJECTIVES.md`](COMPETITIVE-OBJECTIVES.md) — product differentiation objectives and guardrails.
-- [`BRANDING.md`](BRANDING.md) — product naming and visual-direction guidance.
-- [`USER-MANUAL.md`](USER-MANUAL.md) — Concept-stage intended usage model; not production instructions.
-- [`PRIVACY POLICY.md`](PRIVACY%20POLICY.md) — required privacy model and current no-runtime processing state.
-- [`SECURITY.md`](SECURITY.md) — security requirements and current no-runtime state.
-- [`NOTES.md`](NOTES.md) — verified repository notes and remaining open decisions.
+- [`COMPETITIVE-OBJECTIVES.md`](COMPETITIVE-OBJECTIVES.md) — differentiation objectives and guardrails.
+- [`BRANDING.md`](BRANDING.md) — product naming and visual direction.
+- [`USER-MANUAL.md`](USER-MANUAL.md) — current availability plus planned user workflows.
+- [`PRIVACY POLICY.md`](PRIVACY%20POLICY.md) — required privacy model and current experimental-processing boundary.
+- [`SECURITY.md`](SECURITY.md) — security requirements and current experimental security boundary.
+- [`NOTES.md`](NOTES.md) — verified repository notes and remaining decisions.
 - [`docs/api/README.md`](docs/api/README.md) — planned v1 API behavior, compatibility, synchronization, and privacy contract.
-- [`docs/api/openapi.yaml`](docs/api/openapi.yaml) — planned OpenAPI 3.2.1 machine-readable `/api/v1/` contract; not deployment evidence.
-- [`docs/data-model.md`](docs/data-model.md) — logical Bookmarks resource model and storage/authority boundaries.
-- [`docs/migrations.md`](docs/migrations.md) — API, PostgreSQL, SQLite, archive, synchronization, migration, compatibility, and rollback rules.
-- [`LICENSE`](LICENSE) — current repository rights notice applying the GoreeCloud fallback `AGPL-3.0-or-later` license.
+- [`docs/api/openapi.yaml`](docs/api/openapi.yaml) — OpenAPI 3.2.1 planning contract for `/api/v1/`; contract presence is not endpoint implementation evidence.
+- [`docs/data-model.md`](docs/data-model.md) — logical resource model and storage/authority boundaries.
+- [`docs/migrations.md`](docs/migrations.md) — versioning, migration, compatibility, and rollback rules.
+- [`LICENSE`](LICENSE) — current `AGPL-3.0-or-later` fallback rights notice.
 - [`LICENSE-DECISION.md`](LICENSE-DECISION.md) — licensing decision record and supersession rule.
-- [`goreecloud.platform.yaml`](goreecloud.platform.yaml) — GoreeCloud Platform Contract `0.4` declaration with unverified conformance.
+- [`goreecloud.platform.yaml`](goreecloud.platform.yaml) — Platform Contract `0.4` declaration with unverified conformance.
 
 The canonical GoreeCloud product record is `GoreeCloud/Projects/Project Specification — Bookmarks.md` in the authorized GoreeCloud documentation system.
 
 ## Selected architecture direction
 
-The Concept-stage implementation direction is documented in [`ARCHITECTURE.md`](ARCHITECTURE.md). In summary, it selects:
+The broader implementation direction in [`ARCHITECTURE.md`](ARCHITECTURE.md) selects:
 
 - one authoritative modular GoreeCloud Bookmarks service rather than premature microservices;
-- Go for the initial server/API/background-processing implementation;
+- Go for the server/API/background-processing implementation;
 - TypeScript for the first-class web client;
 - PostgreSQL for authoritative relational server state and initial full-text search;
 - SQLite for installed-client offline state and pending mutations;
 - REST-style HTTPS/JSON under `/api/v1/` with an OpenAPI contract;
-- Kotlin/native Android, Swift/native Apple clients, and Rust + GTK 4 for the Linux desktop direction;
+- Kotlin/native Android, Swift/native Apple clients, and Rust + GTK 4 for Linux desktop;
 - WARC 1.1 / ISO 28500:2017 for complete web-preservation capture containers;
 - a Docker Compose self-hosted server stack with dedicated PostgreSQL and persistent archive storage.
 
-The planned v1 wire contract is now defined in `docs/api/openapi.yaml`, with companion logical data and migration/compatibility records under `docs/`. Those records define the implementation target; they do not establish that an API, database, synchronization runtime, migration runner, client, or deployment exists.
-
-These are architecture selections only. They do not establish that any implementation, deployment, synchronization path, archive pipeline, native client, or acceptance evidence currently exists.
+Only the minimal Go service foundation is implemented today. The other selections remain architecture direction until their source and evidence exist.
 
 ## Platform governance
 
-The current Platform Contract baseline is `0.4`, which evaluates exactly nine Integral Platform Systems: GoreeCloud Manager, Privacy Shield, Wardveil Security, Everkeep, Glaze UI, GoreeCloud Mesh, GoreeCloud Identity, GoreeCloud Policy, and GoreeCloud Observability.
+Platform Contract `0.4` evaluates exactly nine Integral Platform Systems: GoreeCloud Manager, Privacy Shield, Wardveil Security, Everkeep, Glaze UI, GoreeCloud Mesh, GoreeCloud Identity, GoreeCloud Policy, and GoreeCloud Observability.
 
 GoreeCloud Sync is separately governed and is not a tenth Integral Platform System.
 
-The current contract reference target for Glaze UI is `1.5.1`. No Bookmarks-specific platform-system implementation or acceptance evidence is currently verified.
+All nine Bookmarks integrations remain blocked/unaccepted. The current health and readiness routes are not, by themselves, a GoreeCloud Observability or Manager integration.
 
 ## Related project
 
-The separate `GoreeCloud/goreecloud-bookmark-browser-extension` repository represents a related browser-extension capture surface. Native GoreeCloud Browser integration remains part of the broader Bookmarks direction and must be reconciled with Browser authority and implementation state rather than creating conflicting bookmark/capture ownership.
-
-## Implementation status
-
-Authoritative repository `main` contains the Concept-stage documentation and governance baseline, but no application source, server source, client source, build system, tests, deployment configuration, runtime evidence, or release artifact establishing a GoreeCloud Bookmarks product implementation.
-
-Repository documentation, architecture/API/data decisions, manifests, roadmap entries, and governance records must not be treated as runtime implementation or acceptance evidence.
+`GoreeCloud/goreecloud-bookmark-browser-extension` is a related capture surface. Native GoreeCloud Browser integration remains broader planned work and must preserve Bookmarks as the authoritative bookmark domain.
 
 ## Licensing
 
-The active GoreeCloud Software Licensing Policy establishes `AGPL-3.0-or-later` as the default fallback when no more appropriate project-specific license has been selected. No Bookmarks-specific superseding decision is currently recorded, so this repository applies that fallback through [`LICENSE`](LICENSE).
-
-A future authorized Bookmarks-specific license decision may supersede the fallback. Any such change must update the repository and applicable canonical GoreeCloud records through the governed process and account for third-party compatibility and previously distributed code where applicable.
+The active GoreeCloud Software Licensing Policy applies `AGPL-3.0-or-later` as the default fallback because no Bookmarks-specific superseding decision is currently recorded. This repository records that state through [`LICENSE`](LICENSE) and [`LICENSE-DECISION.md`](LICENSE-DECISION.md).
 
 ## Repository workflow
 
-Material repository changes should use short-lived purpose-specific branches and pull requests into `main`. The repository includes `.github/PULL_REQUEST_TEMPLATE.md` to preserve scope, status, validation, and exact-revision traceability.
+Material changes use short-lived purpose-specific branches and pull requests into `main`. `.github/PULL_REQUEST_TEMPLATE.md` preserves scope, validation, and exact-revision traceability.
 
-Default-branch protection remains required by GoreeCloud governance. Its final GitHub administrative configuration is tracked separately until authoritative GitHub state verifies that protection is active.
+Default-branch protection remains required by GoreeCloud governance but is not currently verified active in GitHub. That repository-administration blocker is tracked separately.
 
 ## Truthful status rule
 
-Planned capabilities, architecture/API/data decisions, roadmap entries, specifications, mockups, manifests, metadata, or documentation presence must never be represented as implemented, accepted, production-ready, or Stable without authoritative implementation and evidence.
+Implemented source, passing CI, merge state, release state, deployment state, platform acceptance, production readiness, and Stable qualification are separate claims. Planned capabilities, documentation, manifests, or a successful process start must never be used to imply a more mature state than evidence supports.
