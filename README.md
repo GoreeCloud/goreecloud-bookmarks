@@ -31,6 +31,10 @@ The preferred workflow is:
 - [`PRIVACY POLICY.md`](PRIVACY%20POLICY.md) — required privacy model and current no-runtime processing state.
 - [`SECURITY.md`](SECURITY.md) — security requirements and current no-runtime state.
 - [`NOTES.md`](NOTES.md) — verified repository notes and remaining open decisions.
+- [`docs/api/README.md`](docs/api/README.md) — planned v1 API behavior, compatibility, synchronization, and privacy contract.
+- [`docs/api/openapi.yaml`](docs/api/openapi.yaml) — planned OpenAPI 3.2.1 machine-readable `/api/v1/` contract; not deployment evidence.
+- [`docs/data-model.md`](docs/data-model.md) — logical Bookmarks resource model and storage/authority boundaries.
+- [`docs/migrations.md`](docs/migrations.md) — API, PostgreSQL, SQLite, archive, synchronization, migration, compatibility, and rollback rules.
 - [`LICENSE`](LICENSE) — current repository rights notice applying the GoreeCloud fallback `AGPL-3.0-or-later` license.
 - [`LICENSE-DECISION.md`](LICENSE-DECISION.md) — licensing decision record and supersession rule.
 - [`goreecloud.platform.yaml`](goreecloud.platform.yaml) — GoreeCloud Platform Contract `0.4` declaration with unverified conformance.
@@ -51,6 +55,8 @@ The Concept-stage implementation direction is documented in [`ARCHITECTURE.md`](
 - WARC 1.1 / ISO 28500:2017 for complete web-preservation capture containers;
 - a Docker Compose self-hosted server stack with dedicated PostgreSQL and persistent archive storage.
 
+The planned v1 wire contract is now defined in `docs/api/openapi.yaml`, with companion logical data and migration/compatibility records under `docs/`. Those records define the implementation target; they do not establish that an API, database, synchronization runtime, migration runner, client, or deployment exists.
+
 These are architecture selections only. They do not establish that any implementation, deployment, synchronization path, archive pipeline, native client, or acceptance evidence currently exists.
 
 ## Platform governance
@@ -69,7 +75,7 @@ The separate `GoreeCloud/goreecloud-bookmark-browser-extension` repository repre
 
 Authoritative repository `main` contains the Concept-stage documentation and governance baseline, but no application source, server source, client source, build system, tests, deployment configuration, runtime evidence, or release artifact establishing a GoreeCloud Bookmarks product implementation.
 
-Repository documentation, architecture decisions, manifests, roadmap entries, and governance records must not be treated as runtime implementation or acceptance evidence.
+Repository documentation, architecture/API/data decisions, manifests, roadmap entries, and governance records must not be treated as runtime implementation or acceptance evidence.
 
 ## Licensing
 
@@ -85,4 +91,4 @@ Default-branch protection remains required by GoreeCloud governance. Its final G
 
 ## Truthful status rule
 
-Planned capabilities, architecture decisions, roadmap entries, specifications, mockups, manifests, metadata, or documentation presence must never be represented as implemented, accepted, production-ready, or Stable without authoritative implementation and evidence.
+Planned capabilities, architecture/API/data decisions, roadmap entries, specifications, mockups, manifests, metadata, or documentation presence must never be represented as implemented, accepted, production-ready, or Stable without authoritative implementation and evidence.
