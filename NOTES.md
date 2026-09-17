@@ -11,6 +11,8 @@
 - Current Platform Contract baseline reviewed during this documentation pass: `0.4`.
 - Current Integral Platform System model: exactly nine systems.
 - Current Stable Glaze UI consumer target referenced by Platform Contract `0.4`: `1.5.1`.
+- Current governing repository license: `AGPL-3.0-or-later` through the GoreeCloud default fallback; no Bookmarks-specific superseding license decision is currently recorded.
+- Default branch `main` is not currently protected in verified GitHub state; protection remains a repository-administration task.
 
 ## Important authority boundaries
 
@@ -20,6 +22,7 @@
 - GoreeCloud Sync is separately governed and is not an Integral Platform System.
 - GoreeCloud Browser integration must be reconciled with the Browser project and the separate bookmark-browser-extension repository rather than creating competing capture or bookmark authority.
 - Optional intelligence must not become a dependency for core bookmarking.
+- The fallback license may be superseded only by an authorized Bookmarks-specific decision reconciled across repository and canonical project records.
 
 ## Open architecture decisions
 
@@ -36,7 +39,7 @@ The following remain intentionally undecided until authoritative design work sel
 - Synchronization algorithm and transport.
 - Deployment/container model.
 - API versioning and compatibility policy.
-- Concrete licensing record for this repository if the current central licensing policy has not yet been explicitly applied to Bookmarks.
+- Whether a Bookmarks-specific license should supersede the current `AGPL-3.0-or-later` fallback after dependency, distribution, interoperability, and product-architecture review.
 
 ## Documentation maintenance
 

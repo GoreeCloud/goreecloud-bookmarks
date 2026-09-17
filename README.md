@@ -30,6 +30,8 @@ The preferred workflow is:
 - [`PRIVACY POLICY.md`](PRIVACY%20POLICY.md) — required privacy model and current no-runtime processing state.
 - [`SECURITY.md`](SECURITY.md) — security requirements and current no-runtime state.
 - [`NOTES.md`](NOTES.md) — verified repository notes and open architecture decisions.
+- [`LICENSE`](LICENSE) — current repository rights notice applying the GoreeCloud fallback `AGPL-3.0-or-later` license.
+- [`LICENSE-DECISION.md`](LICENSE-DECISION.md) — licensing decision record and supersession rule.
 - [`goreecloud.platform.yaml`](goreecloud.platform.yaml) — GoreeCloud Platform Contract `0.4` declaration with unverified conformance.
 
 The canonical GoreeCloud product record is `GoreeCloud/Projects/Project Specification — Bookmarks.md` in the authorized GoreeCloud documentation system.
@@ -48,17 +50,21 @@ The separate `GoreeCloud/goreecloud-bookmark-browser-extension` repository repre
 
 ## Implementation status
 
-Authoritative `main` before the current governance-baseline branch is commit:
+Authoritative repository `main` contains the Concept-stage documentation and governance baseline, but no application source, server source, client source, build system, tests, deployment configuration, runtime evidence, or release artifact establishing a GoreeCloud Bookmarks product implementation.
 
-`bfe1de2287493cb959507e7417cfa957faf1323d`
-
-That revision contains the documentation foundation merged through PR #1, but no application source, server source, client source, build system, tests, deployment configuration, runtime evidence, or release artifact establishing a Bookmarks product implementation.
-
-The current governance branch adds the required documentation baseline and Platform Contract declaration. Those changes do not become authoritative `main` state until merged and verified.
+Repository documentation, manifests, roadmap entries, and governance records must not be treated as runtime implementation or acceptance evidence.
 
 ## Licensing
 
-GoreeCloud has an active central software-licensing policy, but this documentation pass has not found a Bookmarks-specific authoritative record explicitly assigning the repository license. No `LICENSE` file is added by inference. The license must be recorded through the governed project/repository process before any public software release that requires it.
+The active GoreeCloud Software Licensing Policy establishes `AGPL-3.0-or-later` as the default fallback when no more appropriate project-specific license has been selected. No Bookmarks-specific superseding decision is currently recorded, so this repository applies that fallback through [`LICENSE`](LICENSE).
+
+A future authorized Bookmarks-specific license decision may supersede the fallback. Any such change must update the repository and applicable canonical GoreeCloud records through the governed process and account for third-party compatibility and previously distributed code where applicable.
+
+## Repository workflow
+
+Material repository changes should use short-lived purpose-specific branches and pull requests into `main`. The repository includes `.github/PULL_REQUEST_TEMPLATE.md` to preserve scope, status, validation, and exact-revision traceability.
+
+Default-branch protection remains required by GoreeCloud governance. Its final GitHub administrative configuration is tracked separately until authoritative GitHub state verifies that protection is active.
 
 ## Truthful status rule
 

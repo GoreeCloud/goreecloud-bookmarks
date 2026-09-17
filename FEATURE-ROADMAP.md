@@ -14,7 +14,7 @@ This roadmap orders intended work. It is not release evidence, a delivery commit
 - Declare the current GoreeCloud Platform Contract without overstating conformance.
 - Establish truthful capability reporting.
 - Establish repository validation, branching, protection, ownership, and dependency-maintenance controls as required by current governance.
-- Select and record the approved Bookmarks license before a public software release if not already established by authoritative project governance.
+- Apply the current GoreeCloud software-license fallback (`AGPL-3.0-or-later`) unless and until an authorized Bookmarks-specific license decision supersedes it; preserve compatibility and third-party notice review before software distribution.
 
 ## Phase 1 — Bookmarking foundation
 
@@ -79,7 +79,7 @@ Core bookmarking, organization, search, archival, import/export, and synchroniza
 
 ## Cross-cutting gates for every phase
 
-Each phase must address applicable privacy, security, continuity, accessibility, testing, synchronization, migration, rollback, operational-health, policy, documentation, and exact-revision evidence requirements. All nine Integral Platform Systems must be evaluated according to current authoritative governance; GoreeCloud Sync remains separately governed.
+Each phase must address applicable privacy, security, continuity, accessibility, testing, synchronization, migration, rollback, operational-health, policy, documentation, licensing, and exact-revision evidence requirements. All nine Integral Platform Systems must be evaluated according to current authoritative governance; GoreeCloud Sync remains separately governed.
 
 ## Lifecycle progression
 
