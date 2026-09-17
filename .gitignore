@@ -1,0 +1,53 @@
+# Operating-system and editor files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Environment and secret-bearing local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Logs and temporary files
+*.log
+tmp/
+temp/
+.cache/
+
+# Generic build and dependency outputs
+node_modules/
+dist/
+build/
+out/
+coverage/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Rust
+target/
+
+# Java/Kotlin/Gradle
+.gradle/
+*.class
+
+# Local databases and runtime state
+*.db
+*.sqlite
+*.sqlite3
+
+# Archive/capture scratch data must not be committed
+captures/
+archives/
+offline-cache/
