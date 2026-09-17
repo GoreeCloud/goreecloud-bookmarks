@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/GoreeCloud/goreecloud-bookmarks/internal/database/postgres"
 	"github.com/GoreeCloud/goreecloud-bookmarks/internal/httpapi"
 )
 
@@ -19,9 +20,33 @@ const defaultListenAddress = "127.0.0.1:8080"
 func main() {
 	logger := log.New(os.Stderr, "goreecloud-bookmarks: ", log.Ldate|log.Ltime|log.LUTC)
 
+	handler := httpapi.NewHandler()
+	var database *postgres.Database
+
+	if databaseURL := strings.TrimSpace(os.Getenv("GOREECLOUD_BOOKMARKS_DATABASE_URL")); databaseURL != "" {
+		var err error
+		database, err = postgres.Open(context.Background(), databaseURL)
+		if err != nil {
+			// Database URLs may contain credentials. Do not emit parser/config
+			// details to logs when initialization fails.
+			logger.Fatal("database configuration is invalid or could not initialize")
+		}
+		defer database.Close()
+
+		handler = httpapi.NewHandlerWithReadiness(httpapi.ReadinessFunc(func(ctx context.Context) httpapi.ReadinessResult {
+			result := database.CheckReadiness(ctx)
+			return httpapi.ReadinessResult{
+				Ready: result.Ready,
+				Checks: map[string]string{
+					"bookmarks-data": result.State,
+				},
+			}
+		}))
+	}
+
 	server := &http.Server{
 		Addr:              listenAddress(),
-		Handler:           httpapi.NewHandler(),
+		Handler:           handler,
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       10 * time.Second,
 		WriteTimeout:      10 * time.Second,
@@ -42,7 +67,7 @@ func main() {
 		}
 	}()
 
-	logger.Printf("starting Experimental service foundation on %s", server.Addr)
+	logger.Printf("starting GoreeCloud Bookmarks on %s", server.Addr)
 	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		logger.Fatalf("server failed: %v", err)
 	}
