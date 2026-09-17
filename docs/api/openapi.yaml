@@ -1,0 +1,1740 @@
+openapi: 3.2.1
+info:
+  title: GoreeCloud Bookmarks API
+  version: 0.1.0-concept
+  summary: Planned v1 application API contract for GoreeCloud Bookmarks.
+  description: >-
+    Concept-stage machine-readable contract. It defines the intended /api/v1 resource
+    surface and schemas but does not assert that any endpoint is implemented, deployed,
+    reachable, accepted, or production-ready.
+x-goreecloud-status: planned
+x-goreecloud-lifecycle: concept
+x-goreecloud-api-major: v1
+security:
+  - bearerAuth: []
+tags:
+  - name: Bookmarks
+  - name: Collections
+  - name: Tags
+  - name: Notes
+  - name: Highlights
+  - name: Archives
+  - name: Reminders
+  - name: Sharing
+  - name: Automation
+  - name: LinkHealth
+  - name: SavedSearches
+  - name: Sync
+  - name: Health
+paths:
+  /api/v1/health:
+    get:
+      tags: [Health]
+      operationId: getHealth
+      summary: Return bounded service-health state.
+      security: []
+      responses:
+        '200':
+          description: Health response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+  /api/v1/ready:
+    get:
+      tags: [Health]
+      operationId: getReadiness
+      summary: Return bounded readiness state.
+      security: []
+      responses:
+        '200':
+          description: Service is ready.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadinessStatus'
+        '503':
+          description: Service is not ready.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadinessStatus'
+  /api/v1/bookmarks:
+    get:
+      tags: [Bookmarks]
+      operationId: listBookmarks
+      summary: List authorized bookmarks.
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+        - in: query
+          name: collectionId
+          schema: { type: string }
+        - in: query
+          name: tagId
+          schema: { type: string }
+        - in: query
+          name: readState
+          schema: { type: string }
+        - in: query
+          name: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: Bookmark page.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookmarkList'
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      tags: [Bookmarks]
+      operationId: createBookmark
+      summary: Create a bookmark immediately before optional enrichment.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookmarkCreate'
+      responses:
+        '201':
+          description: Bookmark created.
+          headers:
+            ETag:
+              schema: { type: string }
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bookmark'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/bookmarks/{bookmarkId}:
+    parameters:
+      - $ref: '#/components/parameters/BookmarkId'
+    get:
+      tags: [Bookmarks]
+      operationId: getBookmark
+      responses:
+        '200':
+          description: Bookmark.
+          headers:
+            ETag:
+              schema: { type: string }
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bookmark'
+        default:
+          $ref: '#/components/responses/Error'
+    patch:
+      tags: [Bookmarks]
+      operationId: updateBookmark
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookmarkUpdate'
+      responses:
+        '200':
+          description: Updated bookmark.
+          headers:
+            ETag:
+              schema: { type: string }
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bookmark'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        default:
+          $ref: '#/components/responses/Error'
+    delete:
+      tags: [Bookmarks]
+      operationId: deleteBookmark
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      responses:
+        '204':
+          description: Bookmark tombstoned/deleted from normal views.
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/collections:
+    get:
+      tags: [Collections]
+      operationId: listCollections
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Collection page.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectionList'
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      tags: [Collections]
+      operationId: createCollection
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CollectionCreate'
+      responses:
+        '201':
+          description: Collection created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Collection'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/collections/{collectionId}:
+    parameters:
+      - $ref: '#/components/parameters/CollectionId'
+    get:
+      tags: [Collections]
+      operationId: getCollection
+      responses:
+        '200':
+          description: Collection.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Collection'
+        default:
+          $ref: '#/components/responses/Error'
+    patch:
+      tags: [Collections]
+      operationId: updateCollection
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CollectionUpdate'
+      responses:
+        '200':
+          description: Updated collection.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Collection'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        default:
+          $ref: '#/components/responses/Error'
+    delete:
+      tags: [Collections]
+      operationId: deleteCollection
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      responses:
+        '204': { description: Collection deleted/tombstoned. }
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/tags:
+    get:
+      tags: [Tags]
+      operationId: listTags
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Tag page.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagList'
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      tags: [Tags]
+      operationId: createTag
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TagCreate'
+      responses:
+        '201':
+          description: Tag created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/tags/{tagId}:
+    parameters:
+      - $ref: '#/components/parameters/TagId'
+    get:
+      tags: [Tags]
+      operationId: getTag
+      responses:
+        '200':
+          description: Tag.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+        default:
+          $ref: '#/components/responses/Error'
+    patch:
+      tags: [Tags]
+      operationId: updateTag
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TagUpdate'
+      responses:
+        '200':
+          description: Updated tag.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        default:
+          $ref: '#/components/responses/Error'
+    delete:
+      tags: [Tags]
+      operationId: deleteTag
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      responses:
+        '204': { description: Tag deleted/tombstoned. }
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/notes:
+    get:
+      tags: [Notes]
+      operationId: listNotes
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+        - in: query
+          name: bookmarkId
+          schema: { type: string }
+      responses:
+        '200':
+          description: Note page.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NoteList'
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      tags: [Notes]
+      operationId: createNote
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NoteCreate'
+      responses:
+        '201':
+          description: Note created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Note'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/notes/{noteId}:
+    parameters:
+      - $ref: '#/components/parameters/NoteId'
+    get:
+      tags: [Notes]
+      operationId: getNote
+      responses:
+        '200':
+          description: Note.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Note'
+        default:
+          $ref: '#/components/responses/Error'
+    patch:
+      tags: [Notes]
+      operationId: updateNote
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NoteUpdate'
+      responses:
+        '200':
+          description: Updated note.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Note'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        default:
+          $ref: '#/components/responses/Error'
+    delete:
+      tags: [Notes]
+      operationId: deleteNote
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      responses:
+        '204': { description: Note deleted/tombstoned. }
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/highlights:
+    get:
+      tags: [Highlights]
+      operationId: listHighlights
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+        - in: query
+          name: bookmarkId
+          schema: { type: string }
+      responses:
+        '200':
+          description: Highlight page.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HighlightList'
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      tags: [Highlights]
+      operationId: createHighlight
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HighlightCreate'
+      responses:
+        '201':
+          description: Highlight created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Highlight'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/highlights/{highlightId}:
+    parameters:
+      - $ref: '#/components/parameters/HighlightId'
+    get:
+      tags: [Highlights]
+      operationId: getHighlight
+      responses:
+        '200':
+          description: Highlight.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Highlight'
+        default:
+          $ref: '#/components/responses/Error'
+    patch:
+      tags: [Highlights]
+      operationId: updateHighlight
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HighlightUpdate'
+      responses:
+        '200':
+          description: Updated highlight.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Highlight'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        default:
+          $ref: '#/components/responses/Error'
+    delete:
+      tags: [Highlights]
+      operationId: deleteHighlight
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      responses:
+        '204': { description: Highlight deleted/tombstoned. }
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/archives:
+    get:
+      tags: [Archives]
+      operationId: listArchives
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+        - in: query
+          name: bookmarkId
+          schema: { type: string }
+      responses:
+        '200':
+          description: Archive page.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArchiveList'
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      tags: [Archives]
+      operationId: requestArchive
+      summary: Create or request an archive for a bookmark.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArchiveCreate'
+      responses:
+        '202':
+          description: Archive request accepted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Archive'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/archives/{archiveId}:
+    parameters:
+      - $ref: '#/components/parameters/ArchiveId'
+    get:
+      tags: [Archives]
+      operationId: getArchive
+      responses:
+        '200':
+          description: Archive.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Archive'
+        default:
+          $ref: '#/components/responses/Error'
+    patch:
+      tags: [Archives]
+      operationId: updateArchivePolicy
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArchiveUpdate'
+      responses:
+        '200':
+          description: Updated archive policy/state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Archive'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        default:
+          $ref: '#/components/responses/Error'
+    delete:
+      tags: [Archives]
+      operationId: deleteArchive
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      responses:
+        '204': { description: Archive deletion requested according to retention/recovery policy. }
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/archive-versions:
+    get:
+      tags: [Archives]
+      operationId: listArchiveVersions
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+        - in: query
+          name: archiveId
+          schema: { type: string }
+      responses:
+        '200':
+          description: Archive-version page.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArchiveVersionList'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/archive-versions/{archiveVersionId}:
+    parameters:
+      - $ref: '#/components/parameters/ArchiveVersionId'
+    get:
+      tags: [Archives]
+      operationId: getArchiveVersion
+      responses:
+        '200':
+          description: Archive version.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArchiveVersion'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/reminders:
+    get:
+      tags: [Reminders]
+      operationId: listReminders
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Reminder page.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReminderList'
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      tags: [Reminders]
+      operationId: createReminder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReminderCreate'
+      responses:
+        '201':
+          description: Reminder created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reminder'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/reminders/{reminderId}:
+    parameters:
+      - $ref: '#/components/parameters/ReminderId'
+    get:
+      tags: [Reminders]
+      operationId: getReminder
+      responses:
+        '200':
+          description: Reminder.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reminder'
+        default:
+          $ref: '#/components/responses/Error'
+    patch:
+      tags: [Reminders]
+      operationId: updateReminder
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReminderUpdate'
+      responses:
+        '200':
+          description: Updated reminder.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reminder'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        default:
+          $ref: '#/components/responses/Error'
+    delete:
+      tags: [Reminders]
+      operationId: deleteReminder
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      responses:
+        '204': { description: Reminder deleted/tombstoned. }
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/shares:
+    get:
+      tags: [Sharing]
+      operationId: listShares
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Share page.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShareList'
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      tags: [Sharing]
+      operationId: createShare
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShareCreate'
+      responses:
+        '201':
+          description: Share created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Share'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/shares/{shareId}:
+    parameters:
+      - $ref: '#/components/parameters/ShareId'
+    get:
+      tags: [Sharing]
+      operationId: getShare
+      responses:
+        '200':
+          description: Share.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Share'
+        default:
+          $ref: '#/components/responses/Error'
+    patch:
+      tags: [Sharing]
+      operationId: updateShare
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShareUpdate'
+      responses:
+        '200':
+          description: Updated share.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Share'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        default:
+          $ref: '#/components/responses/Error'
+    delete:
+      tags: [Sharing]
+      operationId: revokeShare
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      responses:
+        '204': { description: Share revoked. }
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/permissions:
+    get:
+      tags: [Sharing]
+      operationId: listPermissions
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+        - in: query
+          name: shareId
+          schema: { type: string }
+      responses:
+        '200':
+          description: Permission page.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermissionList'
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      tags: [Sharing]
+      operationId: createPermission
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PermissionCreate'
+      responses:
+        '201':
+          description: Permission created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Permission'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/permissions/{permissionId}:
+    parameters:
+      - $ref: '#/components/parameters/PermissionId'
+    get:
+      tags: [Sharing]
+      operationId: getPermission
+      responses:
+        '200':
+          description: Permission.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Permission'
+        default:
+          $ref: '#/components/responses/Error'
+    patch:
+      tags: [Sharing]
+      operationId: updatePermission
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PermissionUpdate'
+      responses:
+        '200':
+          description: Updated permission.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Permission'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        default:
+          $ref: '#/components/responses/Error'
+    delete:
+      tags: [Sharing]
+      operationId: revokePermission
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      responses:
+        '204': { description: Permission revoked. }
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/automation-rules:
+    get:
+      tags: [Automation]
+      operationId: listAutomationRules
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Automation-rule page.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AutomationRuleList'
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      tags: [Automation]
+      operationId: createAutomationRule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AutomationRuleCreate'
+      responses:
+        '201':
+          description: Automation rule created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AutomationRule'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/automation-rules/{automationRuleId}:
+    parameters:
+      - $ref: '#/components/parameters/AutomationRuleId'
+    get:
+      tags: [Automation]
+      operationId: getAutomationRule
+      responses:
+        '200':
+          description: Automation rule.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AutomationRule'
+        default:
+          $ref: '#/components/responses/Error'
+    patch:
+      tags: [Automation]
+      operationId: updateAutomationRule
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AutomationRuleUpdate'
+      responses:
+        '200':
+          description: Updated automation rule.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AutomationRule'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        default:
+          $ref: '#/components/responses/Error'
+    delete:
+      tags: [Automation]
+      operationId: deleteAutomationRule
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      responses:
+        '204': { description: Automation rule deleted/tombstoned. }
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/link-health:
+    get:
+      tags: [LinkHealth]
+      operationId: listLinkHealth
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+        - in: query
+          name: bookmarkId
+          schema: { type: string }
+      responses:
+        '200':
+          description: Link-health page.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinkHealthRecordList'
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      tags: [LinkHealth]
+      operationId: requestLinkHealthCheck
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LinkHealthCheckRequest'
+      responses:
+        '202':
+          description: Link-health check accepted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinkHealthRecord'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/link-health/{linkHealthRecordId}:
+    parameters:
+      - $ref: '#/components/parameters/LinkHealthRecordId'
+    get:
+      tags: [LinkHealth]
+      operationId: getLinkHealthRecord
+      responses:
+        '200':
+          description: Link-health record.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinkHealthRecord'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/saved-searches:
+    get:
+      tags: [SavedSearches]
+      operationId: listSavedSearches
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Saved-search page.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedSearchList'
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      tags: [SavedSearches]
+      operationId: createSavedSearch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SavedSearchCreate'
+      responses:
+        '201':
+          description: Saved search created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedSearch'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/saved-searches/{savedSearchId}:
+    parameters:
+      - $ref: '#/components/parameters/SavedSearchId'
+    get:
+      tags: [SavedSearches]
+      operationId: getSavedSearch
+      responses:
+        '200':
+          description: Saved search.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedSearch'
+        default:
+          $ref: '#/components/responses/Error'
+    patch:
+      tags: [SavedSearches]
+      operationId: updateSavedSearch
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SavedSearchUpdate'
+      responses:
+        '200':
+          description: Updated saved search.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedSearch'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        default:
+          $ref: '#/components/responses/Error'
+    delete:
+      tags: [SavedSearches]
+      operationId: deleteSavedSearch
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      responses:
+        '204': { description: Saved search deleted/tombstoned. }
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/sync/changes:
+    get:
+      tags: [Sync]
+      operationId: getSyncChanges
+      parameters:
+        - in: query
+          name: cursor
+          schema: { type: string }
+          description: Opaque synchronization cursor; omitted for an initial synchronization window.
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 1000, default: 200 }
+      responses:
+        '200':
+          description: Ordered synchronization changes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncChangePage'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/sync/mutations:
+    post:
+      tags: [Sync]
+      operationId: submitSyncMutations
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SyncMutationBatch'
+      responses:
+        '200':
+          description: Per-mutation outcomes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncMutationBatchResult'
+        default:
+          $ref: '#/components/responses/Error'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: >-
+        Access token accepted by GoreeCloud Bookmarks. GoreeCloud Identity/OIDC/OAuth is
+        the intended platform integration where implemented; this Concept contract does
+        not invent an identity-provider URL or token endpoint.
+  parameters:
+    Cursor:
+      in: query
+      name: cursor
+      required: false
+      schema: { type: string }
+      description: Opaque cursor returned by the preceding page.
+    Limit:
+      in: query
+      name: limit
+      required: false
+      schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+    IfMatch:
+      in: header
+      name: If-Match
+      required: true
+      schema: { type: string }
+      description: Entity tag/revision precondition for overwrite-sensitive mutations.
+    IdempotencyKey:
+      in: header
+      name: Idempotency-Key
+      required: true
+      schema: { type: string, minLength: 8, maxLength: 200 }
+    BookmarkId: { in: path, name: bookmarkId, required: true, schema: { type: string } }
+    CollectionId: { in: path, name: collectionId, required: true, schema: { type: string } }
+    TagId: { in: path, name: tagId, required: true, schema: { type: string } }
+    NoteId: { in: path, name: noteId, required: true, schema: { type: string } }
+    HighlightId: { in: path, name: highlightId, required: true, schema: { type: string } }
+    ArchiveId: { in: path, name: archiveId, required: true, schema: { type: string } }
+    ArchiveVersionId: { in: path, name: archiveVersionId, required: true, schema: { type: string } }
+    ReminderId: { in: path, name: reminderId, required: true, schema: { type: string } }
+    ShareId: { in: path, name: shareId, required: true, schema: { type: string } }
+    PermissionId: { in: path, name: permissionId, required: true, schema: { type: string } }
+    AutomationRuleId: { in: path, name: automationRuleId, required: true, schema: { type: string } }
+    LinkHealthRecordId: { in: path, name: linkHealthRecordId, required: true, schema: { type: string } }
+    SavedSearchId: { in: path, name: savedSearchId, required: true, schema: { type: string } }
+  responses:
+    Error:
+      description: Error response.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    PreconditionFailed:
+      description: Current resource revision does not satisfy the supplied precondition.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+  schemas:
+    ResourceBase:
+      type: object
+      required: [id, revision, createdAt, updatedAt]
+      properties:
+        id: { type: string, minLength: 1 }
+        revision: { type: integer, minimum: 1 }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        deletedAt: { type: [string, 'null'], format: date-time }
+    PageInfo:
+      type: object
+      required: [hasMore]
+      properties:
+        nextCursor: { type: [string, 'null'] }
+        hasMore: { type: boolean }
+    PrivacyLevel:
+      type: string
+      enum: [normal, sensitive, private-vault, shared]
+    Bookmark:
+      allOf:
+        - $ref: '#/components/schemas/ResourceBase'
+        - type: object
+          required: [url, title, favorite, pinned, readState, privacyLevel]
+          properties:
+            url: { type: string, format: uri, maxLength: 8192 }
+            originalUrl: { type: [string, 'null'], format: uri, maxLength: 8192 }
+            title: { type: string, maxLength: 4096 }
+            description: { type: [string, 'null'], maxLength: 16384 }
+            contentType: { type: [string, 'null'], maxLength: 255 }
+            source: { type: [string, 'null'], maxLength: 1024 }
+            author: { type: [string, 'null'], maxLength: 2048 }
+            language: { type: [string, 'null'], maxLength: 64 }
+            publishedAt: { type: [string, 'null'], format: date-time }
+            lastVisitedAt: { type: [string, 'null'], format: date-time }
+            favorite: { type: boolean }
+            pinned: { type: boolean }
+            readState: { type: string, enum: [unread, reading, completed, archived] }
+            readingProgress: { type: [number, 'null'], minimum: 0, maximum: 1 }
+            privacyLevel: { $ref: '#/components/schemas/PrivacyLevel' }
+            collectionIds:
+              type: array
+              items: { type: string }
+              uniqueItems: true
+            tagIds:
+              type: array
+              items: { type: string }
+              uniqueItems: true
+            archiveStatus: { type: [string, 'null'] }
+            offlineRequested: { type: boolean, default: false }
+    BookmarkCreate:
+      type: object
+      required: [url]
+      properties:
+        url: { type: string, format: uri, maxLength: 8192 }
+        title: { type: [string, 'null'], maxLength: 4096 }
+        description: { type: [string, 'null'], maxLength: 16384 }
+        collectionIds: { type: array, items: { type: string }, uniqueItems: true }
+        tagIds: { type: array, items: { type: string }, uniqueItems: true }
+        favorite: { type: boolean, default: false }
+        readState: { type: string, enum: [unread, reading, completed, archived], default: unread }
+        privacyLevel: { $ref: '#/components/schemas/PrivacyLevel' }
+        archiveMode: { type: [string, 'null'], enum: [metadata, readable, visual, complete, null] }
+        offlineRequested: { type: boolean, default: false }
+    BookmarkUpdate:
+      type: object
+      properties:
+        url: { type: string, format: uri, maxLength: 8192 }
+        title: { type: string, maxLength: 4096 }
+        description: { type: [string, 'null'], maxLength: 16384 }
+        collectionIds: { type: array, items: { type: string }, uniqueItems: true }
+        tagIds: { type: array, items: { type: string }, uniqueItems: true }
+        favorite: { type: boolean }
+        pinned: { type: boolean }
+        readState: { type: string, enum: [unread, reading, completed, archived] }
+        readingProgress: { type: [number, 'null'], minimum: 0, maximum: 1 }
+        privacyLevel: { $ref: '#/components/schemas/PrivacyLevel' }
+        offlineRequested: { type: boolean }
+    BookmarkList:
+      type: object
+      required: [items, page]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/Bookmark' } }
+        page: { $ref: '#/components/schemas/PageInfo' }
+    Collection:
+      allOf:
+        - $ref: '#/components/schemas/ResourceBase'
+        - type: object
+          required: [name]
+          properties:
+            name: { type: string, minLength: 1, maxLength: 512 }
+            description: { type: [string, 'null'], maxLength: 8192 }
+            parentId: { type: [string, 'null'] }
+            icon: { type: [string, 'null'], maxLength: 512 }
+            coverRef: { type: [string, 'null'] }
+            sortOrder: { type: integer, minimum: 0, default: 0 }
+            defaultArchiveMode: { type: [string, 'null'], enum: [metadata, readable, visual, complete, null] }
+            defaultPrivacyLevel: { oneOf: [{ $ref: '#/components/schemas/PrivacyLevel' }, { type: 'null' }] }
+            defaultOffline: { type: [boolean, 'null'] }
+    CollectionCreate:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 512 }
+        description: { type: [string, 'null'], maxLength: 8192 }
+        parentId: { type: [string, 'null'] }
+        icon: { type: [string, 'null'], maxLength: 512 }
+        sortOrder: { type: integer, minimum: 0, default: 0 }
+    CollectionUpdate:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 512 }
+        description: { type: [string, 'null'], maxLength: 8192 }
+        parentId: { type: [string, 'null'] }
+        icon: { type: [string, 'null'], maxLength: 512 }
+        sortOrder: { type: integer, minimum: 0 }
+    CollectionList:
+      type: object
+      required: [items, page]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/Collection' } }
+        page: { $ref: '#/components/schemas/PageInfo' }
+    Tag:
+      allOf:
+        - $ref: '#/components/schemas/ResourceBase'
+        - type: object
+          required: [name]
+          properties:
+            name: { type: string, minLength: 1, maxLength: 256 }
+            color: { type: [string, 'null'], maxLength: 64 }
+            description: { type: [string, 'null'], maxLength: 4096 }
+            aliases: { type: array, items: { type: string, maxLength: 256 }, uniqueItems: true }
+    TagCreate:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 256 }
+        color: { type: [string, 'null'], maxLength: 64 }
+        description: { type: [string, 'null'], maxLength: 4096 }
+        aliases: { type: array, items: { type: string, maxLength: 256 }, uniqueItems: true }
+    TagUpdate:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 256 }
+        color: { type: [string, 'null'], maxLength: 64 }
+        description: { type: [string, 'null'], maxLength: 4096 }
+        aliases: { type: array, items: { type: string, maxLength: 256 }, uniqueItems: true }
+    TagList:
+      type: object
+      required: [items, page]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/Tag' } }
+        page: { $ref: '#/components/schemas/PageInfo' }
+    Note:
+      allOf:
+        - $ref: '#/components/schemas/ResourceBase'
+        - type: object
+          required: [content]
+          properties:
+            bookmarkId: { type: [string, 'null'] }
+            title: { type: [string, 'null'], maxLength: 1024 }
+            content: { type: string, maxLength: 1048576 }
+            contentFormat: { type: string, enum: [markdown, plain-text], default: markdown }
+            privacyLevel: { $ref: '#/components/schemas/PrivacyLevel' }
+    NoteCreate:
+      type: object
+      required: [content]
+      properties:
+        bookmarkId: { type: [string, 'null'] }
+        title: { type: [string, 'null'], maxLength: 1024 }
+        content: { type: string, maxLength: 1048576 }
+        contentFormat: { type: string, enum: [markdown, plain-text], default: markdown }
+        privacyLevel: { $ref: '#/components/schemas/PrivacyLevel' }
+    NoteUpdate:
+      type: object
+      properties:
+        title: { type: [string, 'null'], maxLength: 1024 }
+        content: { type: string, maxLength: 1048576 }
+        contentFormat: { type: string, enum: [markdown, plain-text] }
+        privacyLevel: { $ref: '#/components/schemas/PrivacyLevel' }
+    NoteList:
+      type: object
+      required: [items, page]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/Note' } }
+        page: { $ref: '#/components/schemas/PageInfo' }
+    Highlight:
+      allOf:
+        - $ref: '#/components/schemas/ResourceBase'
+        - type: object
+          required: [bookmarkId, selectedText]
+          properties:
+            bookmarkId: { type: string }
+            selectedText: { type: string, maxLength: 262144 }
+            note: { type: [string, 'null'], maxLength: 262144 }
+            sourceAnchor:
+              type: [object, 'null']
+              additionalProperties: true
+            label: { type: [string, 'null'], maxLength: 256 }
+            color: { type: [string, 'null'], maxLength: 64 }
+    HighlightCreate:
+      type: object
+      required: [bookmarkId, selectedText]
+      properties:
+        bookmarkId: { type: string }
+        selectedText: { type: string, maxLength: 262144 }
+        note: { type: [string, 'null'], maxLength: 262144 }
+        sourceAnchor: { type: [object, 'null'], additionalProperties: true }
+        label: { type: [string, 'null'], maxLength: 256 }
+        color: { type: [string, 'null'], maxLength: 64 }
+    HighlightUpdate:
+      type: object
+      properties:
+        note: { type: [string, 'null'], maxLength: 262144 }
+        sourceAnchor: { type: [object, 'null'], additionalProperties: true }
+        label: { type: [string, 'null'], maxLength: 256 }
+        color: { type: [string, 'null'], maxLength: 64 }
+    HighlightList:
+      type: object
+      required: [items, page]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/Highlight' } }
+        page: { $ref: '#/components/schemas/PageInfo' }
+    Archive:
+      allOf:
+        - $ref: '#/components/schemas/ResourceBase'
+        - type: object
+          required: [bookmarkId, requestedMode, status]
+          properties:
+            bookmarkId: { type: string }
+            requestedMode: { type: string, enum: [metadata, readable, visual, complete] }
+            status: { type: string, enum: [pending, running, succeeded, failed, cancelled] }
+            latestVersionId: { type: [string, 'null'] }
+            lastCapturedAt: { type: [string, 'null'], format: date-time }
+            warning: { type: [string, 'null'] }
+    ArchiveCreate:
+      type: object
+      required: [bookmarkId, requestedMode]
+      properties:
+        bookmarkId: { type: string }
+        requestedMode: { type: string, enum: [metadata, readable, visual, complete] }
+    ArchiveUpdate:
+      type: object
+      properties:
+        requestedMode: { type: string, enum: [metadata, readable, visual, complete] }
+    ArchiveList:
+      type: object
+      required: [items, page]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/Archive' } }
+        page: { $ref: '#/components/schemas/PageInfo' }
+    ArchiveObjectRef:
+      type: object
+      required: [kind, digestAlgorithm, digest, sizeBytes]
+      properties:
+        kind: { type: string, enum: [warc, readable, visual, preview, other] }
+        mediaType: { type: [string, 'null'] }
+        formatVersion: { type: [string, 'null'] }
+        digestAlgorithm: { type: string, enum: [sha256] }
+        digest: { type: string }
+        sizeBytes: { type: integer, minimum: 0 }
+        integrityState: { type: string, enum: [unknown, verified, failed] }
+    ArchiveVersion:
+      type: object
+      required: [id, archiveId, bookmarkId, capturedAt, status, objects]
+      properties:
+        id: { type: string }
+        archiveId: { type: string }
+        bookmarkId: { type: string }
+        capturedAt: { type: string, format: date-time }
+        sourceUrl: { type: [string, 'null'], format: uri }
+        captureMode: { type: string, enum: [metadata, readable, visual, complete] }
+        status: { type: string, enum: [succeeded, failed, partial] }
+        objects:
+          type: array
+          items: { $ref: '#/components/schemas/ArchiveObjectRef' }
+        warning: { type: [string, 'null'] }
+    ArchiveVersionList:
+      type: object
+      required: [items, page]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/ArchiveVersion' } }
+        page: { $ref: '#/components/schemas/PageInfo' }
+    Reminder:
+      allOf:
+        - $ref: '#/components/schemas/ResourceBase'
+        - type: object
+          required: [bookmarkId, dueAt, status]
+          properties:
+            bookmarkId: { type: string }
+            dueAt: { type: string, format: date-time }
+            recurrence: { type: [string, 'null'], maxLength: 2048 }
+            status: { type: string, enum: [scheduled, triggered, completed, cancelled] }
+            lastTriggeredAt: { type: [string, 'null'], format: date-time }
+    ReminderCreate:
+      type: object
+      required: [bookmarkId, dueAt]
+      properties:
+        bookmarkId: { type: string }
+        dueAt: { type: string, format: date-time }
+        recurrence: { type: [string, 'null'], maxLength: 2048 }
+    ReminderUpdate:
+      type: object
+      properties:
+        dueAt: { type: string, format: date-time }
+        recurrence: { type: [string, 'null'], maxLength: 2048 }
+        status: { type: string, enum: [scheduled, triggered, completed, cancelled] }
+    ReminderList:
+      type: object
+      required: [items, page]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/Reminder' } }
+        page: { $ref: '#/components/schemas/PageInfo' }
+    Share:
+      allOf:
+        - $ref: '#/components/schemas/ResourceBase'
+        - type: object
+          required: [resourceType, resourceId, accessMode]
+          properties:
+            resourceType: { type: string, enum: [bookmark, collection, archive] }
+            resourceId: { type: string }
+            accessMode: { type: string, enum: [specific-people, shared-group, anyone-with-link, public] }
+            expiresAt: { type: [string, 'null'], format: date-time }
+            revokedAt: { type: [string, 'null'], format: date-time }
+    ShareCreate:
+      type: object
+      required: [resourceType, resourceId, accessMode]
+      properties:
+        resourceType: { type: string, enum: [bookmark, collection, archive] }
+        resourceId: { type: string }
+        accessMode: { type: string, enum: [specific-people, shared-group, anyone-with-link, public] }
+        expiresAt: { type: [string, 'null'], format: date-time }
+    ShareUpdate:
+      type: object
+      properties:
+        accessMode: { type: string, enum: [specific-people, shared-group, anyone-with-link, public] }
+        expiresAt: { type: [string, 'null'], format: date-time }
+    ShareList:
+      type: object
+      required: [items, page]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/Share' } }
+        page: { $ref: '#/components/schemas/PageInfo' }
+    Permission:
+      allOf:
+        - $ref: '#/components/schemas/ResourceBase'
+        - type: object
+          required: [shareId, principalType, role]
+          properties:
+            shareId: { type: string }
+            principalType: { type: string, enum: [user, group, link, public] }
+            principalId: { type: [string, 'null'] }
+            role: { type: string, enum: [viewer, contributor, editor, manager, owner] }
+            revokedAt: { type: [string, 'null'], format: date-time }
+    PermissionCreate:
+      type: object
+      required: [shareId, principalType, role]
+      properties:
+        shareId: { type: string }
+        principalType: { type: string, enum: [user, group, link, public] }
+        principalId: { type: [string, 'null'] }
+        role: { type: string, enum: [viewer, contributor, editor, manager, owner] }
+    PermissionUpdate:
+      type: object
+      properties:
+        role: { type: string, enum: [viewer, contributor, editor, manager, owner] }
+    PermissionList:
+      type: object
+      required: [items, page]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/Permission' } }
+        page: { $ref: '#/components/schemas/PageInfo' }
+    RuleClause:
+      type: object
+      required: [type, config]
+      properties:
+        type: { type: string, minLength: 1, maxLength: 256 }
+        config: { type: object, additionalProperties: true }
+    AutomationRule:
+      allOf:
+        - $ref: '#/components/schemas/ResourceBase'
+        - type: object
+          required: [name, enabled, conditions, actions]
+          properties:
+            name: { type: string, minLength: 1, maxLength: 512 }
+            enabled: { type: boolean }
+            conditions: { type: array, items: { $ref: '#/components/schemas/RuleClause' } }
+            actions: { type: array, items: { $ref: '#/components/schemas/RuleClause' } }
+    AutomationRuleCreate:
+      type: object
+      required: [name, conditions, actions]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 512 }
+        enabled: { type: boolean, default: true }
+        conditions: { type: array, items: { $ref: '#/components/schemas/RuleClause' } }
+        actions: { type: array, items: { $ref: '#/components/schemas/RuleClause' } }
+    AutomationRuleUpdate:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 512 }
+        enabled: { type: boolean }
+        conditions: { type: array, items: { $ref: '#/components/schemas/RuleClause' } }
+        actions: { type: array, items: { $ref: '#/components/schemas/RuleClause' } }
+    AutomationRuleList:
+      type: object
+      required: [items, page]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/AutomationRule' } }
+        page: { $ref: '#/components/schemas/PageInfo' }
+    LinkHealthRecord:
+      type: object
+      required: [id, bookmarkId, state, checkedAt]
+      properties:
+        id: { type: string }
+        bookmarkId: { type: string }
+        state: { type: string, enum: [healthy, redirected, changed, temporarily-unavailable, permanently-unavailable, blocked, unknown] }
+        checkedAt: { type: string, format: date-time }
+        httpStatus: { type: [integer, 'null'], minimum: 100, maximum: 599 }
+        redirectTarget: { type: [string, 'null'], format: uri }
+        lastHealthyAt: { type: [string, 'null'], format: date-time }
+        warning: { type: [string, 'null'] }
+    LinkHealthCheckRequest:
+      type: object
+      required: [bookmarkId]
+      properties:
+        bookmarkId: { type: string }
+    LinkHealthRecordList:
+      type: object
+      required: [items, page]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/LinkHealthRecord' } }
+        page: { $ref: '#/components/schemas/PageInfo' }
+    SavedSearch:
+      allOf:
+        - $ref: '#/components/schemas/ResourceBase'
+        - type: object
+          required: [name, query]
+          properties:
+            name: { type: string, minLength: 1, maxLength: 512 }
+            query: { type: string, maxLength: 8192 }
+            filters: { type: object, additionalProperties: true }
+            sort: { type: [object, 'null'], additionalProperties: true }
+            pinned: { type: boolean, default: false }
+            sortOrder: { type: integer, minimum: 0, default: 0 }
+    SavedSearchCreate:
+      type: object
+      required: [name, query]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 512 }
+        query: { type: string, maxLength: 8192 }
+        filters: { type: object, additionalProperties: true }
+        sort: { type: [object, 'null'], additionalProperties: true }
+        pinned: { type: boolean, default: false }
+        sortOrder: { type: integer, minimum: 0, default: 0 }
+    SavedSearchUpdate:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 512 }
+        query: { type: string, maxLength: 8192 }
+        filters: { type: object, additionalProperties: true }
+        sort: { type: [object, 'null'], additionalProperties: true }
+        pinned: { type: boolean }
+        sortOrder: { type: integer, minimum: 0 }
+    SavedSearchList:
+      type: object
+      required: [items, page]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/SavedSearch' } }
+        page: { $ref: '#/components/schemas/PageInfo' }
+    SyncEvent:
+      type: object
+      required: [cursor, objectType, objectId, revision, changeType, changedAt]
+      properties:
+        cursor: { type: string }
+        objectType: { type: string }
+        objectId: { type: string }
+        revision: { type: integer, minimum: 1 }
+        changeType: { type: string, enum: [upsert, delete] }
+        changedAt: { type: string, format: date-time }
+    SyncChangePage:
+      type: object
+      required: [changes, nextCursor, hasMore]
+      properties:
+        changes: { type: array, items: { $ref: '#/components/schemas/SyncEvent' } }
+        nextCursor: { type: string }
+        hasMore: { type: boolean }
+    SyncMutation:
+      type: object
+      required: [clientMutationId, objectType, operation]
+      properties:
+        clientMutationId: { type: string, minLength: 1, maxLength: 256 }
+        objectType: { type: string }
+        objectId: { type: [string, 'null'] }
+        operation: { type: string, enum: [create, update, delete] }
+        baseRevision: { type: [integer, 'null'], minimum: 1 }
+        payload: { type: [object, 'null'], additionalProperties: true }
+    SyncMutationBatch:
+      type: object
+      required: [mutations]
+      properties:
+        deviceId: { type: [string, 'null'] }
+        mutations:
+          type: array
+          minItems: 1
+          maxItems: 200
+          items: { $ref: '#/components/schemas/SyncMutation' }
+    SyncMutationOutcome:
+      type: object
+      required: [clientMutationId, status]
+      properties:
+        clientMutationId: { type: string }
+        status: { type: string, enum: [accepted, replayed, conflict, invalid, forbidden, unsupported] }
+        objectId: { type: [string, 'null'] }
+        revision: { type: [integer, 'null'], minimum: 1 }
+        currentResource: { type: [object, 'null'], additionalProperties: true }
+        error: { oneOf: [{ $ref: '#/components/schemas/ErrorDetail' }, { type: 'null' }] }
+    SyncMutationBatchResult:
+      type: object
+      required: [outcomes]
+      properties:
+        outcomes: { type: array, items: { $ref: '#/components/schemas/SyncMutationOutcome' } }
+    ErrorDetail:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: string, minLength: 1, maxLength: 256 }
+        message: { type: string, minLength: 1, maxLength: 4096 }
+        requestId: { type: [string, 'null'] }
+        details: { type: [object, 'null'], additionalProperties: true }
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error: { $ref: '#/components/schemas/ErrorDetail' }
+    HealthStatus:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string, enum: [ok, degraded] }
+    ReadinessStatus:
+      type: object
+      required: [ready]
+      properties:
+        ready: { type: boolean }
+        checks:
+          type: object
+          additionalProperties:
+            type: string
