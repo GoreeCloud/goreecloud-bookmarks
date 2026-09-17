@@ -1,5 +1,5 @@
 # GoreeCloud Bookmarks Platform Contract declaration
-# Contract declarations describe repository state; they do not prove implementation or acceptance.
+# Contract declarations describe repository state; they do not prove acceptance or production readiness.
 
 schema_version: "0.4"
 
@@ -9,7 +9,7 @@ component:
   product_name: GoreeCloud Bookmarks
   repository: GoreeCloud/goreecloud-bookmarks
 
-lifecycle: concept
+lifecycle: experimental
 version: "0.1.0"
 
 supported_platforms:
@@ -19,40 +19,47 @@ supported_platforms:
   - goreecloud-browser
 
 api:
-  versions: []
-  endpoints: []
+  versions:
+    - "v1"
+  endpoints:
+    - name: health
+      url: "/api/v1/health"
+      purpose: "Return bounded process-health state for the experimental Bookmarks service foundation."
+    - name: readiness
+      url: "/api/v1/ready"
+      purpose: "Return fail-closed readiness state; currently non-ready until the required Bookmarks data layer exists."
 
 platform_systems:
   manager:
     result: applicable-blocked
     version: null
     evidence: []
-    notes: "Administrative and operational integration is planned, but no Bookmarks-specific GoreeCloud Manager runtime integration or acceptance evidence is verified."
+    notes: "Administrative and operational integration is planned, but the experimental health/readiness surface is not GoreeCloud Manager acceptance evidence."
   privacy_shield:
     result: applicable-blocked
     version: null
     evidence: []
-    notes: "Bookmarks handles privacy-sensitive saved-content data, but no Bookmarks-specific Privacy Shield runtime integration or acceptance evidence is verified."
+    notes: "The current experimental service does not process bookmark content, but no Bookmarks-specific Privacy Shield runtime integration or acceptance evidence is verified."
   wardveil_security:
     result: applicable-blocked
     version: null
     evidence: []
-    notes: "Security integration is required for capture, archive, sync, import/export, sharing, and service boundaries, but no Bookmarks-specific Wardveil runtime integration or acceptance evidence is verified."
+    notes: "The experimental foundation has bounded service hardening and tests, but no Bookmarks-specific Wardveil runtime integration or acceptance evidence is verified."
   everkeep:
     result: applicable-blocked
     version: null
     evidence: []
-    notes: "Backup, restore, archive preservation, migration, export, and portability are planned, but no Bookmarks-specific Everkeep runtime integration or acceptance evidence is verified."
+    notes: "No Bookmarks data layer exists yet and no Bookmarks-specific Everkeep backup, restore, migration, portability, or acceptance evidence is verified."
   glaze_ui:
     result: applicable-blocked
     version: null
     evidence: []
-    notes: "User-facing Browser, web, desktop, and mobile experiences are planned; the current Stable Glaze UI consumer target is 1.5.1, but no Bookmarks-specific implementation or acceptance evidence exists."
+    notes: "User-facing Browser, web, desktop, and mobile experiences remain unimplemented; the current Stable Glaze UI consumer target is 1.5.1, but no Bookmarks-specific implementation or acceptance evidence exists."
   mesh:
     result: applicable-blocked
     version: null
     evidence: []
-    notes: "Cross-application capability discovery and coordination are planned where useful, but no Bookmarks-specific GoreeCloud Mesh runtime integration or acceptance evidence is verified."
+    notes: "No Bookmarks-specific GoreeCloud Mesh capability discovery, dependency, event, or acceptance implementation is verified."
     capabilities: []
     dependencies: []
     published_events: []
@@ -61,27 +68,27 @@ platform_systems:
     result: applicable-blocked
     version: null
     evidence: []
-    notes: "Multi-user private libraries, sharing, collaboration, devices, and service authorization require identity integration, but no Bookmarks-specific GoreeCloud Identity runtime integration or acceptance evidence is verified."
+    notes: "Authentication, accounts, devices, sharing, collaboration, and service authorization remain unimplemented; no Bookmarks-specific GoreeCloud Identity acceptance evidence is verified."
   policy:
     result: applicable-blocked
     version: null
     evidence: []
-    notes: "Privacy, security, retention, sharing, administration, and processing decisions require policy evaluation where applicable, but no Bookmarks-specific GoreeCloud Policy runtime integration or acceptance evidence is verified."
+    notes: "No Bookmarks-specific GoreeCloud Policy runtime integration or acceptance evidence is verified."
   observability:
     result: applicable-blocked
     version: null
     evidence: []
-    notes: "API, capture, archive, indexing, synchronization, storage, link-health, and notification health require operational evidence, but no Bookmarks-specific GoreeCloud Observability runtime integration or acceptance evidence is verified."
+    notes: "Bounded health/readiness endpoints exist, but no Bookmarks-specific GoreeCloud Observability integration or acceptance evidence is verified."
 
 health:
-  health_endpoint: null
-  readiness_endpoint: null
+  health_endpoint: "/api/v1/health"
+  readiness_endpoint: "/api/v1/ready"
 
 continuity:
   backup:
     required: true
     requirements:
-      - "Bookmark metadata, collections, tags, notes, highlights, sharing configuration, saved searches, rules, and other critical user state require recoverable backup."
+      - "Bookmark metadata, collections, tags, notes, highlights, sharing configuration, saved searches, rules, and other critical user state require recoverable backup when implemented."
       - "Preserved webpage data may use a separate scalable backup lifecycle, but its recovery scope must be explicit."
   restore:
     required: true
@@ -90,7 +97,7 @@ continuity:
   export:
     required: true
     requirements:
-      - "Users require portable export of bookmark metadata and supported selected/account scopes."
+      - "Users require portable export of bookmark metadata and supported selected/account scopes when the data layer is implemented."
       - "Where permitted, preserved content and archive metadata should be exportable without making Bookmarks the only usable reader of user-owned data."
   portability:
     required: true
@@ -115,8 +122,7 @@ conformance:
   validated_at: null
   evidence: []
   blockers:
-    - "No GoreeCloud Bookmarks application or service implementation is verified in this repository."
+    - "Only a minimal Experimental Go service foundation is implemented; bookmark persistence, authentication, authorization, search, synchronization, archival, clients, and end-user workflows remain unimplemented."
+    - "Readiness intentionally returns non-ready because the required Bookmarks data layer is not configured."
     - "No Bookmarks-specific acceptance evidence exists for any of the nine Integral Platform Systems."
-    - "No supported runtime, health/readiness interface, API, synchronization implementation, archive implementation, or release artifact is verified."
-    - "No production-readiness or Stable qualification evidence exists."
-    - "The repository license has not yet been explicitly established by a Bookmarks-specific authoritative record."
+    - "No supported deployment, release artifact, production-readiness evidence, Release Candidate acceptance, or Stable qualification exists."
