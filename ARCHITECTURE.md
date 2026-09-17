@@ -9,6 +9,7 @@
 - **Authoritative product scope:** `SPECIFICATIONS.md` and `GoreeCloud/Projects/Project Specification — Bookmarks.md`
 - **Current Platform Contract:** `0.4`
 - **Current repository license:** `AGPL-3.0-or-later` fallback unless an authorized Bookmarks-specific decision supersedes it.
+- **Planned API/data contracts:** `docs/api/README.md`, `docs/api/openapi.yaml`, `docs/data-model.md`, and `docs/migrations.md`.
 
 This document selects the initial technical architecture for GoreeCloud Bookmarks. It converts previously open technology questions into implementation direction while preserving the current verified reality: the repository does not yet contain a Bookmarks application, service, client, build, deployment, or accepted runtime.
 
@@ -127,7 +128,7 @@ PostgreSQL will hold relational and transactional state such as:
 
 The Bookmarks deployment should use a dedicated database owned by the Bookmarks stack unless a later approved shared-database design provides a documented operational benefit without weakening isolation, backup, migration, or recovery.
 
-Schema evolution must use ordered, version-controlled migrations. Applied production migrations must not be casually rewritten.
+Schema evolution must use ordered, version-controlled migrations. Applied production migrations must not be casually rewritten. `docs/data-model.md` defines the selected logical ownership model, and `docs/migrations.md` defines the version-domain, migration, compatibility, destructive-change, rollback, and recovery rules implementation must follow.
 
 ## 7. Search architecture
 
@@ -138,6 +139,8 @@ The initial architecture intentionally avoids requiring a second search service 
 Search code must use an internal abstraction so a future dedicated search engine can be introduced for materially larger libraries, specialized indexing, semantic retrieval, or other demonstrated requirements without changing the authoritative bookmark model.
 
 Optional semantic or meaning-based search may later use a separate vector or semantic index. It must remain optional and must not become necessary for core bookmark capture, organization, exact-text search, archival, import/export, or synchronization.
+
+Search/index data is derived state and must remain rebuildable from authorized authoritative data according to `docs/migrations.md`.
 
 ## 8. Archive and preservation architecture
 
@@ -164,6 +167,8 @@ WARC is used for captured protocol responses, payloads, related metadata, and pr
 
 Every persisted archive object must have a stable identifier and integrity metadata such as a cryptographic digest. Archive metadata must identify ownership, source bookmark, capture time, representation type, storage location, size, format, integrity state, and retention state where applicable.
 
+Historical archive bytes are immutable preservation artifacts for migration purposes. Format conversion, recompression, or storage relocation must preserve provenance and integrity according to `docs/migrations.md` rather than invisibly rewriting historical evidence.
+
 An archive capture is not considered usable merely because bytes exist. Safe-viewer behavior, integrity validation, restoration, and recovery remain separate requirements.
 
 ## 9. Durable background work
@@ -186,19 +191,23 @@ Jobs must support, as applicable:
 
 The worker may initially run from the same Go codebase and image as the API with a distinct process role. A separate worker service or queue technology may be introduced later only when justified by measured operational requirements.
 
+Long-lived queued jobs must remain compatible across deployments or be explicitly migrated, drained, cancelled/recreated when semantically safe, or otherwise handled according to `docs/migrations.md`.
+
 ## 10. API contract
 
 The primary application API will be **HTTPS + REST-style JSON** under a versioned path beginning with:
 
 `/api/v1/`
 
-The API will maintain an **OpenAPI** contract for implemented endpoints.
+The planned v1 API behavior is documented in `docs/api/README.md`, and the machine-readable application contract is `docs/api/openapi.yaml` using OpenAPI `3.2.1`. The OpenAPI file intentionally contains no deployment server URL and is marked planned/Concept-stage.
 
 The API version is independent from the application release version.
 
+The selected v1 resource surface includes Bookmark, Collection, Tag, Note, Highlight, Archive, ArchiveVersion, Reminder, Share, Permission, AutomationRule, LinkHealthRecord, SavedSearch, synchronization changes/mutations, and bounded health/readiness operations.
+
 Required architectural behavior includes:
 
-- stable resource identifiers;
+- stable opaque resource identifiers;
 - application-level authentication and authorization;
 - OIDC/OAuth 2.0 integration with GoreeCloud Identity where applicable and implemented;
 - request validation and stable error structures;
@@ -206,30 +215,34 @@ Required architectural behavior includes:
 - explicit filtering and sorting contracts;
 - entity revision values and/or ETags for conflict-aware mutation;
 - `If-Match` or equivalent preconditions where stale writes must be rejected;
-- idempotency keys for retry-sensitive capture, import, bulk, or other create operations where duplicate execution would be harmful;
+- idempotency keys for retry-sensitive capture, import, bulk, synchronization, or other create operations where duplicate execution would be harmful;
 - no ordinary client access to the Bookmarks database;
-- bounded file/archive transfer endpoints with authorization, validation, integrity checks, and resumability where required.
+- bounded file/archive transfer endpoints with authorization, validation, integrity checks, and resumability where required;
+- privacy-preserving not-found/authorization behavior where revealing resource existence would leak protected state.
 
 GraphQL, gRPC, WebSockets, or another transport may be added only when a demonstrated requirement is not adequately served by the versioned REST contract.
+
+Backward-compatible changes may remain within v1; breaking wire or semantic changes require explicit major-version handling according to `docs/api/README.md` and `docs/migrations.md`.
 
 ## 11. Synchronization model
 
 Installed clients will use a **local SQLite database** for offline metadata, searchable local state, selected offline content references, synchronization cursors, and pending mutations.
 
-SQLite is client-local state, not a second account authority.
+SQLite is client-local state, not a second account authority. `docs/data-model.md` distinguishes rebuildable cache from unsynchronized user-authored state, which must not be discarded as a cache-reset shortcut.
 
 Initial synchronization will use the versioned HTTPS API rather than a separate custom persistent socket protocol.
 
-The server will expose an incremental synchronization/change-feed contract under the versioned API. The precise endpoint schema will be defined before implementation, but the model must include:
+The planned v1 synchronization contract is defined in `docs/api/openapi.yaml` through `/api/v1/sync/changes` and `/api/v1/sync/mutations`. It uses:
 
 - stable object IDs;
-- per-object or per-change revision information;
+- per-object/per-change revision information;
 - device identity where applicable;
 - durable client mutation IDs;
-- incremental cursors/checkpoints;
-- retry-safe submissions;
+- incremental opaque cursors/checkpoints;
+- retry-safe mutation batches;
 - explicit deletion/tombstone semantics;
-- conflict responses with enough information to preserve data.
+- per-mutation outcomes rather than silent partial loss;
+- conflict responses with enough state to preserve user work.
 
 Conflict handling must prefer preservation over silent overwrite:
 
@@ -237,6 +250,8 @@ Conflict handling must prefer preservation over silent overwrite:
 - stale writes to the same logical field should produce an explicit conflict rather than silently discarding user work;
 - ambiguous user-authored text conflicts must preserve variants or enough revision history for recovery;
 - last-write-wins may be used only for fields where the consequence is explicitly considered safe.
+
+Client/API compatibility, queued-write migration, tombstone retention, and synchronization versioning follow `docs/migrations.md`.
 
 GoreeCloud Sync remains a separately governed GoreeCloud capability. Any later integration must preserve Bookmarks as the authority for bookmark data and must not introduce direct cross-application database ownership.
 
@@ -261,6 +276,7 @@ Deployment rules include:
 - active secrets and environment-specific protected values remain outside ordinary Git history;
 - production images must be pinned according to current Docker governance;
 - the service must expose appropriate health and readiness behavior before production qualification;
+- readiness must remain false while required schema migration/validation state is incomplete or unsafe;
 - test and production data, credentials, persistent storage, and deployment state remain separated;
 - no deployment hostname, host, DNS entry, Caddy route, NetBird policy, port, secret, or production path is claimed by this architecture document until separately implemented and verified.
 
@@ -278,7 +294,9 @@ The server recovery model will include distinct protection for:
 
 Database files must not be assumed recoverable merely because their live storage directory was copied.
 
-Recovery qualification must eventually prove that the database, archive relationships, permissions, service configuration, authentication path, search reconstruction, background jobs, and user-visible library can be restored to an approved state.
+Recovery qualification must eventually prove that the database, archive relationships, permissions, service configuration, authentication path, search reconstruction, background jobs, migration state, API behavior, and user-visible library can be restored to an approved state.
+
+Destructive migrations require an appropriate validated recovery point and rollback/repair plan before execution as defined in `docs/migrations.md`.
 
 ## 14. Security and privacy boundaries
 
@@ -294,6 +312,7 @@ The architecture requires:
 - controlled outbound requests for capture and metadata processing;
 - clear privacy behavior for Sensitive and Private Vault content;
 - protection against cross-user access to bookmarks, archives, highlights, notes, and shares;
+- privacy-sensitive errors that avoid leaking protected resource existence;
 - security review before claims of Wardveil, Privacy Shield, Identity, Policy, or other platform-system conformance.
 
 Private Vault remains an advanced privacy mode. Its cryptographic protocol and key-management design are not selected by this architecture document and must be designed separately before implementation.
@@ -329,7 +348,7 @@ clients/android/        Kotlin Android client
 clients/linux/          Rust + GTK 4 Linux client
 clients/apple/          Swift Apple client(s) when approved
 migrations/             PostgreSQL schema migrations
-docs/                   supplementary API, deployment, recovery, and architecture details
+docs/                   API, data-model, migration, deployment, recovery, and architecture details
 scripts/                governed development/build/test utilities when needed
 ```
 
@@ -341,12 +360,13 @@ The following remain separate implementation or governance decisions rather than
 
 - exact Go, PostgreSQL, SQLite, Rust, GTK, Kotlin, Swift, and TypeScript versions;
 - exact TypeScript UI framework;
-- exact dependency libraries and package managers;
+- exact implementation dependency libraries and package managers;
 - exact WARC creation/replay library and compression implementation;
 - exact Private Vault encryption protocol and key-management design;
 - exact production host, hostname, DNS, Caddy, NetBird, storage paths, secrets, ports, and resource limits;
 - exact backup frequency and retention values;
 - exact release signing and distribution infrastructure;
+- exact database migration tooling/library and client SQLite migration implementation, provided they satisfy `docs/migrations.md`;
 - whether a future Bookmarks-specific license should supersede the current `AGPL-3.0-or-later` fallback;
 - whether measured scale later justifies extracting search, archive processing, workers, or another module into an independently deployed service.
 
@@ -354,12 +374,14 @@ Deferred decisions must be recorded and verified before they become operational 
 
 ## 18. Capability and lifecycle boundary
 
-This architecture document is **not implementation evidence**.
+This architecture and its API/data/migration contract records are **not implementation evidence**.
 
-It does not establish that:
+They do not establish that:
 
 - the Go service exists;
+- the `/api/v1/` endpoints exist or are reachable;
 - PostgreSQL or SQLite has been deployed;
+- a database schema or migration runner exists;
 - WARC capture works;
 - any native client exists;
 - synchronization works;
@@ -367,4 +389,4 @@ It does not establish that:
 - any Platform Contract integration has passed acceptance;
 - Bookmarks has advanced beyond Concept.
 
-`CAPABILITIES.md` remains the repository authority for currently verified capabilities. Until implementation and exact-revision evidence exist, the selected technologies in this document remain architecture decisions only.
+`CAPABILITIES.md` remains the repository authority for currently verified capabilities. Until implementation and exact-revision evidence exist, the selected technologies and contracts in this repository remain implementation direction only.
