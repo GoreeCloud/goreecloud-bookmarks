@@ -4,103 +4,103 @@
 
 This file records the current verified capability state of `GoreeCloud/goreecloud-bookmarks`.
 
-**Verified repository state date:** 2026-09-17  
-**Repository state:** Documentation-only initial repository foundation.  
-**Product implementation status:** No application or service implementation has been verified in this repository.
+**Verified state date:** 2026-09-17  
+**Release lifecycle:** Concept  
+**Product implementation status:** No GoreeCloud Bookmarks application or service implementation has been verified.  
+**Current Platform Contract declaration:** `0.4`, conformance `unverified`.
 
 The planned product vision is defined in `SPECIFICATIONS.md` and the canonical GoreeCloud project specification. Planned functionality must not be interpreted as current capability.
 
-## Core Capabilities
+## Core capabilities
 
-No implemented GoreeCloud Bookmarks product capabilities are currently verified in this repository.
+No implemented GoreeCloud Bookmarks product capability is currently verified. The repository currently provides project and governance documentation only.
 
-The repository currently provides project documentation only.
+## User capabilities
 
-## User Capabilities
+No end-user bookmarking, archiving, search, reader, annotation, synchronization, offline, sharing, collaboration, reminder, feed, rediscovery, or automation capability is currently verified.
 
-No end-user bookmarking, archiving, search, reader, annotation, synchronization, offline, sharing, collaboration, reminder, or automation capability is currently verified.
+## Administrative capabilities
 
-## Administrative Capabilities
+No administrative interface, processing queue, retention control, storage-management interface, link-health administration, search-index administration, multi-user administration, health endpoint, or readiness endpoint is currently verified.
 
-No administrative interface, processing queue, retention control, storage-management interface, link-health administration, search-index administration, or multi-user administration capability is currently verified.
+## Integral Platform Systems
 
-## Platform Integrations
+Current GoreeCloud governance requires evaluation against exactly nine Integral Platform Systems. The Bookmarks Platform Contract declaration records all nine as `applicable-blocked` because no Bookmarks-specific runtime integration or acceptance evidence is verified.
 
-### Glaze UI
+### GoreeCloud Manager
 
-Planned in the product specification. No Bookmarks-specific Glaze UI implementation or acceptance evidence is currently verified.
-
-### Wardveil Security
-
-Planned as an applicable GoreeCloud security integration. No substantive Bookmarks-specific runtime integration or acceptance evidence is currently verified.
+Planned for administration and operational management. No Bookmarks-specific implementation or acceptance evidence is verified.
 
 ### Privacy Shield
 
-Planned as an applicable privacy-control integration. No substantive Bookmarks-specific runtime integration or acceptance evidence is currently verified.
+Required for privacy-sensitive saved-content processing, sharing, retention, metadata fetching, telemetry, and optional analysis. No Bookmarks-specific implementation or acceptance evidence is verified.
+
+### Wardveil Security
+
+Required for capture, archival, parsing, synchronization, import/export, sharing, authorization, and service security boundaries. No Bookmarks-specific implementation or acceptance evidence is verified.
 
 ### Everkeep
 
-Planned for backup, portability, recovery, preservation, and continuity-related integration where applicable. No substantive Bookmarks-specific runtime integration or acceptance evidence is currently verified.
+Required for continuity, backup, restore, recovery, preservation, migration, and portability. No Bookmarks-specific implementation or acceptance evidence is verified.
+
+### Glaze UI
+
+Planned for Browser, web, desktop, and mobile user experiences. The current Platform Contract `0.4` reference target is Glaze UI `1.5.1`; no Bookmarks-specific implementation or acceptance evidence is verified.
 
 ### GoreeCloud Mesh
 
-Planned where cross-application capability discovery, events, dependencies, or coordinated integration are applicable. No substantive Bookmarks-specific runtime integration or acceptance evidence is currently verified.
+Planned where bounded first-party capability discovery, dependencies, events, or coordination are useful. No Bookmarks-specific implementation or acceptance evidence is verified.
 
-### GoreeCloud Identity and Manager
+### GoreeCloud Identity
 
-The planned multi-user service requires identity and administration boundaries, but no Bookmarks-specific implementation or acceptance evidence is currently verified.
+Required for private multi-user libraries, authentication, devices, sharing, collaboration, and service authorization. No Bookmarks-specific implementation or acceptance evidence is verified.
 
-## Data and Interoperability
+### GoreeCloud Policy
 
-Planned capabilities include portable bookmark import/export, structured exports, browser-compatible formats, archive portability, and synchronization. None are currently verified as implemented.
+Required where shared privacy, security, retention, sharing, administration, and processing policies must be evaluated and evidenced. No Bookmarks-specific implementation or acceptance evidence is verified.
 
-## Supported Platforms and Interfaces
+### GoreeCloud Observability
 
-The planned product targets:
+Required for API, capture, archive, extraction, indexing, synchronization, storage, link-health, notification, and dependency health evidence. No Bookmarks-specific implementation or acceptance evidence is verified.
 
-- GoreeCloud Browser integration.
-- Web application.
-- Desktop application.
-- Mobile application.
+GoreeCloud Sync remains separately governed and is **not** a tenth Integral Platform System.
 
-No operational client or service interface is currently verified in this repository.
+## Data and interoperability
 
-## Security and Privacy Capabilities
+Planned capabilities include portable bookmark import/export, structured exports, browser-compatible formats, archive portability, local-first behavior, and synchronization. None are currently verified as implemented.
 
-The planned architecture is private by default and includes optional higher-privacy encrypted-vault behavior, explicit sharing, tracking-parameter cleanup, isolated archive viewing, user-controlled retention, and optional intelligence.
+## Supported targets and interfaces
 
-These are planned requirements, not current capabilities.
+The planned product targets GoreeCloud Browser integration plus web, desktop, and mobile interfaces. The Platform Contract manifest declares those intended platform targets; the declaration is not evidence that operational clients exist.
 
-## Resilience, Backup, and Recovery Capabilities
+## Security and privacy
 
-Backup, export, local-first caching, conflict-preserving synchronization, offline operation, archive durability, and recovery validation are planned. No Bookmarks-specific implementation is currently verified.
+The planned architecture is private by default and includes optional higher-privacy vault behavior, explicit sharing, tracking-parameter cleanup, isolated archive viewing, user-controlled retention, and optional intelligence. These are planned requirements, not current runtime controls.
 
-## Accessibility Capabilities
+## Resilience, backup, and recovery
+
+Backup, restore, export, portability, local-first caching, conflict-preserving synchronization, archive durability, and recovery validation are required/planned. No Bookmarks-specific implementation is currently verified.
+
+## Accessibility
 
 Keyboard navigation, screen-reader support, high contrast, reduced motion, scalable text, logical focus order, large touch targets, non-color indicators, and accessible reader typography are planned requirements. No Bookmarks-specific accessibility implementation or acceptance evidence is currently verified.
 
-## Automation and API Capabilities
+## Automation and API
 
-A modular Bookmarks API, capture pipeline, metadata processing, archival, extraction, search, synchronization, automation, link-health, and notification architecture is planned.
+A modular Bookmarks API, capture pipeline, metadata processing, archival, extraction, search, synchronization, automation, link-health, notification, policy, and observability architecture is planned. No executable API or background service is currently verified.
 
-No executable API or background service capability is currently verified in this repository.
+## Repository documentation state
 
-## Current Limitations
+The governance branch `docs/bookmarks-governance-baseline-20260917` adds the proposed root documentation baseline and Platform Contract declaration. Those files are not authoritative `main` state until the governed pull request is merged and verified.
 
-- The authoritative `main` branch was verified as an initial repository containing only a minimal `README.md` before this documentation branch.
-- No application source, server source, client source, build system, tests, deployment configuration, runtime evidence, release artifact, or production acceptance was verified.
-- The repository is not documentation-complete under current GoreeCloud repository governance.
-- Planned product scope is substantially broader than the current verified implementation state.
-- No lifecycle promotion or production-readiness claim is established by documentation alone.
+The repository license remains unresolved at the Bookmarks-specific project-record level in this pass; no license file is added merely from a general licensing default without an explicit Bookmarks authority record.
 
-## Capability Validation
+## Capability validation
 
-Validation performed for this capability record was limited to authoritative repository inspection and GoreeCloud governance reconciliation.
+Authoritative `main` before this governance branch is commit:
 
-Verified starting revision of `main`:
+`bfe1de2287493cb959507e7417cfa957faf1323d`
 
-`1b714db382648c11320fc476c7f956f1e40480e0`
+That revision contains repository documentation established by PR #1 but no verified application or service implementation.
 
-At that revision, the repository contained only a minimal `README.md` and no verified product implementation.
-
-Any future capability claim must be reconciled against implementation, tests, runtime evidence, integration evidence, release state, and applicable production-acceptance requirements before it is represented here as current.
+Any future capability claim must be reconciled against source, tests, runtime evidence, integration evidence, exact revision, release state, and applicable production-acceptance requirements before being represented here as current.
