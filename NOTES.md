@@ -2,9 +2,15 @@
 
 ## Current verified repository state
 
-- Product lifecycle: **Concept**.
+- Product lifecycle represented by this implementation candidate: **Experimental**.
 - Repository: `GoreeCloud/goreecloud-bookmarks`.
-- Product implementation: no application or service implementation currently verified.
+- Current implementation: minimal Go service foundation only; no end-user bookmark data plane is implemented.
+- Go baseline: `1.27.1`, pinned in `go.mod`.
+- Current Go runtime dependency model: standard library only; no third-party Go module dependency is required by the service foundation.
+- Implemented HTTP routes: `GET /api/v1/health` and `GET /api/v1/ready` only.
+- Current readiness behavior: intentionally HTTP `503`, `ready: false`, with `bookmarks-data: not-configured` until the required data layer exists.
+- Development listener default: `127.0.0.1:8080`; optional non-secret override through `GOREECLOUD_BOOKMARKS_LISTEN_ADDR`.
+- Repository validation: `.github/workflows/validate-go.yml` pins its GitHub Actions revisions and validates the exact Go toolchain, formatting, `go vet`, unit tests, and service build.
 - Canonical product specification: `GoreeCloud/Projects/Project Specification — Bookmarks.md`.
 - Repository product specification: `SPECIFICATIONS.md`.
 - Repository architecture record: `ARCHITECTURE.md`.
@@ -12,79 +18,71 @@
 - Logical data model: `docs/data-model.md`.
 - Migration/compatibility rules: `docs/migrations.md`.
 - Related capture repository: `GoreeCloud/goreecloud-bookmark-browser-extension`.
-- Current Platform Contract baseline: `0.4`.
-- Current Integral Platform System model: exactly nine systems.
-- Current Stable Glaze UI consumer target referenced by Platform Contract `0.4`: `1.5.1`.
-- Current governing repository license: `AGPL-3.0-or-later` through the GoreeCloud default fallback; no Bookmarks-specific superseding license decision is currently recorded.
-- Default branch `main` is not currently protected in verified GitHub state; protection remains a repository-administration task.
+- Platform Contract baseline: `0.4`.
+- Integral Platform System model: exactly nine systems.
+- Stable Glaze UI consumer target referenced by Platform Contract `0.4`: `1.5.1`.
+- Governing repository license: `AGPL-3.0-or-later` through the GoreeCloud default fallback; no Bookmarks-specific superseding license decision is currently recorded.
+- Default branch `main` remains unprotected in verified GitHub state; protection remains a repository-administration blocker.
 
 ## Important authority boundaries
 
-- Planned feature, architecture, API, data-model, or migration documentation is not implementation evidence.
-- `CAPABILITIES.md` records current verified capability state.
-- `FEATURE-ROADMAP.md` orders planned work but does not establish completion.
-- `ARCHITECTURE.md` records selected implementation direction, not deployed state.
-- `docs/api/openapi.yaml` records the planned application wire contract; it does not assert that an endpoint exists or is reachable.
+- Source implementation, CI validation, merge state, release state, deployment state, platform acceptance, and production acceptance are separate states.
+- `CAPABILITIES.md` records current implemented capability scope.
+- `FEATURE-ROADMAP.md` records milestone/phase work but is not release evidence.
+- `ARCHITECTURE.md` records selected architecture and the boundary between the implemented foundation and still-planned components.
+- `docs/api/openapi.yaml` remains the planned v1 wire contract. Contract entries beyond health/readiness must not be treated as implemented endpoints.
 - `docs/data-model.md` is a logical ownership/model record, not proof of a PostgreSQL or SQLite schema.
 - `docs/migrations.md` defines required evolution/rollback behavior, not proof that a migration runner or tested recovery path exists.
-- GoreeCloud Bookmarks remains authoritative for bookmark data.
+- GoreeCloud Bookmarks remains authoritative for bookmark-domain data when that data layer is implemented.
 - GoreeCloud Sync is separately governed and is not an Integral Platform System.
-- GoreeCloud Browser integration must be reconciled with the Browser project and the separate bookmark-browser-extension repository rather than creating competing capture or bookmark authority.
+- GoreeCloud Browser integration must be reconciled with Browser authority and the separate bookmark-browser-extension repository.
 - Optional intelligence must not become a dependency for core bookmarking.
-- The fallback license may be superseded only by an authorized Bookmarks-specific decision reconciled across repository and canonical project records.
+- The fallback license may be superseded only by an authorized Bookmarks-specific decision reconciled across repository and canonical records.
 
-## Selected architecture direction
+## Implemented experimental foundation
 
-The initial implementation direction is selected in `ARCHITECTURE.md`:
+The first executable foundation consists of:
 
-- One authoritative modular Bookmarks service; logical product modules begin inside one codebase instead of being deployed as premature microservices.
+- `cmd/bookmarks/main.go` — service entry point, local listener configuration, HTTP timeouts, and graceful shutdown.
+- `internal/httpapi/handler.go` — bounded health/readiness HTTP surface.
+- `internal/httpapi/handler_test.go` — health, readiness, method, and response-behavior tests.
+- `cmd/bookmarks/main_test.go` — listen-address tests.
+- `go.mod` — pinned Go `1.27.1` baseline.
+- `.github/workflows/validate-go.yml` — exact-candidate validation.
+
+The foundation deliberately does not create an empty database, fake bookmark API, placeholder clients, Docker deployment, or claimed platform integration merely to increase apparent implementation breadth.
+
+## Selected broader architecture direction
+
+The unimplemented broader direction remains:
+
+- One authoritative modular Bookmarks service rather than premature microservices.
 - Go server for API, synchronization coordination, capture orchestration, jobs, and long-running service responsibilities.
-- TypeScript first-class web client using the applicable Glaze UI contract.
+- TypeScript web client.
 - Kotlin/native Android client.
-- Swift/native Apple clients when those platforms are implemented.
-- Rust + GTK 4 Linux desktop client direction.
-- PostgreSQL as the authoritative relational server database.
-- PostgreSQL full-text search for the initial core search implementation, with an internal abstraction for future dedicated search/semantic indexes if justified.
-- SQLite for installed-client offline metadata, synchronization cursors, and pending mutations.
-- HTTPS REST-style JSON API under `/api/v1/` with OpenAPI, explicit authorization, conflict-aware revisions/ETags, and retry-safe mutation design where required.
-- PostgreSQL-backed durable background jobs processed by Go workers before introducing a separate queue platform.
-- Persistent archive payload storage outside the container writable layer, separate from PostgreSQL archive metadata.
-- WARC 1.1 / ISO 28500:2017 as the target container for complete web-preservation captures, with readable and visual derived representations linked to archive versions.
-- Docker Compose as the initial self-hosted server deployment boundary, with the Bookmarks application, dedicated PostgreSQL, and a worker role only when asynchronous processing requires it.
-- Database-native backup plus independent archive/data protection and tested recovery; synchronization is not backup.
-
-## Selected API, data, and migration direction
-
-The initial planned contract is now recorded under `docs/`:
-
-- OpenAPI `3.2.1` describes the planned `/api/v1/` resource surface without a server URL or deployment claim.
-- Core schemas cover Bookmark, Collection, Tag, Note, Highlight, Archive, ArchiveVersion, Reminder, Share, Permission, SyncEvent/mutations, AutomationRule, LinkHealthRecord, and SavedSearch.
-- Resource identifiers are opaque; mutable synchronized resources carry revision state and overwrite-sensitive mutations use ETag/`If-Match`-style preconditions.
-- Retry-sensitive creates and synchronization mutation batches use idempotency keys.
-- List and synchronization feeds use opaque cursor pagination/checkpoints.
-- Normal deletion produces synchronization-visible tombstone state before physical purge when required for offline consistency.
-- PostgreSQL is authoritative for relational/transactional server state; archive payloads remain outside ordinary relational rows; search is derived/rebuildable state.
-- Installed-client SQLite state distinguishes rebuildable cache from unsynchronized user-authored data, which is non-disposable.
-- Server migrations are ordered and append-only after application; potentially breaking changes use expand → migrate → contract where practical.
-- Database rollback does not assume unsafe automatic down migrations; rollback may use compatible application rollback, forward correction, or verified recovery-point restoration according to the actual change.
-- Historical WARC/archive bytes remain immutable; conversions or storage moves create/verify new derived representations instead of rewriting preservation history invisibly.
-- API, application, PostgreSQL schema, SQLite schema, archive representation, sync schema, and Platform Contract versions are distinct version domains.
+- Swift/native Apple clients when implemented.
+- Rust + GTK 4 Linux desktop client.
+- PostgreSQL authoritative relational state and initial full-text search.
+- SQLite installed-client offline state and pending mutations.
+- REST/JSON under `/api/v1/` with OpenAPI, explicit authorization, revisions/ETags, and retry-safe mutation rules.
+- PostgreSQL-backed durable background jobs before a separate queue platform is justified.
+- Persistent archive payload storage outside the container writable layer.
+- WARC 1.1 / ISO 28500:2017 for complete preservation captures.
+- Docker Compose as the initial self-hosted server deployment boundary.
+- Database-native backup plus independent archive/data protection and tested recovery.
 
 ## Decisions intentionally deferred
 
-The following remain open until implementation or a more specific governed decision establishes them:
-
-- Exact language, framework, database, client-toolchain, and dependency versions.
-- Exact TypeScript UI framework.
-- Exact dependency libraries and package managers used to implement the planned API/data model.
+- PostgreSQL/SQLite/database-driver and migration-tool versions and implementation packages.
+- Exact TypeScript UI framework and frontend dependency set.
 - Exact WARC capture/replay library and compression implementation.
 - Exact Private Vault cryptographic protocol, key lifecycle, and recovery model.
-- Exact production deployment host, hostname, DNS, Caddy route, NetBird policy, secrets, ports, resource limits, storage paths, and operational schedules.
+- Exact production host, hostname, DNS, Caddy route, NetBird policy, secrets, ports, resource limits, storage paths, and operational schedules.
 - Exact backup frequency and retention values.
 - Exact release signing, package publication, and client-update infrastructure.
 - Whether measured scale or isolation requirements justify extracting search, archive processing, jobs, or another module into a separate deployed service.
-- Whether a Bookmarks-specific license should supersede the current `AGPL-3.0-or-later` fallback after dependency, distribution, interoperability, and product-architecture review.
+- Whether a Bookmarks-specific license should supersede the current `AGPL-3.0-or-later` fallback after applicable review.
 
 ## Documentation maintenance
 
-When implementation begins, update `CAPABILITIES.md`, `USER-MANUAL.md`, `PRIVACY POLICY.md`, `SECURITY.md`, `goreecloud.platform.yaml`, `ARCHITECTURE.md`, the `docs/` API/data/migration contracts, and the feature roadmap only from verified implementation and evidence. Do not infer current capability from specifications, architecture decisions, API schemas, mockups, issue labels, or intended technology choices.
+Every new implementation change must reconcile `CAPABILITIES.md`, `FEATURES.md`, `USER-MANUAL.md`, `PRIVACY POLICY.md`, `SECURITY.md`, `goreecloud.platform.yaml`, `ARCHITECTURE.md`, the relevant `docs/` contracts, and the feature roadmap when the verified meaning of those records changes.
