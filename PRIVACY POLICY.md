@@ -2,9 +2,29 @@
 
 ## Status
 
-This repository currently represents a **Concept-stage** product. No GoreeCloud Bookmarks runtime, hosted service, application telemetry pipeline, account database, archive processor, or production data-processing operation is verified as implemented.
+GoreeCloud Bookmarks is currently an **Experimental** project with a minimal Go service foundation.
 
-This document therefore records the required privacy model for future implementation and the current no-runtime state. It must be updated before any production processing begins.
+The implemented service currently exposes only bounded health/readiness behavior. It does **not** implement accounts, bookmark persistence, archive processing, search indexing, synchronization, telemetry collection, sharing, or a production user-data-processing path.
+
+This document therefore records both the required privacy model for future Bookmarks functionality and the narrow current processing boundary. It must continue to be updated before user bookmark data is processed by newly implemented subsystems.
+
+## Current experimental processing boundary
+
+The current service foundation:
+
+- does not accept or store bookmark content;
+- does not implement a user/account database;
+- does not implement archive capture or content extraction;
+- does not implement search queries or indexes;
+- does not implement synchronization or sharing;
+- does not implement application telemetry;
+- does not include a third-party runtime module dependency;
+- exposes health/readiness JSON containing only bounded service state;
+- logs service startup/shutdown/error information without a designed user-content logging path.
+
+The optional `GOREECLOUD_BOOKMARKS_LISTEN_ADDR` variable configures a listener address and is not a secret. Active credentials or secret-bearing configuration must remain outside source control under GoreeCloud sensitive-information requirements.
+
+Repository hosting, GitHub Actions, and development-platform processing are separate from a future Bookmarks user-data runtime and remain governed by their applicable systems and policies.
 
 ## Core privacy requirements
 
@@ -31,7 +51,7 @@ Transport and stored-data protections may permit approved server-side indexing, 
 
 Selected data may be encrypted before leaving the user's device so the server primarily synchronizes opaque encrypted data. Capabilities that require server-side plaintext processing may be limited, delayed, device-local, or unavailable.
 
-Neither mode is currently implemented or accepted.
+Neither privacy mode is currently implemented or accepted.
 
 ## Planned privacy levels
 
@@ -54,6 +74,8 @@ Capturing a page must not grant archived content trusted-application status. Fut
 
 Operational evidence must minimize private content. GoreeCloud Observability integration must preserve useful health and diagnostic information without converting bookmark contents, URLs, annotations, search terms, or other sensitive data into unnecessary telemetry.
 
+The current health/readiness implementation is not Bookmarks-specific Observability acceptance evidence.
+
 ## Administration
 
 Administrative authority and content access must remain separate concepts. A service administrator must not automatically gain permission to inspect private bookmark contents solely because they operate the deployment.
@@ -64,4 +86,4 @@ Future implementation must define retention and deletion behavior for bookmark m
 
 ## Current data-processing statement
 
-At the verified repository state represented by this policy, no Bookmarks-specific application or service processing of user bookmark data is established. Repository hosting and development-platform processing are governed separately from the future Bookmarks product runtime.
+At the Experimental source state represented by this policy, GoreeCloud Bookmarks has an executable service process but no implemented user bookmark-data plane. No claim of complete Privacy Shield integration, production privacy acceptance, or Private Vault behavior is established.

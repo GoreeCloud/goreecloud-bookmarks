@@ -2,13 +2,40 @@
 
 ## Current availability
 
-GoreeCloud Bookmarks is currently documented at the **Concept** lifecycle stage. No production application, service, web interface, desktop client, mobile client, or supported end-user workflow is currently verified in this repository.
+GoreeCloud Bookmarks is currently at the **Experimental** lifecycle stage.
 
-This manual therefore describes the intended interaction model and clearly marks it as planned. It must be revised against real implementation before being used as installation, operation, support, or production-use instructions.
+A minimal Go service foundation now exists for engineering validation, but there is still no supported end-user bookmark workflow, web application, desktop client, mobile client, production service, account system, or persistent bookmark library.
+
+The only currently implemented HTTP behavior is:
+
+- `GET /api/v1/health` — bounded process-health response.
+- `GET /api/v1/ready` — intentionally returns HTTP `503` and `ready: false` because the required Bookmarks data layer is not configured.
+
+These endpoints are engineering signals, not an end-user Bookmarks interface.
+
+## Experimental developer execution
+
+With the pinned Go `1.27.1` toolchain, the service foundation can be validated with:
+
+```bash
+go vet ./...
+go test ./...
+go build -o ./build/goreecloud-bookmarks ./cmd/bookmarks
+```
+
+For local experimental execution:
+
+```bash
+go run ./cmd/bookmarks
+```
+
+It listens on `127.0.0.1:8080` by default. `GOREECLOUD_BOOKMARKS_LISTEN_ADDR` may explicitly override that local-development listener.
+
+This is not a production installation procedure. No persistent data, authentication, authorization, migration, backup, reverse-proxy, TLS, database, or deployment configuration is established by the current service foundation.
 
 ## Intended core workflow
 
-The planned default workflow is:
+The planned end-user workflow remains:
 
 1. Save a page, link, selection, image, file, or note.
 2. Confirm capture immediately.
@@ -16,11 +43,13 @@ The planned default workflow is:
 4. Organize later using Inbox, collections, tags, Smart Collections, favorites, Read Later, or search.
 5. Retrieve the saved item through search, browsing, related-item discovery, reminders, or rediscovery features.
 
+None of those end-user steps is currently implemented.
+
 ## Planned primary areas
 
 - **Home** — recent, pinned, reading, reminder, and rediscovery surfaces.
 - **Inbox** — unprocessed captures.
-- **Library** — the complete saved-item collection.
+- **Library** — complete saved-item collection.
 - **Read Later** — reading queue and progress.
 - **Highlights** — cross-library highlight search and review.
 - **Collections** — structured organization.
@@ -32,28 +61,20 @@ The planned default workflow is:
 - **Import / Export** — migration and portability tools.
 - **Settings** — preferences, privacy, offline, archival, automation, synchronization, and processing controls.
 
-## Planned capture behavior
+## Planned capture, privacy, offline, and portability behavior
 
-A normal save should require one action and should persist the bookmark before optional enrichment begins. An advanced save panel may then expose collection, tags, notes, Read Later, favorite, reminder, archive, offline, and privacy controls.
+A future normal save should persist the bookmark before optional enrichment begins. Planned GoreeCloud Browser workflows include saving the current page, selected text, links, images, multiple tabs, and browsing sessions.
 
-Planned GoreeCloud Browser workflows include saving the current page, selected text, links, images, multiple tabs, and browsing sessions without requiring the Bookmarks application to replace the active page.
+Items are intended to be private by default, with explicit sharing and higher-privacy processing controls. No complete Bookmarks privacy implementation should be inferred from those requirements; see `PRIVACY POLICY.md` and `CAPABILITIES.md`.
 
-## Planned privacy behavior
+Installed clients are intended to maintain useful local state and safely synchronize offline mutations. No client or synchronization implementation currently exists.
 
-Items are intended to be private by default. Sharing should require explicit user action. Higher-privacy modes may restrict preview generation, metadata fetching, archival, remote analysis, or server-side indexing.
-
-No current privacy implementation should be inferred from these planned controls. See `PRIVACY POLICY.md` and `CAPABILITIES.md` for current truth.
-
-## Planned offline behavior
-
-Installed clients are intended to maintain local metadata, pending changes, searchable recent-library data, and user-selected offline content. Offline changes should synchronize after connectivity returns without silently discarding ambiguous conflicts.
-
-## Planned import and export
-
-Import should preview detected items, hierarchy, duplicates, and errors before committing a large migration. Export should support portable browser-compatible forms, structured data, selected scopes, and complete-account export where applicable.
+Import and export are planned to support migration preview, duplicate handling, portable browser-compatible forms, structured data, selected scopes, and complete-account export where applicable. No import/export runtime is currently implemented.
 
 ## Support and troubleshooting
 
-There is currently no supported Bookmarks runtime to troubleshoot. Repository documentation and planning issues must not be represented as end-user product support incidents.
+The experimental service foundation may be validated as source code, but there is no supported user library or production Bookmarks service to troubleshoot yet.
 
-When implementation begins, this manual must be expanded with verified installation, sign-in, capture, organization, offline, synchronization, sharing, backup/recovery, update, troubleshooting, accessibility, and removal/retirement procedures for each supported client and deployment mode.
+A health response of `200` does not mean Bookmarks is ready for use. Current readiness is intentionally `503` until the required data layer and its validation exist.
+
+This manual must continue to be expanded from verified implementation evidence as installation, sign-in, capture, organization, offline, synchronization, sharing, backup/recovery, update, troubleshooting, accessibility, and retirement behavior becomes real.

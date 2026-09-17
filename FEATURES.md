@@ -2,13 +2,24 @@
 
 ## Status
 
-**Release lifecycle:** Concept  
-**Implementation status:** No application or service implementation is currently verified.  
-**Authority:** Planned feature scope is derived from `SPECIFICATIONS.md` and the canonical GoreeCloud Bookmarks project specification.
+**Release lifecycle:** Experimental  
+**Implementation status:** Minimal Go service foundation implemented; no end-user bookmarking feature is currently implemented.  
+**Authority:** Planned feature scope is derived from `SPECIFICATIONS.md` and the canonical GoreeCloud Bookmarks project specification. Current verified capability is recorded in `CAPABILITIES.md`.
 
-This file catalogs intended product features. Inclusion here does **not** mean a feature is implemented, validated, released, or production-ready.
+Inclusion in the planned catalog below does **not** mean a feature is implemented, validated, released, deployed, or production-ready.
 
-## Capture and library
+## Current implemented experimental foundation
+
+The current source implements only engineering service-foundation behavior:
+
+- HTTP process-health route at `GET /api/v1/health`.
+- Fail-closed readiness route at `GET /api/v1/ready`; it remains not ready until the Bookmarks data layer exists.
+- Local-development service entry point with bounded HTTP timeouts and graceful shutdown.
+- Automated formatting, vet, unit-test, and build validation for the Go foundation.
+
+These are enabling runtime capabilities, not user-facing bookmark-management features.
+
+## Planned capture and library
 
 - One-click URL capture with immediate persistence before enrichment.
 - Inbox-based capture-first workflow.
@@ -18,7 +29,7 @@ This file catalogs intended product features. Inclusion here does **not** mean a
 - Multi-tab and browsing-session capture.
 - Selection, image, and link capture from GoreeCloud Browser.
 
-## Search and organization
+## Planned search and organization
 
 - Metadata search across titles, URLs, descriptions, collections, tags, notes, and highlights.
 - Full-content search across extracted and archived content.
@@ -28,7 +39,7 @@ This file catalogs intended product features. Inclusion here does **not** mean a
 - Automatic tag, collection, summary, and related-item suggestions.
 - User-defined automation rules.
 
-## Preservation and reading
+## Planned preservation and reading
 
 - Metadata-only, readable, visual-snapshot, and complete archive modes.
 - Archive version history and change comparison.
@@ -38,7 +49,7 @@ This file catalogs intended product features. Inclusion here does **not** mean a
 - Optional tracking-parameter cleanup with provenance retention.
 - Reader mode, reading progress, highlights, annotations, and lightweight research notes.
 
-## Offline and synchronization
+## Planned offline and synchronization
 
 - Useful local client caches.
 - Offline-selected bookmarks, collections, favorites, Read Later, and Smart Collections.
@@ -46,7 +57,7 @@ This file catalogs intended product features. Inclusion here does **not** mean a
 - Sync history and device visibility.
 - Preservation of ambiguous conflicting edits for user review.
 
-## Sharing and collaboration
+## Planned sharing and collaboration
 
 - Private-by-default individual and collection sharing.
 - Read-only archive sharing.
@@ -54,7 +65,7 @@ This file catalogs intended product features. Inclusion here does **not** mean a
 - Collaborative activity history.
 - Optional public curated collections with explicit metadata disclosure controls.
 
-## Clients and integration
+## Planned clients and integration
 
 - Deep native GoreeCloud Browser integration.
 - Web application.
@@ -64,7 +75,7 @@ This file catalogs intended product features. Inclusion here does **not** mean a
 - Optional synchronization with conventional browser bookmarks.
 - Cross-application GoreeCloud integrations where they improve user value without transferring domain authority.
 
-## Privacy, security, and continuity
+## Planned privacy, security, and continuity
 
 - Private-by-default access.
 - Standard Private Library and optional Private Vault processing models.
@@ -75,7 +86,7 @@ This file catalogs intended product features. Inclusion here does **not** mean a
 - Import, export, backup, restore, and portability.
 - Administration/content-access separation.
 
-## Rediscovery and discovery
+## Planned rediscovery and discovery
 
 - Related bookmarks.
 - On This Day.
@@ -85,7 +96,7 @@ This file catalogs intended product features. Inclusion here does **not** mean a
 - Weekly Review.
 - Optional feed following.
 
-## Accessibility and operation
+## Planned accessibility and operation
 
 - Keyboard-first desktop/web operation and command palette.
 - Screen-reader support, logical focus order, scalable text, reduced motion, high contrast, large touch targets, and non-color state indicators.
@@ -94,4 +105,4 @@ This file catalogs intended product features. Inclusion here does **not** mean a
 
 ## Current verified capabilities
 
-See [`CAPABILITIES.md`](CAPABILITIES.md). At the current Concept-stage repository baseline, no end-user or runtime feature listed above is verified as implemented.
+See [`CAPABILITIES.md`](CAPABILITIES.md). At the current Experimental foundation, no end-user feature in the planned catalog above is verified as implemented.

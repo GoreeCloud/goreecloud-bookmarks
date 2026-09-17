@@ -4,18 +4,18 @@
 
 - **Product:** GoreeCloud Bookmarks
 - **Repository:** `GoreeCloud/goreecloud-bookmarks`
-- **Release lifecycle:** Concept
-- **Architecture state:** Selected implementation direction; no runtime implementation or platform acceptance is established by this document.
+- **Release lifecycle:** Experimental
+- **Architecture state:** Selected architecture with a minimal executable Go service foundation; broader product runtime remains unimplemented.
 - **Authoritative product scope:** `SPECIFICATIONS.md` and `GoreeCloud/Projects/Project Specification — Bookmarks.md`
 - **Current Platform Contract:** `0.4`
 - **Current repository license:** `AGPL-3.0-or-later` fallback unless an authorized Bookmarks-specific decision supersedes it.
-- **Planned API/data contracts:** `docs/api/README.md`, `docs/api/openapi.yaml`, `docs/data-model.md`, and `docs/migrations.md`.
+- **API/data contracts:** `docs/api/README.md`, `docs/api/openapi.yaml`, `docs/data-model.md`, and `docs/migrations.md`.
 
-This document selects the initial technical architecture for GoreeCloud Bookmarks. It converts previously open technology questions into implementation direction while preserving the current verified reality: the repository does not yet contain a Bookmarks application, service, client, build, deployment, or accepted runtime.
+This document separates the architecture that has been selected from the subset that is currently implemented. `CAPABILITIES.md` controls current capability claims.
 
 ## 1. Architectural principles
 
-The initial architecture must remain:
+GoreeCloud Bookmarks is intended to remain:
 
 - self-hostable and open source;
 - private by default;
@@ -24,17 +24,17 @@ The initial architecture must remain:
 - portable across approved GoreeCloud infrastructure;
 - recoverable independently of any individual client;
 - versioned through documented APIs rather than direct client database access;
-- modular enough to split later without requiring premature microservices;
-- dependency-conscious and simple enough to operate, back up, restore, test, and migrate;
+- modular enough to split later without premature microservices;
+- dependency-conscious and understandable to future maintainers;
 - compatible with all nine Integral Platform Systems without representing unimplemented integrations as accepted.
 
-GoreeCloud Browser, desktop, mobile, and web experiences are clients and integration surfaces. They must not become competing authorities for the bookmark library.
+GoreeCloud Browser, desktop, mobile, and web experiences are clients/integration surfaces rather than competing authorities for bookmark state.
 
 ## 2. Initial system shape
 
-GoreeCloud Bookmarks will begin as a **modular service-backed application**, not as a collection of independently deployed microservices.
+The selected architecture is a **modular service-backed application**, not an initial fleet of independently deployed microservices.
 
-The first server implementation will use one GoreeCloud Bookmarks codebase with explicit internal modules for the product domains already described in the product specification:
+Logical modules include:
 
 - bookmarks, collections, tags, notes, highlights, sharing, and permissions;
 - capture and enrichment coordination;
@@ -47,346 +47,227 @@ The first server implementation will use one GoreeCloud Bookmarks codebase with 
 - link health;
 - reminders and notifications.
 
-These are logical service boundaries. They do **not** require separate network services, repositories, databases, containers, or release lifecycles at the initial stage.
-
-A logical module may be extracted into a separate process or service only when verified requirements justify the added operational boundary, such as materially different scaling, security isolation, failure containment, resource use, deployment cadence, or maintenance ownership.
+These boundaries do not initially require separate repositories, network services, databases, containers, or release lifecycles. Extraction into a separate service requires evidence of a meaningful scaling, isolation, failure-containment, resource, deployment-cadence, or ownership need.
 
 ## 3. Server implementation
 
-### Language
+### Current implementation
 
-The initial Bookmarks server will use **Go**.
+The first executable server foundation is implemented in Go `1.27.1` using only the Go standard library at runtime.
 
-Go is selected for the API, synchronization coordination, capture orchestration, durable background processing, health endpoints, and other long-running network-service responsibilities.
+Current source provides:
 
-The server should prefer the Go standard library and small, well-reviewed dependencies. A heavy application framework is not an architectural requirement.
+- `cmd/bookmarks/main.go` as the process entry point;
+- `internal/httpapi` as the initial HTTP boundary;
+- bounded server timeouts;
+- graceful process shutdown;
+- loopback-only default development binding;
+- health and fail-closed readiness endpoints;
+- unit tests and repository CI validation.
 
-Exact Go and dependency versions must be pinned and recorded when implementation begins; this Concept-stage decision does not invent version values.
+It does **not** yet provide bookmark persistence, authentication, authorization, PostgreSQL access, background jobs, archive processing, search, synchronization, or user-facing product functionality.
 
 ### Server authority
 
-The server is authoritative for account-level Bookmarks state that is meant to synchronize across devices, including bookmarks, collections, tags, notes, highlights, archive metadata, sharing state, automation rules, reminder state, server-visible preferences, and synchronization revisions.
+When the data layer is implemented, the Bookmarks server is selected as authoritative for account-level state intended to synchronize across devices, including bookmarks, collections, tags, notes, highlights, archive metadata, sharing state, automation rules, reminder state, server-visible preferences, and synchronization revisions.
 
-Clients may retain offline state and pending mutations, but they must reconcile through the supported Bookmarks API rather than writing directly to the server database.
+Clients may retain offline state and pending mutations but must reconcile through supported interfaces rather than write directly to the server database.
 
 ## 4. Web client
 
-The web application will use **TypeScript** and the current approved Glaze UI contract applicable at implementation time.
+The planned web application uses **TypeScript** and the approved Glaze UI contract applicable at implementation time.
 
-The web experience is a first-class client of the same versioned Bookmarks API used by other clients. It must not depend on direct database access or undocumented server internals.
+It is intended to consume the same versioned Bookmarks API as other clients and must not depend on direct database access or undocumented server internals.
 
-The exact TypeScript UI framework remains an implementation-level selection. It may be selected only after evaluating accessibility, Glaze UI compatibility, maintenance burden, build reproducibility, security, and long-term technology independence. The architecture does not require React, Vue, Svelte, or another specific framework merely for convention.
-
-For the initial deployment, compiled web assets should be served by the Bookmarks server when practical so the product does not require a separate frontend runtime solely to deliver static application assets.
+The exact TypeScript UI framework remains deferred pending accessibility, Glaze UI, security, maintenance, reproducibility, and technology-independence review. No web client is currently implemented.
 
 ## 5. Native clients
 
 ### Android
 
-The Android client will use **Kotlin with native Android architecture and platform APIs**.
-
-This direction supports share-target capture, offline storage, notifications, background synchronization, device authentication, file/image capture, and other Android-integrated behaviors without reducing the app to a WebView wrapper.
+Selected direction: **Kotlin with native Android architecture and platform APIs** for share-target capture, offline state, notifications, background synchronization, device authentication, file/image capture, and platform integration.
 
 ### Apple platforms
 
-Apple clients will use **Swift with native Apple frameworks** where iOS, iPadOS, or macOS support is approved.
-
-The client must use the same authoritative Bookmarks service and versioned API as other clients while adapting Glaze UI to native Apple interaction conventions.
+Selected direction: **Swift with native Apple frameworks** for approved iOS/iPadOS/macOS clients.
 
 ### Linux desktop
 
-The Linux desktop client direction is **Rust with GTK 4**.
+Selected direction: **Rust with GTK 4**. `libadwaita` may be evaluated only if compatible with Glaze UI, accessibility, distribution, and independence requirements.
 
-Rust and GTK 4 are selected for a native Linux experience with efficient local behavior, filesystem and desktop integration, notifications, keyboard workflows, drag-and-drop, protocol handling, offline storage, and Glaze UI adaptation without relying on a browser wrapper as the product architecture.
+The planned Linux distribution preference remains `.deb`, then Flatpak, then AppImage when each is technically appropriate and validated.
 
-`libadwaita` may be evaluated as an implementation dependency only if it remains compatible with approved Glaze UI behavior, accessibility, distribution targets, and technology-independence requirements. It is not required by this architecture decision.
-
-The planned Linux release hierarchy remains `.deb`, Flatpak, then AppImage when each format is technically appropriate and separately validated.
+No native Bookmarks client is currently implemented.
 
 ## 6. Server database and relational state
 
-The initial authoritative relational database will be **PostgreSQL**.
+Selected authoritative relational database: **PostgreSQL**.
 
-This is a Bookmarks-specific architecture selection rather than a GoreeCloud-wide mandate.
+Planned relational/transactional state includes users/service identity references, devices, bookmarks, collections, tags, notes, highlights, reminders, shares, permissions, automation rules, archive metadata, link-health state, synchronization revisions, durable jobs, saved searches, and server-visible preferences.
 
-PostgreSQL will hold relational and transactional state such as:
+A dedicated Bookmarks database is preferred unless a later approved design provides a documented benefit without weakening isolation, backup, migration, or recovery.
 
-- users and service-facing identity references;
-- devices;
-- bookmarks and metadata;
-- collections and membership relationships;
-- tags and bookmark-tag relationships;
-- notes and highlights;
-- reminders;
-- shares and permissions;
-- automation rules;
-- archive metadata and archive-version metadata;
-- link-health state;
-- synchronization revisions and mutation records;
-- durable job state;
-- saved searches and server-visible preferences.
+Schema evolution must use ordered, version-controlled migrations. `docs/data-model.md` defines logical ownership; `docs/migrations.md` defines version, compatibility, destructive-change, rollback, and recovery requirements.
 
-The Bookmarks deployment should use a dedicated database owned by the Bookmarks stack unless a later approved shared-database design provides a documented operational benefit without weakening isolation, backup, migration, or recovery.
-
-Schema evolution must use ordered, version-controlled migrations. Applied production migrations must not be casually rewritten. `docs/data-model.md` defines the selected logical ownership model, and `docs/migrations.md` defines the version-domain, migration, compatibility, destructive-change, rollback, and recovery rules implementation must follow.
+**Current state:** no PostgreSQL connection, schema, migration, or persistent bookmark record is implemented. This is why readiness intentionally fails.
 
 ## 7. Search architecture
 
-**PostgreSQL full-text search** is the initial search/indexing engine for Phase 1 metadata and extracted text.
+Selected initial search engine: **PostgreSQL full-text search** for Phase 1 metadata and extracted text.
 
-The initial architecture intentionally avoids requiring a second search service before measured requirements justify one.
+Search code should use an internal boundary so a future dedicated or semantic index can be introduced only when justified. Optional semantic retrieval must not become a dependency for core capture, organization, exact-text search, archival, import/export, or synchronization.
 
-Search code must use an internal abstraction so a future dedicated search engine can be introduced for materially larger libraries, specialized indexing, semantic retrieval, or other demonstrated requirements without changing the authoritative bookmark model.
+Search indexes are derived state and must remain rebuildable from authorized authoritative data.
 
-Optional semantic or meaning-based search may later use a separate vector or semantic index. It must remain optional and must not become necessary for core bookmark capture, organization, exact-text search, archival, import/export, or synchronization.
-
-Search/index data is derived state and must remain rebuildable from authorized authoritative data according to `docs/migrations.md`.
+**Current state:** no Bookmarks search runtime or index exists.
 
 ## 8. Archive and preservation architecture
 
-Archive metadata belongs in PostgreSQL. Preserved payloads do not.
+Archive metadata belongs in PostgreSQL; preserved payload bytes do not.
 
-Preserved content will use a storage abstraction whose initial self-hosted implementation writes to a dedicated persistent Bookmarks archive location outside the container writable layer. The abstraction must permit a future object-storage backend without making an external object store mandatory for initial operation.
+Selected storage direction uses a persistent archive-storage abstraction outside the container writable layer, allowing future object-storage support without requiring an external object store for initial self-hosting.
 
-### Preservation representations
+A saved item may have original metadata/source URL, normalized readable content, visual snapshots, complete preservation captures, previews/thumbnails, and later versions.
 
-A saved item may have multiple related representations:
+The target complete-capture container is **WARC 1.1 / ISO 28500:2017**. Historical preservation bytes are immutable for migration/provenance purposes; conversions or relocations must preserve integrity and provenance rather than invisibly rewriting history.
 
-- original metadata and source URL;
-- normalized readable content;
-- visual snapshot where enabled;
-- complete web-preservation capture;
-- derived previews or thumbnails;
-- later archive versions.
+Persisted archive objects require stable identifiers and integrity metadata such as cryptographic digests.
 
-### Complete capture format
-
-The target standard container for complete web-preservation captures is **WARC 1.1 / ISO 28500:2017**.
-
-WARC is used for captured protocol responses, payloads, related metadata, and preservation-oriented records. Readable text and visual snapshots may remain separately addressable derived representations linked to the same archive version rather than being forced into one presentation format.
-
-Every persisted archive object must have a stable identifier and integrity metadata such as a cryptographic digest. Archive metadata must identify ownership, source bookmark, capture time, representation type, storage location, size, format, integrity state, and retention state where applicable.
-
-Historical archive bytes are immutable preservation artifacts for migration purposes. Format conversion, recompression, or storage relocation must preserve provenance and integrity according to `docs/migrations.md` rather than invisibly rewriting historical evidence.
-
-An archive capture is not considered usable merely because bytes exist. Safe-viewer behavior, integrity validation, restoration, and recovery remain separate requirements.
+**Current state:** no archive storage or capture runtime exists.
 
 ## 9. Durable background work
 
-The initial background-job mechanism will be a **PostgreSQL-backed durable job queue** processed by Go workers.
+Selected initial mechanism: **PostgreSQL-backed durable jobs processed by Go workers** rather than adding Redis, RabbitMQ, or another queue before a verified requirement exists.
 
-This avoids adding Redis, RabbitMQ, or another queueing platform before a verified requirement justifies it.
+Jobs should support durable persistence, unique IDs, bounded retry/backoff, idempotency where needed, explicit states, attempt history, terminal failure handling, safe operator inspection, and cancellation where safe.
 
-Jobs must support, as applicable:
+Long-lived jobs must remain compatible across deployments or be explicitly migrated/drained/cancelled/recreated according to `docs/migrations.md`.
 
-- durable persistence before execution;
-- unique job or mutation identifiers;
-- retry with bounded backoff;
-- idempotent processing where retry is possible;
-- explicit success/failure state;
-- attempt counts and timestamps;
-- dead-letter or terminal-failure state;
-- safe operator inspection without exposing unnecessary bookmark content;
-- cancellation where the underlying operation can be safely stopped.
-
-The worker may initially run from the same Go codebase and image as the API with a distinct process role. A separate worker service or queue technology may be introduced later only when justified by measured operational requirements.
-
-Long-lived queued jobs must remain compatible across deployments or be explicitly migrated, drained, cancelled/recreated when semantically safe, or otherwise handled according to `docs/migrations.md`.
+**Current state:** no background-job store or worker runtime exists.
 
 ## 10. API contract
 
-The primary application API will be **HTTPS + REST-style JSON** under a versioned path beginning with:
+The selected application API is **HTTPS + REST-style JSON** under `/api/v1/` with OpenAPI `3.2.1` planning records in `docs/api/`.
 
-`/api/v1/`
+The planned resource surface includes Bookmark, Collection, Tag, Note, Highlight, Archive, ArchiveVersion, Reminder, Share, Permission, AutomationRule, LinkHealthRecord, SavedSearch, synchronization changes/mutations, and bounded health/readiness operations.
 
-The planned v1 API behavior is documented in `docs/api/README.md`, and the machine-readable application contract is `docs/api/openapi.yaml` using OpenAPI `3.2.1`. The OpenAPI file intentionally contains no deployment server URL and is marked planned/Concept-stage.
+Required design behavior includes stable opaque IDs, authorization, request validation, stable errors, cursor pagination, explicit filtering/sorting, revisions/ETags, `If-Match` for overwrite-sensitive changes, idempotency for retry-sensitive operations, and privacy-sensitive error behavior.
 
-The API version is independent from the application release version.
+### Currently implemented routes
 
-The selected v1 resource surface includes Bookmark, Collection, Tag, Note, Highlight, Archive, ArchiveVersion, Reminder, Share, Permission, AutomationRule, LinkHealthRecord, SavedSearch, synchronization changes/mutations, and bounded health/readiness operations.
+Only these routes are currently implemented:
 
-Required architectural behavior includes:
+- `GET /api/v1/health` — returns HTTP `200` with bounded process-health JSON.
+- `GET /api/v1/ready` — returns HTTP `503` with `ready: false` and `bookmarks-data: not-configured` until the required data layer exists.
 
-- stable opaque resource identifiers;
-- application-level authentication and authorization;
-- OIDC/OAuth 2.0 integration with GoreeCloud Identity where applicable and implemented;
-- request validation and stable error structures;
-- cursor-based pagination for large collections and histories where appropriate;
-- explicit filtering and sorting contracts;
-- entity revision values and/or ETags for conflict-aware mutation;
-- `If-Match` or equivalent preconditions where stale writes must be rejected;
-- idempotency keys for retry-sensitive capture, import, bulk, synchronization, or other create operations where duplicate execution would be harmful;
-- no ordinary client access to the Bookmarks database;
-- bounded file/archive transfer endpoints with authorization, validation, integrity checks, and resumability where required;
-- privacy-preserving not-found/authorization behavior where revealing resource existence would leak protected state.
+The current health/readiness implementation does not require authentication because it returns only bounded service state and no user/content/dependency detail.
 
-GraphQL, gRPC, WebSockets, or another transport may be added only when a demonstrated requirement is not adequately served by the versioned REST contract.
-
-Backward-compatible changes may remain within v1; breaking wire or semantic changes require explicit major-version handling according to `docs/api/README.md` and `docs/migrations.md`.
+Every other operation in the OpenAPI planning contract remains unimplemented.
 
 ## 11. Synchronization model
 
-Installed clients will use a **local SQLite database** for offline metadata, searchable local state, selected offline content references, synchronization cursors, and pending mutations.
+Selected installed-client local store: **SQLite** for offline metadata, searchable local state, selected offline references, synchronization cursors, and pending mutations.
 
-SQLite is client-local state, not a second account authority. `docs/data-model.md` distinguishes rebuildable cache from unsynchronized user-authored state, which must not be discarded as a cache-reset shortcut.
+SQLite is client-local state, not a second account authority. Unsynchronized user-authored data is non-disposable even when other local cache state can be rebuilt.
 
-Initial synchronization will use the versioned HTTPS API rather than a separate custom persistent socket protocol.
+The planned v1 sync contract uses `/api/v1/sync/changes` and `/api/v1/sync/mutations`, stable IDs/revisions, durable client mutation IDs, opaque cursors, retry-safe batches, deletion/tombstones, per-mutation outcomes, and preservation-first conflicts.
 
-The planned v1 synchronization contract is defined in `docs/api/openapi.yaml` through `/api/v1/sync/changes` and `/api/v1/sync/mutations`. It uses:
+GoreeCloud Sync remains separately governed. Any later integration must preserve Bookmarks domain authority.
 
-- stable object IDs;
-- per-object/per-change revision information;
-- device identity where applicable;
-- durable client mutation IDs;
-- incremental opaque cursors/checkpoints;
-- retry-safe mutation batches;
-- explicit deletion/tombstone semantics;
-- per-mutation outcomes rather than silent partial loss;
-- conflict responses with enough state to preserve user work.
-
-Conflict handling must prefer preservation over silent overwrite:
-
-- independent field changes may merge when the rules are deterministic and safe;
-- stale writes to the same logical field should produce an explicit conflict rather than silently discarding user work;
-- ambiguous user-authored text conflicts must preserve variants or enough revision history for recovery;
-- last-write-wins may be used only for fields where the consequence is explicitly considered safe.
-
-Client/API compatibility, queued-write migration, tombstone retention, and synchronization versioning follow `docs/migrations.md`.
-
-GoreeCloud Sync remains a separately governed GoreeCloud capability. Any later integration must preserve Bookmarks as the authority for bookmark data and must not introduce direct cross-application database ownership.
+**Current state:** no SQLite client, synchronization endpoint, mutation queue, or GoreeCloud Sync integration exists.
 
 ## 12. Initial deployment model
 
-The initial self-hosted server deployment will use a **Docker Compose Bookmarks stack**.
-
-The minimal production topology is intended to be:
+Selected future self-hosted deployment boundary: **Docker Compose** with:
 
 1. Bookmarks application service — Go API plus compiled web assets.
 2. Dedicated PostgreSQL service.
-3. Background worker process/service from the same Bookmarks codebase when asynchronous work requires operational separation.
+3. Worker process/service from the same Bookmarks codebase when asynchronous processing requires operational separation.
 
-The design must avoid additional infrastructure containers unless a verified requirement justifies them.
+Future deployment must use purpose-specific internal networking, avoid general PostgreSQL host publication, preserve state outside replaceable containers, keep secrets outside Git, pin production images, expose truthful health/readiness, and separate test/production credentials/data/storage.
 
-Deployment rules include:
-
-- Bookmarks application and PostgreSQL communicate over a purpose-specific internal Docker network;
-- PostgreSQL must not be published as a general host/public port;
-- the application may join the approved Caddy/proxy network when it needs web access through the approved publication path;
-- application state, database state, and archive payloads must survive container replacement in approved persistent locations;
-- active secrets and environment-specific protected values remain outside ordinary Git history;
-- production images must be pinned according to current Docker governance;
-- the service must expose appropriate health and readiness behavior before production qualification;
-- readiness must remain false while required schema migration/validation state is incomplete or unsafe;
-- test and production data, credentials, persistent storage, and deployment state remain separated;
-- no deployment hostname, host, DNS entry, Caddy route, NetBird policy, port, secret, or production path is claimed by this architecture document until separately implemented and verified.
+No hostname, DNS record, Caddy route, NetBird policy, public/private production port, secret, production storage path, container stack, or deployment is established by the current experimental source.
 
 ## 13. Backup, export, and recovery boundaries
 
 Synchronization is not backup.
 
-The server recovery model will include distinct protection for:
+Future recovery must separately protect PostgreSQL, archive payload storage, deployment/configuration artifacts, protected secret recovery references, and application-native portable export.
 
-- PostgreSQL through database-supported backups and independently protected recovery points;
-- archive payload storage through versioned independent backup appropriate to its size and importance;
-- deployment/configuration artifacts required to recreate the stack;
-- protected secret recovery references without placing active secrets in the repository;
-- application-native export for user portability and account-level data transfer.
+Recovery qualification must eventually prove database, archive relationships, permissions, configuration, authentication, search reconstruction, jobs, migration state, API behavior, and user-visible library restoration.
 
-Database files must not be assumed recoverable merely because their live storage directory was copied.
+Destructive migrations require a validated recovery point and repair/rollback plan under `docs/migrations.md`.
 
-Recovery qualification must eventually prove that the database, archive relationships, permissions, service configuration, authentication path, search reconstruction, background jobs, migration state, API behavior, and user-visible library can be restored to an approved state.
-
-Destructive migrations require an appropriate validated recovery point and rollback/repair plan before execution as defined in `docs/migrations.md`.
+**Current state:** graceful process shutdown exists, but no Bookmarks data backup, restore, migration recovery, tested rollback, or Everkeep integration exists.
 
 ## 14. Security and privacy boundaries
 
-The architecture requires:
+The architecture requires least privilege, application-level authorization, private-by-default libraries, no unnecessary behavioral analytics, secrets outside source control, safe hostile-content handling, controlled outbound fetching, explicit higher-privacy behavior, cross-user isolation, privacy-sensitive error handling, and platform security/privacy review.
 
-- least-privilege service and database credentials;
-- application-level authorization even on private networks;
-- private-by-default bookmark libraries;
-- no unnecessary behavioral analytics or advertising telemetry;
-- no active secrets in source control or client packages;
-- safe handling of hostile URLs, fetched metadata, documents, and archived content;
-- isolated archive viewing with active content disabled by default;
-- controlled outbound requests for capture and metadata processing;
-- clear privacy behavior for Sensitive and Private Vault content;
-- protection against cross-user access to bookmarks, archives, highlights, notes, and shares;
-- privacy-sensitive errors that avoid leaking protected resource existence;
-- security review before claims of Wardveil, Privacy Shield, Identity, Policy, or other platform-system conformance.
+The current experimental process defaults to loopback, uses bounded timeouts, sets basic defensive response headers, includes no active secrets, and has no user-content data plane. These narrow properties are not production-security evidence.
 
-Private Vault remains an advanced privacy mode. Its cryptographic protocol and key-management design are not selected by this architecture document and must be designed separately before implementation.
+Private Vault cryptographic protocol and key management remain separately deferred.
 
 ## 15. Observability boundary
 
 Operational evidence should describe service health without unnecessarily exposing bookmark content.
 
-The implementation should eventually expose evidence for:
+Current source exposes bounded health/readiness signals only. These do not constitute GoreeCloud Observability acceptance.
 
-- API health and readiness;
-- database connectivity and migration state;
-- capture/enrichment queue depth and failure rate;
-- archive job state;
-- search indexing lag;
-- synchronization failures/conflicts;
-- link-health backlog;
-- storage capacity and archive integrity state;
-- notification failures;
-- backup and restore-test status where integration permits.
+Future operational evidence should cover database connectivity/migration state, capture/enrichment jobs, archive jobs, search lag, synchronization failures/conflicts, link-health backlog, storage/integrity state, notification failures, and backup/restore-test status.
 
-Logging must avoid tokens, credentials, full private content, and unnecessary sensitive URLs or request bodies.
+Logging must avoid tokens, credentials, full private content, and unnecessary sensitive URLs/request bodies.
 
-## 16. Planned repository implementation structure
+## 16. Repository implementation structure
 
-No empty implementation directories are created by this architecture decision. When source implementation begins, the repository should use ecosystem-appropriate locations similar to:
+Current implemented source structure begins as:
 
 ```text
-cmd/                    Go service/worker entry points
-internal/               Go application domains and internal packages
-web/                    TypeScript web client
-clients/android/        Kotlin Android client
-clients/linux/          Rust + GTK 4 Linux client
-clients/apple/          Swift Apple client(s) when approved
-migrations/             PostgreSQL schema migrations
-docs/                   API, data-model, migration, deployment, recovery, and architecture details
-scripts/                governed development/build/test utilities when needed
+cmd/bookmarks/           Go service entry point and entry-point tests
+internal/httpapi/        HTTP routing, health/readiness behavior, and tests
+docs/api/                planned API contract and guidance
+docs/data-model.md       logical data ownership/model
+docs/migrations.md       version/migration/rollback requirements
+.github/workflows/       repository validation
+go.mod                   pinned Go toolchain baseline
 ```
 
-The exact structure may adapt to selected build systems and platform conventions. Empty scaffolding must not be created solely to make the repository look complete.
+Future source may add conventional locations such as `web/`, `clients/android/`, `clients/linux/`, `clients/apple/`, `migrations/`, and supplementary `docs/` areas when implementation actually requires them. Empty scaffolding must not be created solely to make the repository look complete.
 
 ## 17. Decisions intentionally deferred
 
-The following remain separate implementation or governance decisions rather than being invented here:
+Still deferred:
 
-- exact Go, PostgreSQL, SQLite, Rust, GTK, Kotlin, Swift, and TypeScript versions;
+- PostgreSQL, SQLite, Rust, GTK, Kotlin, Swift, TypeScript, database-driver, and other dependency/tool versions not yet implemented;
 - exact TypeScript UI framework;
-- exact implementation dependency libraries and package managers;
 - exact WARC creation/replay library and compression implementation;
 - exact Private Vault encryption protocol and key-management design;
-- exact production host, hostname, DNS, Caddy, NetBird, storage paths, secrets, ports, and resource limits;
-- exact backup frequency and retention values;
-- exact release signing and distribution infrastructure;
-- exact database migration tooling/library and client SQLite migration implementation, provided they satisfy `docs/migrations.md`;
-- whether a future Bookmarks-specific license should supersede the current `AGPL-3.0-or-later` fallback;
-- whether measured scale later justifies extracting search, archive processing, workers, or another module into an independently deployed service.
+- production host, hostname, DNS, Caddy, NetBird, storage paths, secrets, ports, and resource limits;
+- backup frequency and retention values;
+- release signing/distribution infrastructure;
+- database migration tooling and client SQLite migration implementation;
+- any future Bookmarks-specific license decision superseding the fallback;
+- whether measured scale later justifies extracting search, archive processing, workers, or another module.
 
-Deferred decisions must be recorded and verified before they become operational requirements.
+Go is no longer an entirely deferred tool choice: the experimental service foundation pins Go `1.27.1`.
 
 ## 18. Capability and lifecycle boundary
 
-This architecture and its API/data/migration contract records are **not implementation evidence**.
+The executable Go service foundation is implementation evidence for its narrow source/tested behavior only.
 
-They do not establish that:
+It establishes an **Experimental** prototype foundation, not a complete Bookmarks product.
 
-- the Go service exists;
-- the `/api/v1/` endpoints exist or are reachable;
-- PostgreSQL or SQLite has been deployed;
-- a database schema or migration runner exists;
+It does **not** establish that:
+
+- bookmark creation or durable bookmark persistence works;
+- PostgreSQL or SQLite is configured;
+- authentication or authorization exists;
+- planned bookmark/collection/tag/note/archive/sync API operations exist;
 - WARC capture works;
-- any native client exists;
+- any web/native client exists;
 - synchronization works;
 - Docker Compose deployment exists;
-- any Platform Contract integration has passed acceptance;
-- Bookmarks has advanced beyond Concept.
+- any of the nine Integral Platform Systems has passed Bookmarks acceptance;
+- production readiness, Release Candidate, or Stable requirements are met.
 
-`CAPABILITIES.md` remains the repository authority for currently verified capabilities. Until implementation and exact-revision evidence exist, the selected technologies and contracts in this repository remain implementation direction only.
+`CAPABILITIES.md` remains the repository authority for current verified capability scope. Every future claim must remain attributable to source and applicable validation at an exact revision.
