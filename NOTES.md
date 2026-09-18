@@ -2,15 +2,15 @@
 
 ## Current verified repository state
 
-- Product lifecycle represented by this implementation candidate: **Experimental**.
+- Product lifecycle represented by this implementation candidate: **Development**.
 - Repository: `GoreeCloud/goreecloud-bookmarks`.
-- Current implementation: minimal Go service foundation only; no end-user bookmark data plane is implemented.
+- Current implementation: Go/PostgreSQL service and persistence foundation; no authenticated end-user bookmark HTTP data plane is implemented.
 - Go baseline: `1.27.1`, pinned in `go.mod`.
-- Current Go runtime dependency model: standard library only; no third-party Go module dependency is required by the service foundation.
+- Current direct Go runtime dependency: `github.com/jackc/pgx/v5` `v5.11.0`, with provenance/license baseline in `docs/dependencies.md`.
 - Implemented HTTP routes: `GET /api/v1/health` and `GET /api/v1/ready` only.
-- Current readiness behavior: intentionally HTTP `503`, `ready: false`, with `bookmarks-data: not-configured` until the required data layer exists.
+- Current readiness behavior: fail closed unless configured PostgreSQL is reachable and the exact embedded migration history is current and untampered.
 - Development listener default: `127.0.0.1:8080`; optional non-secret override through `GOREECLOUD_BOOKMARKS_LISTEN_ADDR`.
-- Repository validation: `.github/workflows/validate-go.yml` pins its GitHub Actions revisions and validates the exact Go toolchain, formatting, `go vet`, unit tests, and service build.
+- Repository validation: `.github/workflows/validate-go.yml` pins its GitHub Actions revisions and validates the exact Go toolchain, formatting, module tidiness, `go vet`, unit/integration tests against ephemeral PostgreSQL `18.6`, and service/migration-command builds.
 - Canonical product specification: `GoreeCloud/Projects/Project Specification — Bookmarks.md`.
 - Repository product specification: `SPECIFICATIONS.md`.
 - Repository architecture record: `ARCHITECTURE.md`.
@@ -31,26 +31,39 @@
 - `FEATURE-ROADMAP.md` records milestone/phase work but is not release evidence.
 - `ARCHITECTURE.md` records selected architecture and the boundary between the implemented foundation and still-planned components.
 - `docs/api/openapi.yaml` remains the planned v1 wire contract. Contract entries beyond health/readiness must not be treated as implemented endpoints.
-- `docs/data-model.md` is a logical ownership/model record, not proof of a PostgreSQL or SQLite schema.
-- `docs/migrations.md` defines required evolution/rollback behavior, not proof that a migration runner or tested recovery path exists.
-- GoreeCloud Bookmarks remains authoritative for bookmark-domain data when that data layer is implemented.
+- `docs/data-model.md` is the logical ownership/model record. Migration version `1` now implements only the initial PostgreSQL Bookmark subset; the rest of the model remains planned.
+- `docs/migrations.md` defines evolution/rollback behavior and now records the implemented explicit migration runner; destructive-migration recovery and production rollback remain unqualified.
+- GoreeCloud Bookmarks is authoritative for the implemented PostgreSQL bookmark-domain rows; GoreeCloud Identity remains authoritative for identity/credential data.
 - GoreeCloud Sync is separately governed and is not an Integral Platform System.
 - GoreeCloud Browser integration must be reconciled with Browser authority and the separate bookmark-browser-extension repository.
 - Optional intelligence must not become a dependency for core bookmarking.
 - The fallback license may be superseded only by an authorized Bookmarks-specific decision reconciled across repository and canonical records.
 
-## Implemented experimental foundation
+## Implemented Development foundation
 
-The first executable foundation consists of:
+The current implemented foundation consists of:
 
 - `cmd/bookmarks/main.go` — service entry point, local listener configuration, HTTP timeouts, and graceful shutdown.
 - `internal/httpapi/handler.go` — bounded health/readiness HTTP surface.
+- `internal/database/postgres/` — PostgreSQL connectivity, exact schema-state checks, migration execution, and owner-scoped internal bookmark persistence.
+- `migrations/000001_initial_bookmarks.sql` — initial authoritative Bookmark table.
+- `cmd/bookmarks-migrate/main.go` — explicit migration entry point; service startup does not auto-migrate.
+- `docs/dependencies.md` — current third-party dependency provenance/licensing baseline.
 - `internal/httpapi/handler_test.go` — health, readiness, method, and response-behavior tests.
 - `cmd/bookmarks/main_test.go` — listen-address tests.
-- `go.mod` — pinned Go `1.27.1` baseline.
+- `go.mod` / `go.sum` — pinned Go `1.27.1` baseline plus reviewed `pgx/v5` dependency graph.
 - `.github/workflows/validate-go.yml` — exact-candidate validation.
 
-The foundation deliberately does not create an empty database, fake bookmark API, placeholder clients, Docker deployment, or claimed platform integration merely to increase apparent implementation breadth.
+The foundation deliberately does not expose a bookmark-domain HTTP API, invent local credentials, add placeholder clients, create a supported Docker deployment, or claim platform acceptance merely to increase apparent implementation breadth.
+
+## Current PostgreSQL checkpoint
+
+- PostgreSQL migration version `1` creates the initial `bookmarks` relation.
+- Migration history is append-only/checksummed and guarded by a PostgreSQL advisory lock.
+- The runtime rejects missing, newer-than-binary, tampered, or structurally invalid schema state through fail-closed readiness.
+- Internal persistence supports owner-scoped bookmark create/read operations only.
+- Active database configuration is external through `GOREECLOUD_BOOKMARKS_DATABASE_URL`; no active database credential is stored in Git.
+- CI uses an ephemeral database whose name must end in `_test` before destructive reset code can run.
 
 ## Selected broader architecture direction
 
@@ -73,7 +86,7 @@ The unimplemented broader direction remains:
 
 ## Decisions intentionally deferred
 
-- PostgreSQL/SQLite/database-driver and migration-tool versions and implementation packages.
+- SQLite client implementation/tooling and any future additional database/migration dependencies.
 - Exact TypeScript UI framework and frontend dependency set.
 - Exact WARC capture/replay library and compression implementation.
 - Exact Private Vault cryptographic protocol, key lifecycle, and recovery model.
