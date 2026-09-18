@@ -3,7 +3,7 @@
 ## Status
 
 **Release lifecycle:** Development  
-**Implementation status:** Go/PostgreSQL service and persistence foundation implemented; no authenticated end-user bookmark-management feature is currently exposed.  
+**Implementation status:** Go/PostgreSQL foundation plus internal retry-safe Bookmark capture is implemented; no authenticated end-user bookmark-management feature is currently exposed.  
 **Authority:** Planned feature scope is derived from `SPECIFICATIONS.md` and the canonical GoreeCloud Bookmarks project specification. Current verified capability is recorded in `CAPABILITIES.md`.
 
 Inclusion in the planned catalog below does **not** mean a feature is implemented, validated, released, deployed, or production-ready.
@@ -15,8 +15,9 @@ The current source implements engineering service/data-foundation behavior:
 - HTTP process-health route at `GET /api/v1/health`.
 - Fail-closed readiness route at `GET /api/v1/ready`; readiness passes only for reachable PostgreSQL with exact-current migration history.
 - Local-development service entry point with bounded HTTP timeouts and graceful shutdown.
-- Explicit ordered/checksummed PostgreSQL migrations and initial Bookmark persistence relation.
-- Owner-scoped internal bookmark create/read persistence; no bookmark-domain HTTP endpoint yet.
+- Explicit ordered/checksummed PostgreSQL migrations through version `2`, including initial Bookmark persistence and owner-scoped create-idempotency state.
+- Internal durable Bookmark capture semantics: validated/defaulted input, opaque server IDs, save-before-enrichment, safe replay of identical requests, conflict on mismatched reuse, and concurrent retry deduplication.
+- Owner-scoped internal bookmark read/capture persistence; no bookmark-domain HTTP endpoint yet.
 - Automated formatting, module-tidy, vet, unit/integration-test, and build validation for the Go/PostgreSQL foundation.
 
 These are enabling runtime capabilities, not user-facing bookmark-management features.
