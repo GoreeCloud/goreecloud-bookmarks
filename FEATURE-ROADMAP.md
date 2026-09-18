@@ -22,6 +22,7 @@ Verified completed foundation work:
 - [x] Go validation workflow added for exact-toolchain, formatting, module-tidy, vet, test, and build checks.
 - [x] PostgreSQL connectivity, explicit migration runner, migration history, initial Bookmark schema, and owner-scoped internal persistence implemented.
 - [x] Mandatory PostgreSQL integration validation added, including newer-schema and migration-history-tamper rejection.
+- [x] Internal retry-safe Bookmark capture/domain service and persistent owner-scoped idempotency implemented, including concurrent retry deduplication.
 
 Foundation work that remains open:
 
@@ -37,7 +38,7 @@ The current Development foundation is intentionally not ready for production or 
 
 All Phase 1 product capabilities remain open:
 
-- [ ] Durable one-click bookmark creation.
+- [ ] Durable one-click bookmark creation through an authorized application API. Internal save-first/idempotency semantics are implemented, but the user-facing/authenticated capture path remains blocked on an approved identity integration.
 - [ ] Inbox.
 - [ ] Collections and nested collections.
 - [ ] Tags and bookmark-tag relationships.
