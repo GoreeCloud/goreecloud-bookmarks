@@ -17,22 +17,22 @@ var ErrBookmarkNotFound = errors.New("bookmark not found")
 // model. Additional fields can be added through governed migrations as their
 // product behavior is implemented.
 type Bookmark struct {
-	ID             string
-	OwnerID        string
-	Revision       int64
-	URL            string
-	OriginalURL    *string
-	Title          string
-	Description    *string
-	Favorite       bool
-	Pinned         bool
-	ReadState      string
-	ReadingProgress *float64
-	PrivacyLevel   string
+	ID               string
+	OwnerID          string
+	Revision         int64
+	URL              string
+	OriginalURL      *string
+	Title            string
+	Description      *string
+	Favorite         bool
+	Pinned           bool
+	ReadState        string
+	ReadingProgress  *float64
+	PrivacyLevel     string
 	OfflineRequested bool
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
-	DeletedAt      *time.Time
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
+	DeletedAt        *time.Time
 }
 
 // CreateBookmark persists one new bookmark record. It is an internal data-layer
