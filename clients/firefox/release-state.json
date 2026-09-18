@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "product": "GoreeCloud Bookmarks Firefox Client",
+  "firefox_addon_id": "goreecloud-bookmarks@goreecloud.com",
+  "source_version": "0.1.1",
+  "source_state": "authenticated-source-candidate",
+  "accepted_stable_version": null,
+  "canonical_repository": "GoreeCloud/goreecloud-bookmarks",
+  "canonical_path": "clients/firefox",
+  "migrated_from": "GoreeCloud/goreecloud-firefox-extensions/extensions/bookmarks",
+  "migrated_from_revision": "e7f502b15b706864268ddec18e327f12840f3b82"
+}

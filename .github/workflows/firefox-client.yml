@@ -1,0 +1,37 @@
+name: Bookmarks Firefox Client
+
+on:
+  pull_request:
+    paths:
+      - 'clients/firefox/**'
+      - '.github/workflows/firefox-client.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'clients/firefox/**'
+      - '.github/workflows/firefox-client.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate Firefox source contract
+        run: python clients/firefox/scripts/validate.py
+      - name: Check JavaScript syntax
+        run: |
+          node --check clients/firefox/popup.js
+          node --check clients/firefox/options.js
+      - name: Build deterministic Firefox package
+        run: python clients/firefox/scripts/package.py
+      - name: Verify Firefox package
+        run: unzip -t dist/goreecloud-bookmarks-*.xpi
