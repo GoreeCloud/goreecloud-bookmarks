@@ -68,11 +68,11 @@ func (d *Database) Ping(ctx context.Context) error {
 type SchemaState string
 
 const (
-	SchemaCurrent          SchemaState = "schema-current"
-	SchemaMigrationNeeded  SchemaState = "migration-required"
-	SchemaNewerThanBinary  SchemaState = "schema-newer-than-binary"
-	SchemaHistoryMismatch  SchemaState = "migration-history-mismatch"
-	SchemaInvalid          SchemaState = "schema-invalid"
+	SchemaCurrent         SchemaState = "schema-current"
+	SchemaMigrationNeeded SchemaState = "migration-required"
+	SchemaNewerThanBinary SchemaState = "schema-newer-than-binary"
+	SchemaHistoryMismatch SchemaState = "migration-history-mismatch"
+	SchemaInvalid         SchemaState = "schema-invalid"
 )
 
 // ReadinessResult is deliberately bounded so operational endpoints never emit
