@@ -2,11 +2,14 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/GoreeCloud/goreecloud-bookmarks/internal/bookmarks"
 )
 
 func openIntegrationDatabase(t *testing.T) (*Database, context.Context) {
@@ -41,6 +44,9 @@ func openIntegrationDatabase(t *testing.T) (*Database, context.Context) {
 func resetIntegrationDatabase(t *testing.T, ctx context.Context, database *Database) {
 	t.Helper()
 
+	if _, err := database.pool.Exec(ctx, "DROP TABLE IF EXISTS bookmark_create_idempotency"); err != nil {
+		t.Fatalf("drop bookmark idempotency table: %v", err)
+	}
 	if _, err := database.pool.Exec(ctx, "DROP TABLE IF EXISTS bookmarks"); err != nil {
 		t.Fatalf("drop bookmarks table: %v", err)
 	}
@@ -63,8 +69,8 @@ func migrateIntegrationDatabase(t *testing.T, ctx context.Context, database *Dat
 	if err != nil {
 		t.Fatalf("migrate: %v", err)
 	}
-	if result.Applied != 1 || result.CurrentVersion != 1 {
-		t.Fatalf("migration result = %+v, want one applied migration at version 1", result)
+	if result.Applied != 2 || result.CurrentVersion != 2 {
+		t.Fatalf("migration result = %+v, want two applied migrations at version 2", result)
 	}
 
 	if readiness := database.CheckReadiness(ctx); !readiness.Ready || readiness.State != string(SchemaCurrent) {
@@ -72,43 +78,111 @@ func migrateIntegrationDatabase(t *testing.T, ctx context.Context, database *Dat
 	}
 }
 
-func TestPostgreSQLMigrationsAndBookmarkStore(t *testing.T) {
+func TestPostgreSQLMigrationsAndIdempotentBookmarkStore(t *testing.T) {
 	database, ctx := openIntegrationDatabase(t)
 	migrateIntegrationDatabase(t, ctx, database)
 
-	bookmarkID := fmt.Sprintf("integration-%d", time.Now().UnixNano())
-	created, err := database.CreateBookmark(ctx, Bookmark{
-		ID:           bookmarkID,
+	firstID := fmt.Sprintf("integration-%d", time.Now().UnixNano())
+	firstInput := bookmarks.Bookmark{
+		ID:           firstID,
 		OwnerID:      "identity-test-owner",
 		URL:          "https://example.invalid/bookmark",
 		Title:        "Integration bookmark",
+		ReadState:    "unread",
 		PrivacyLevel: "normal",
-	})
+	}
+	requestHash := strings.Repeat("a", 64)
+
+	created, replayed, err := database.CreateBookmarkIdempotent(
+		ctx,
+		"identity-test-owner",
+		"request-key-1",
+		requestHash,
+		firstInput,
+	)
 	if err != nil {
 		t.Fatalf("create bookmark: %v", err)
+	}
+	if replayed {
+		t.Fatal("first create reported replay")
 	}
 	if created.Revision != 1 || created.CreatedAt.IsZero() || created.UpdatedAt.IsZero() {
 		t.Fatalf("created bookmark has invalid revision/timestamps: %+v", created)
 	}
 
-	loaded, err := database.GetBookmark(ctx, "identity-test-owner", bookmarkID)
+	loaded, err := database.GetBookmark(ctx, "identity-test-owner", firstID)
 	if err != nil {
 		t.Fatalf("get bookmark: %v", err)
 	}
-	if loaded.ID != bookmarkID || loaded.OwnerID != "identity-test-owner" || loaded.URL != created.URL {
+	if loaded.ID != firstID || loaded.OwnerID != "identity-test-owner" || loaded.URL != created.URL {
 		t.Fatalf("loaded bookmark = %+v, want persisted owner/id/url", loaded)
 	}
 
-	if _, err := database.GetBookmark(ctx, "different-owner", bookmarkID); err != ErrBookmarkNotFound {
-		t.Fatalf("cross-owner read error = %v, want ErrBookmarkNotFound", err)
+	if _, err := database.GetBookmark(ctx, "different-owner", firstID); !errors.Is(err, bookmarks.ErrNotFound) {
+		t.Fatalf("cross-owner read error = %v, want ErrNotFound", err)
+	}
+
+	retryInput := firstInput
+	retryInput.ID = "retry-generated-but-unused"
+	replayedBookmark, replayed, err := database.CreateBookmarkIdempotent(
+		ctx,
+		"identity-test-owner",
+		"request-key-1",
+		requestHash,
+		retryInput,
+	)
+	if err != nil {
+		t.Fatalf("replay bookmark: %v", err)
+	}
+	if !replayed || replayedBookmark.ID != firstID {
+		t.Fatalf("replay = (%+v, %v), want original bookmark %q", replayedBookmark, replayed, firstID)
+	}
+
+	var bookmarkCount, idempotencyCount int
+	if err := database.pool.QueryRow(ctx, "SELECT count(*) FROM bookmarks").Scan(&bookmarkCount); err != nil {
+		t.Fatalf("count bookmarks: %v", err)
+	}
+	if err := database.pool.QueryRow(ctx, "SELECT count(*) FROM bookmark_create_idempotency").Scan(&idempotencyCount); err != nil {
+		t.Fatalf("count bookmark idempotency rows: %v", err)
+	}
+	if bookmarkCount != 1 || idempotencyCount != 1 {
+		t.Fatalf("replay created duplicates: bookmarks=%d idempotency=%d", bookmarkCount, idempotencyCount)
+	}
+
+	_, _, err = database.CreateBookmarkIdempotent(
+		ctx,
+		"identity-test-owner",
+		"request-key-1",
+		strings.Repeat("b", 64),
+		retryInput,
+	)
+	if !errors.Is(err, bookmarks.ErrIdempotencyConflict) {
+		t.Fatalf("conflicting replay error = %v, want ErrIdempotencyConflict", err)
+	}
+
+	otherOwnerInput := firstInput
+	otherOwnerInput.ID = "other-owner-bookmark"
+	otherOwnerInput.OwnerID = "other-owner"
+	other, otherReplay, err := database.CreateBookmarkIdempotent(
+		ctx,
+		"other-owner",
+		"request-key-1",
+		requestHash,
+		otherOwnerInput,
+	)
+	if err != nil {
+		t.Fatalf("same key for different owner: %v", err)
+	}
+	if otherReplay || other.ID != "other-owner-bookmark" {
+		t.Fatalf("different owner create = (%+v, %v), want independent create", other, otherReplay)
 	}
 
 	second, err := database.Migrate(ctx)
 	if err != nil {
 		t.Fatalf("second migrate: %v", err)
 	}
-	if second.Applied != 0 || second.CurrentVersion != 1 {
-		t.Fatalf("second migration result = %+v, want idempotent no-op", second)
+	if second.Applied != 0 || second.CurrentVersion != 2 {
+		t.Fatalf("second migration result = %+v, want idempotent no-op at version 2", second)
 	}
 }
 
@@ -118,7 +192,7 @@ func TestPostgreSQLRejectsNewerSchema(t *testing.T) {
 
 	if _, err := database.pool.Exec(ctx, `
 INSERT INTO goreecloud_bookmarks_schema_migrations (version, name, checksum)
-VALUES (2, 'future_migration', 'future-checksum')`); err != nil {
+VALUES (3, 'future_migration', 'future-checksum')`); err != nil {
 		t.Fatalf("insert future migration: %v", err)
 	}
 
@@ -152,5 +226,21 @@ WHERE version = 1`); err != nil {
 	}
 	if _, err := database.Migrate(ctx); err == nil {
 		t.Fatal("Migrate() succeeded with tampered migration history; want failure")
+	}
+}
+
+func TestPostgreSQLRejectsMissingRequiredSchemaObject(t *testing.T) {
+	database, ctx := openIntegrationDatabase(t)
+	migrateIntegrationDatabase(t, ctx, database)
+
+	if _, err := database.pool.Exec(ctx, "DROP TABLE bookmark_create_idempotency"); err != nil {
+		t.Fatalf("drop required idempotency table: %v", err)
+	}
+
+	if readiness := database.CheckReadiness(ctx); readiness.Ready || readiness.State != string(SchemaInvalid) {
+		t.Fatalf("readiness = %+v, want schema-invalid", readiness)
+	}
+	if err := database.CheckStartupCompatibility(ctx); err == nil {
+		t.Fatal("missing required schema object was startup-compatible; want rejection")
 	}
 }
