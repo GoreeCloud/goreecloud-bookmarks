@@ -2,14 +2,14 @@
 
 ## Status
 
-- **Lifecycle:** Concept
+- **Lifecycle:** Development
 - **API major:** `v1`
-- **Contract status:** Planned architecture contract; no endpoint implementation is currently verified.
+- **Contract status:** Planned v1 architecture contract with health/readiness implemented; bookmark-domain operations remain unimplemented.
 - **Machine-readable contract:** `docs/api/openapi.yaml`
 - **OpenAPI description version:** `3.2.1`
 - **Authoritative application data owner:** GoreeCloud Bookmarks
 
-This document defines the initial GoreeCloud Bookmarks API boundary. It describes the contract that implementation must satisfy; it is not evidence that the API is deployed, reachable, accepted, or production-ready.
+This document defines the initial GoreeCloud Bookmarks API boundary. Health/readiness are implemented engineering endpoints; other resource operations remain planned. Contract presence is not deployment, acceptance, or production-readiness evidence.
 
 ## 1. Authority model
 
@@ -33,7 +33,7 @@ Backward-compatible additions may remain within `/api/v1/`. A change that requir
 
 ## 3. Authentication and authorization
 
-Authenticated application operations require an access token accepted by GoreeCloud Bookmarks. GoreeCloud Identity/OIDC/OAuth integration is the intended platform direction where implemented, but no identity-provider URL or production token endpoint is invented in this Concept-stage contract.
+Authenticated application operations require an access token accepted by GoreeCloud Bookmarks. GoreeCloud Identity/OIDC/OAuth integration is the intended platform direction where implemented, but no identity-provider URL or production token endpoint is invented in this Development-stage contract.
 
 Authentication never replaces application authorization. Every resource operation must enforce owner, share, role, privacy-level, and administrative boundaries inside Bookmarks.
 
