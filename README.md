@@ -3,7 +3,7 @@
 GoreeCloud Bookmarks is the GoreeCloud bookmarking, web-archiving, read-later, annotation, and personal web-memory project.
 
 > **Release lifecycle:** Development  
-> **Current capability state:** Go/PostgreSQL service and persistence foundation. No authenticated end-user bookmarking workflow is implemented.
+> **Current capability state:** Go/PostgreSQL service and persistence foundation plus a Firefox client source candidate. No authenticated end-to-end bookmarking workflow is implemented.
 
 ## Product direction
 
@@ -31,8 +31,9 @@ The repository contains the current Development service/data foundation:
 - Explicit ordered/checksummed schema migrations through `cmd/bookmarks-migrate`; service startup never auto-migrates.
 - Initial bookmark persistence schema plus internal owner-scoped create/read operations.
 - Unit tests plus mandatory PostgreSQL integration tests and GitHub validation for formatting, module tidiness, vetting, tests, and builds.
+- Firefox client source candidate `0.1.1` under `clients/firefox/`, with add-on ID `goreecloud-bookmarks@goreecloud.com`, source validation, JavaScript syntax checks, and deterministic packaging.
 
-No authenticated bookmark-domain HTTP endpoint, GoreeCloud Identity integration, collections, tags, search, synchronization, archival, web UI, desktop/mobile client, supported Docker deployment, backup/restore qualification, or accepted Integral Platform System integration is implemented yet.
+No authenticated bookmark-domain HTTP endpoint, GoreeCloud Identity integration, collections, tags, search, synchronization, archival, web UI, native desktop/mobile client, supported Docker deployment, backup/restore qualification, or accepted Integral Platform System integration is implemented yet. The Firefox client is not an end-to-end supported workflow because the required `/api/v1/bookmarks/extension-capture` application endpoint is not present on authoritative `main`, and runtime/signing acceptance remains incomplete.
 
 ## Development
 
@@ -91,6 +92,7 @@ This service is not a production deployment target at the current lifecycle stat
 - [`LICENSE`](LICENSE) — current `AGPL-3.0-or-later` fallback rights notice.
 - [`LICENSE-DECISION.md`](LICENSE-DECISION.md) — licensing decision record and supersession rule.
 - [`goreecloud.platform.yaml`](goreecloud.platform.yaml) — Platform Contract `0.4` declaration with unverified conformance.
+- [`clients/firefox/`](clients/firefox/) — Firefox client source candidate, release gates, validation, and deterministic packaging.
 
 The canonical GoreeCloud product record is `GoreeCloud/Projects/Project Specification — Bookmarks.md` in the authorized GoreeCloud documentation system.
 
@@ -104,11 +106,11 @@ The broader implementation direction in [`ARCHITECTURE.md`](ARCHITECTURE.md) sel
 - PostgreSQL for authoritative relational server state and initial full-text search;
 - SQLite for installed-client offline state and pending mutations;
 - REST-style HTTPS/JSON under `/api/v1/` with an OpenAPI contract;
-- Kotlin/native Android, Swift/native Apple clients, and Rust + GTK 4 for Linux desktop;
+- Firefox browser client source under `clients/firefox/`, plus selected future Kotlin/native Android, Swift/native Apple, and Rust + GTK 4 Linux clients;
 - WARC 1.1 / ISO 28500:2017 for complete web-preservation capture containers;
 - a Docker Compose self-hosted server stack with dedicated PostgreSQL and persistent archive storage.
 
-The Go service, PostgreSQL connectivity/migration foundation, and initial bookmark relation are implemented today. The remaining selections remain architecture direction until their source and evidence exist.
+The Go service, PostgreSQL connectivity/migration foundation, initial bookmark relation, and Firefox client source candidate are implemented today. The Firefox client still lacks the application-side capture endpoint and runtime/signing acceptance; the remaining selections remain architecture direction until their source and evidence exist.
 
 ## Platform governance
 
@@ -118,9 +120,9 @@ GoreeCloud Sync is separately governed and is not a tenth Integral Platform Syst
 
 All nine Bookmarks integrations remain blocked/unaccepted. The current health and readiness routes are not, by themselves, a GoreeCloud Observability or Manager integration.
 
-## Related project
+## Firefox and browser integration
 
-`GoreeCloud/goreecloud-bookmark-browser-extension` is a related capture surface. Native GoreeCloud Browser integration remains broader planned work and must preserve Bookmarks as the authoritative bookmark domain.
+The Firefox client now lives inside this application repository at `clients/firefox/`. Historical provenance from the former standalone/cross-browser extension is retained in the client migration records rather than treated as an active repository boundary. Native GoreeCloud Browser integration remains broader planned work and must preserve Bookmarks as the authoritative bookmark domain.
 
 ## Licensing
 
