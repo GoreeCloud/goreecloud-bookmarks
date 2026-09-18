@@ -24,6 +24,7 @@ type Migration struct {
 // Ordered is the authoritative migration order for this application revision.
 var Ordered = []Migration{
 	{Version: 1, Name: "initial_bookmarks", File: "000001_initial_bookmarks.sql"},
+	{Version: 2, Name: "bookmark_create_idempotency", File: "000002_bookmark_create_idempotency.sql"},
 }
 
 // CurrentVersion returns the highest schema version understood by this binary.
