@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -183,6 +184,82 @@ func TestPostgreSQLMigrationsAndIdempotentBookmarkStore(t *testing.T) {
 	}
 	if second.Applied != 0 || second.CurrentVersion != 2 {
 		t.Fatalf("second migration result = %+v, want idempotent no-op at version 2", second)
+	}
+}
+
+func TestPostgreSQLConcurrentIdempotentBookmarkCreate(t *testing.T) {
+	database, ctx := openIntegrationDatabase(t)
+	migrateIntegrationDatabase(t, ctx, database)
+
+	type createResult struct {
+		bookmark bookmarks.Bookmark
+		replayed bool
+		err      error
+	}
+
+	start := make(chan struct{})
+	results := make(chan createResult, 2)
+	var wg sync.WaitGroup
+
+	for _, bookmarkID := range []string{"concurrent-bookmark-a", "concurrent-bookmark-b"} {
+		bookmarkID := bookmarkID
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			<-start
+
+			bookmark, replayed, err := database.CreateBookmarkIdempotent(
+				ctx,
+				"concurrent-owner",
+				"concurrent-request-key",
+				strings.Repeat("c", 64),
+				bookmarks.Bookmark{
+					ID:           bookmarkID,
+					OwnerID:      "concurrent-owner",
+					URL:          "https://example.invalid/concurrent",
+					Title:        "Concurrent bookmark",
+					ReadState:    "unread",
+					PrivacyLevel: "normal",
+				},
+			)
+			results <- createResult{bookmark: bookmark, replayed: replayed, err: err}
+		}()
+	}
+
+	close(start)
+	wg.Wait()
+	close(results)
+
+	var firstID string
+	var createdCount, replayCount int
+	for result := range results {
+		if result.err != nil {
+			t.Fatalf("concurrent create: %v", result.err)
+		}
+		if firstID == "" {
+			firstID = result.bookmark.ID
+		} else if result.bookmark.ID != firstID {
+			t.Fatalf("concurrent retries returned different bookmark IDs: %q vs %q", firstID, result.bookmark.ID)
+		}
+		if result.replayed {
+			replayCount++
+		} else {
+			createdCount++
+		}
+	}
+	if createdCount != 1 || replayCount != 1 {
+		t.Fatalf("concurrent outcomes: created=%d replayed=%d, want 1/1", createdCount, replayCount)
+	}
+
+	var bookmarkCount, idempotencyCount int
+	if err := database.pool.QueryRow(ctx, "SELECT count(*) FROM bookmarks").Scan(&bookmarkCount); err != nil {
+		t.Fatalf("count bookmarks: %v", err)
+	}
+	if err := database.pool.QueryRow(ctx, "SELECT count(*) FROM bookmark_create_idempotency").Scan(&idempotencyCount); err != nil {
+		t.Fatalf("count idempotency rows: %v", err)
+	}
+	if bookmarkCount != 1 || idempotencyCount != 1 {
+		t.Fatalf("concurrent retries created duplicates: bookmarks=%d idempotency=%d", bookmarkCount, idempotencyCount)
 	}
 }
 
