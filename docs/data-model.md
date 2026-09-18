@@ -8,7 +8,7 @@
 - **Authoritative wire schemas:** `docs/api/openapi.yaml`
 - **Persistence direction:** PostgreSQL server state; SQLite installed-client offline state; archive payloads outside relational storage.
 
-This record defines the logical objects and ownership relationships that implementation must preserve. Migration version `1` currently implements only the initial Bookmark row subset; it does not imply that every logical object below has a SQL representation.
+This record defines the logical objects and ownership relationships that implementation must preserve. Migration version `1` implements the initial Bookmark row subset and migration version `2` implements owner-scoped bookmark-create idempotency state; it does not imply that every logical object below has a SQL representation.
 
 ## 1. Common synchronized fields
 
@@ -80,6 +80,12 @@ Core fields:
 - archive/offline summary state derived from related records.
 
 Collection membership, tags, notes, highlights, archive versions, reminders, sharing, and link-health records remain related objects rather than being flattened into one unbounded Bookmark row.
+
+### Current create-idempotency state
+
+Retry-sensitive bookmark creation currently uses a separate operational relation keyed by `ownerId` plus the client-supplied idempotency key. It stores the normalized request hash, resulting bookmark ID, and creation time. This state exists to make repeated or concurrent delivery of the same logical create request resolve to one committed Bookmark without making the idempotency key part of the Bookmark resource itself.
+
+The same owner/key may not be reused for materially different normalized create content. Different owners have independent key namespaces. The relation is internal persistence state and is not a substitute for future synchronization mutation history or an authentication boundary.
 
 ## 5. Collection
 
@@ -366,7 +372,7 @@ Changing privacy level must trigger validation of derived previews, indexes, arc
 
 ## 23. Server storage boundaries
 
-PostgreSQL stores relational metadata and transactional state. The current implementation includes only the initial `bookmarks` relation and migration-history metadata; other relational objects below remain planned until implemented through governed migrations.
+PostgreSQL stores relational metadata and transactional state. The current implementation includes the initial `bookmarks` relation, internal `bookmark_create_idempotency` state, and migration-history metadata; other relational objects below remain planned until implemented through governed migrations.
 
 Archive bodies, WARC files, visual snapshots, large extracted artifacts, and other large payloads use the archive/file storage abstraction outside ordinary relational rows. PostgreSQL stores authorized references and integrity metadata.
 
