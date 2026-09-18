@@ -4,9 +4,9 @@
 
 This file records the current verified capability state represented by the source in `GoreeCloud/goreecloud-bookmarks`.
 
-**Verified state date:** 2026-09-17  
+**Verified state date:** 2026-09-18  
 **Release lifecycle:** Development  
-**Implementation status:** Go/PostgreSQL service and persistence foundation implemented; no authenticated end-user bookmarking workflow is implemented.  
+**Implementation status:** Go/PostgreSQL service and persistence foundation plus Firefox client source candidate implemented; no authenticated end-to-end bookmarking workflow is implemented.  
 **Platform Contract:** `0.4`, conformance `unverified`.
 
 The planned product vision remains defined by `SPECIFICATIONS.md`, `ARCHITECTURE.md`, the repository API/data contracts, and the canonical GoreeCloud project specification. Planned functionality must not be interpreted as current capability.
@@ -30,9 +30,15 @@ Implemented behavior is limited to:
 
 This remains Development-stage engineering software. Health means only that the process can answer its bounded health request. Readiness can pass only against an explicitly configured, reachable PostgreSQL database whose migration history exactly matches the embedded schema contract.
 
+## Firefox client source candidate
+
+`clients/firefox/` contains GoreeCloud Bookmarks Firefox client version `0.1.1` with add-on ID `goreecloud-bookmarks@goreecloud.com`. The source includes popup/options UI, bounded Firefox permissions, source validation, JavaScript syntax validation, deterministic packaging, privacy/security records, and runtime/release acceptance plans. The client is an application-owned platform variant, not a separate repository or bookmark-data authority.
+
+The required `/api/v1/bookmarks/extension-capture` application endpoint is not present on authoritative `main`. Consequently current Firefox source does not establish successful bookmark capture, authenticated application integration, Mozilla signing, persistent install/restart acceptance, or Stable release.
+
 ## User capabilities
 
-No end-user bookmark creation, Inbox, collections, tags, favorites, Read Later, metadata extraction, search, archival, reader, annotation, synchronization, offline library, sharing, collaboration, reminders, feeds, rediscovery, automation, import, export, web interface, desktop client, mobile client, or GoreeCloud Browser integration is currently verified as implemented.
+No end-to-end end-user bookmark creation, Inbox, collections, tags, favorites, Read Later, metadata extraction, search, archival, reader, annotation, synchronization, offline library, sharing, collaboration, reminders, feeds, rediscovery, automation, import, export, web interface, native desktop client, native mobile client, or GoreeCloud Browser integration is currently verified as implemented. Firefox client UI/source exists, but application-backed capture remains blocked and unaccepted.
 
 ## Data and persistence
 
@@ -82,11 +88,11 @@ Graceful process shutdown, ordered schema migration, exact migration-history ver
 
 ## Accessibility and user interface
 
-No Bookmarks user interface is currently implemented, so no Bookmarks-specific accessibility or Glaze UI acceptance claim is established.
+Firefox popup/options interface source is implemented under `clients/firefox/`, but no Firefox runtime accessibility or Glaze UI acceptance claim is established. No broader Bookmarks web, native desktop, or native mobile interface is currently implemented.
 
 ## Build and validation boundary
 
-The repository pins Go `1.27.1` and includes `.github/workflows/validate-go.yml` to validate formatting, module tidiness, `go vet`, unit tests, mandatory PostgreSQL integration tests, and compilation of both the service and migration command on exact pull-request/source revisions.
+The repository pins Go `1.27.1` and includes `.github/workflows/validate-go.yml` to validate formatting, module tidiness, `go vet`, unit tests, mandatory PostgreSQL integration tests, and compilation of both the service and migration command on exact pull-request/source revisions. `.github/workflows/firefox-client.yml` separately validates the Firefox source contract, JavaScript syntax, deterministic packaging, and XPI integrity for Firefox-client changes.
 
 Source presence, passing CI, merge state, release state, deployment state, platform acceptance, production readiness, and Stable qualification are distinct states and must not be conflated.
 
