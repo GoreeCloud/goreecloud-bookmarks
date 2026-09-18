@@ -3,7 +3,7 @@
 GoreeCloud Bookmarks is the GoreeCloud bookmarking, web-archiving, read-later, annotation, and personal web-memory project.
 
 > **Release lifecycle:** Development  
-> **Current capability state:** Go/PostgreSQL service and persistence foundation. No authenticated end-user bookmarking workflow is implemented.
+> **Current capability state:** Go/PostgreSQL foundation plus internal retry-safe bookmark capture service. No authenticated end-user bookmarking workflow is implemented.
 
 ## Product direction
 
@@ -29,10 +29,12 @@ The repository contains the current Development service/data foundation:
 - HTTP timeouts and graceful SIGINT/SIGTERM shutdown.
 - PostgreSQL connectivity through `pgx/v5` `v5.11.0`.
 - Explicit ordered/checksummed schema migrations through `cmd/bookmarks-migrate`; service startup never auto-migrates.
-- Initial bookmark persistence schema plus internal owner-scoped create/read operations.
+- Initial bookmark persistence schema plus internal owner-scoped read operations.
+- Internal Bookmark capture service with validated/defaulted create semantics, opaque server-generated IDs, and durable save-before-enrichment behavior.
+- Migration version `2` adds persistent owner-scoped create idempotency so retrying the same request returns the original bookmark while conflicting key reuse fails.
 - Unit tests plus mandatory PostgreSQL integration tests and GitHub validation for formatting, module tidiness, vetting, tests, and builds.
 
-No authenticated bookmark-domain HTTP endpoint, GoreeCloud Identity integration, collections, tags, search, synchronization, archival, web UI, desktop/mobile client, supported Docker deployment, backup/restore qualification, or accepted Integral Platform System integration is implemented yet.
+No authenticated bookmark-domain HTTP endpoint or GoreeCloud Identity integration is implemented yet. Collection/tag/archive create fields are rejected rather than silently ignored until their product behavior exists. Search, synchronization, archival, web UI, desktop/mobile clients, supported Docker deployment, backup/restore qualification, and Integral Platform System acceptance also remain unimplemented.
 
 ## Development
 
@@ -108,7 +110,7 @@ The broader implementation direction in [`ARCHITECTURE.md`](ARCHITECTURE.md) sel
 - WARC 1.1 / ISO 28500:2017 for complete web-preservation capture containers;
 - a Docker Compose self-hosted server stack with dedicated PostgreSQL and persistent archive storage.
 
-The Go service, PostgreSQL connectivity/migration foundation, and initial bookmark relation are implemented today. The remaining selections remain architecture direction until their source and evidence exist.
+The Go service, PostgreSQL migration/persistence foundation, initial bookmark relation, and internal retry-safe Bookmark capture service are implemented today. The remaining selections remain architecture direction until their source and evidence exist.
 
 ## Platform governance
 
