@@ -55,6 +55,9 @@ func migrateIntegrationDatabase(t *testing.T, ctx context.Context, database *Dat
 	if readiness := database.CheckReadiness(ctx); readiness.Ready || readiness.State != string(SchemaMigrationNeeded) {
 		t.Fatalf("pre-migration readiness = %+v, want migration-required", readiness)
 	}
+	if err := database.CheckStartupCompatibility(ctx); err != nil {
+		t.Fatalf("migration-required schema should be startup-compatible: %v", err)
+	}
 
 	result, err := database.Migrate(ctx)
 	if err != nil {
@@ -122,6 +125,9 @@ VALUES (2, 'future_migration', 'future-checksum')`); err != nil {
 	if readiness := database.CheckReadiness(ctx); readiness.Ready || readiness.State != string(SchemaNewerThanBinary) {
 		t.Fatalf("readiness = %+v, want schema-newer-than-binary", readiness)
 	}
+	if err := database.CheckStartupCompatibility(ctx); err == nil {
+		t.Fatal("newer-than-binary schema was startup-compatible; want rejection")
+	}
 	if _, err := database.Migrate(ctx); err == nil {
 		t.Fatal("Migrate() succeeded against schema newer than binary; want failure")
 	}
@@ -140,6 +146,9 @@ WHERE version = 1`); err != nil {
 
 	if readiness := database.CheckReadiness(ctx); readiness.Ready || readiness.State != string(SchemaHistoryMismatch) {
 		t.Fatalf("readiness = %+v, want migration-history-mismatch", readiness)
+	}
+	if err := database.CheckStartupCompatibility(ctx); err == nil {
+		t.Fatal("tampered migration history was startup-compatible; want rejection")
 	}
 	if _, err := database.Migrate(ctx); err == nil {
 		t.Fatal("Migrate() succeeded with tampered migration history; want failure")
