@@ -53,7 +53,7 @@ go build -o ./build/goreecloud-bookmarks-migrate ./cmd/bookmarks-migrate
 
 The repository validation workflow separately verifies formatting without modifying files, vets, tests, and builds the exact candidate revision.
 
-For local experimental execution:
+For local Development execution:
 
 ```bash
 go run ./cmd/bookmarks
@@ -68,7 +68,7 @@ GET /api/v1/health
 GET /api/v1/ready
 ```
 
-Without `GOREECLOUD_BOOKMARKS_DATABASE_URL`, readiness remains fail-closed. When a protected database URL is supplied, run `go run ./cmd/bookmarks-migrate` explicitly before expecting readiness to pass. The current PostgreSQL 18.6 baseline is validated only as an Experimental/Development integration-test target, not as a production deployment guarantee.
+Without `GOREECLOUD_BOOKMARKS_DATABASE_URL`, readiness remains fail-closed. When a protected database URL is supplied, run `go run ./cmd/bookmarks-migrate` explicitly before expecting readiness to pass. The current PostgreSQL 18.6 baseline is validated only as a Development integration-test target, not as a production deployment guarantee.
 
 This service is not a production deployment target at the current lifecycle state.
 
@@ -77,14 +77,14 @@ This service is not a production deployment target at the current lifecycle stat
 - [`SPECIFICATIONS.md`](SPECIFICATIONS.md) — planned product requirements.
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — selected architecture plus current implementation boundary.
 - [`CAPABILITIES.md`](CAPABILITIES.md) — current verified capability state.
-- [`FEATURES.md`](FEATURES.md) — current experimental foundation and planned feature catalog.
+- [`FEATURES.md`](FEATURES.md) — current Development foundation and planned feature catalog.
 - [`FEATURE-ROADMAP.md`](FEATURE-ROADMAP.md) — phased implementation roadmap and current milestone state.
 - [`BENEFITS.md`](BENEFITS.md) — intended user and platform benefits.
 - [`COMPETITIVE-OBJECTIVES.md`](COMPETITIVE-OBJECTIVES.md) — differentiation objectives and guardrails.
 - [`BRANDING.md`](BRANDING.md) — product naming and visual direction.
 - [`USER-MANUAL.md`](USER-MANUAL.md) — current availability plus planned user workflows.
-- [`PRIVACY POLICY.md`](PRIVACY%20POLICY.md) — required privacy model and current experimental-processing boundary.
-- [`SECURITY.md`](SECURITY.md) — security requirements and current experimental security boundary.
+- [`PRIVACY POLICY.md`](PRIVACY%20POLICY.md) — required privacy model and current Development processing boundary.
+- [`SECURITY.md`](SECURITY.md) — security requirements and current Development security boundary.
 - [`NOTES.md`](NOTES.md) — verified repository notes and remaining decisions.
 - [`docs/api/README.md`](docs/api/README.md) — planned v1 API behavior, compatibility, synchronization, and privacy contract.
 - [`docs/api/openapi.yaml`](docs/api/openapi.yaml) — OpenAPI 3.2.1 planning contract for `/api/v1/`; contract presence is not endpoint implementation evidence.
