@@ -22,7 +22,7 @@ Direct/transitive module versions are pinned by `go.mod` and integrity-checked t
 ## PostgreSQL server baseline
 
 - **Development integration-test baseline:** PostgreSQL `18.6`.
-- **CI image:** Docker Official Image `postgres:18.6` using an exact release tag for an ephemeral synthetic test database. It is not a production image or important-state database; production database images remain subject to stronger pinning/qualification requirements.
+- **CI image:** Docker Official Image `postgres:18.6@sha256:4ef4dbc939d61acea57712655ddb4b4ab27419c913f94cca0cd57cb3ea3c2280`, pinned by release tag and observed registry digest for the ephemeral synthetic test database. This does not qualify a production database image or deployment.
 - **Role:** Authoritative relational/transactional server state for GoreeCloud Bookmarks.
 - **Production status:** No production PostgreSQL deployment, host, database, credential, storage path, backup policy, TLS endpoint, or acceptance evidence is established by this repository state.
 
