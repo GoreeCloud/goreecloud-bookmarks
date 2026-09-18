@@ -65,7 +65,9 @@ Current source provides:
 - health and fail-closed readiness endpoints;
 - unit tests plus mandatory PostgreSQL integration validation in repository CI.
 - explicit schema migration through `cmd/bookmarks-migrate`;
-- owner-scoped internal bookmark create/read persistence.
+- owner-scoped internal bookmark read persistence;
+- an internal Bookmark capture/domain service that validates implemented create fields, generates opaque server IDs, persists before any future enrichment, and rejects unsupported collection/tag/archive create behavior;
+- owner-scoped durable create idempotency so sequential or concurrent retries of the same logical request resolve to one bookmark.
 
 It does **not** yet provide authentication, authorization, bookmark-domain HTTP operations, background jobs, archive processing, search, synchronization, or user-facing product functionality.
 
@@ -109,9 +111,9 @@ Planned relational/transactional state includes users/service identity reference
 
 A dedicated Bookmarks database is preferred unless a later approved design provides a documented benefit without weakening isolation, backup, migration, or recovery.
 
-Schema evolution uses ordered, embedded version-controlled migrations. Migration version `1` creates the initial `bookmarks` relation; applied history is checksummed and guarded by an advisory lock. `docs/data-model.md` defines logical ownership; `docs/migrations.md` defines version, compatibility, destructive-change, rollback, and recovery requirements.
+Schema evolution uses ordered, embedded version-controlled migrations. Migration version `1` creates the initial `bookmarks` relation and version `2` adds durable owner-scoped bookmark-create idempotency; applied history is checksummed and guarded by an advisory lock. `docs/data-model.md` defines logical ownership; `docs/migrations.md` defines version, compatibility, destructive-change, rollback, and recovery requirements.
 
-**Current state:** PostgreSQL connection/pooling, exact schema-state checks, explicit migration execution, migration version `1`, and owner-scoped internal bookmark create/read persistence are implemented. Readiness passes only when the configured database is reachable and its embedded migration history is current and untampered.
+**Current state:** PostgreSQL connection/pooling, exact schema-state checks, explicit migration execution through version `2`, owner-scoped reads, and atomic retry-safe internal bookmark capture are implemented. Readiness passes only when the configured database is reachable and its embedded migration history is current and untampered.
 
 ## 7. Search architecture
 
