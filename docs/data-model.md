@@ -2,13 +2,13 @@
 
 ## Status
 
-- **Lifecycle:** Concept
-- **Model status:** Selected logical model; no database schema or runtime persistence is currently verified.
+- **Lifecycle:** Development
+- **Model status:** Selected logical model with the initial PostgreSQL Bookmark subset implemented; other logical objects remain planned.
 - **Server authority:** GoreeCloud Bookmarks
 - **Authoritative wire schemas:** `docs/api/openapi.yaml`
 - **Persistence direction:** PostgreSQL server state; SQLite installed-client offline state; archive payloads outside relational storage.
 
-This record defines the logical objects and ownership relationships that implementation must preserve. It does not prescribe every SQL table, index, foreign-key name, or client-cache representation.
+This record defines the logical objects and ownership relationships that implementation must preserve. Migration version `1` currently implements only the initial Bookmark row subset; it does not imply that every logical object below has a SQL representation.
 
 ## 1. Common synchronized fields
 
@@ -55,7 +55,7 @@ Device records support session/device management and sync visibility but must no
 
 ## 4. Bookmark
 
-The Bookmark is the central saved-item record.
+The Bookmark is the central saved-item record. The current Development schema implements its initial owner-scoped persisted subset in PostgreSQL.
 
 Core fields:
 
@@ -366,7 +366,7 @@ Changing privacy level must trigger validation of derived previews, indexes, arc
 
 ## 23. Server storage boundaries
 
-PostgreSQL stores relational metadata and transactional state.
+PostgreSQL stores relational metadata and transactional state. The current implementation includes only the initial `bookmarks` relation and migration-history metadata; other relational objects below remain planned until implemented through governed migrations.
 
 Archive bodies, WARC files, visual snapshots, large extracted artifacts, and other large payloads use the archive/file storage abstraction outside ordinary relational rows. PostgreSQL stores authorized references and integrity metadata.
 
