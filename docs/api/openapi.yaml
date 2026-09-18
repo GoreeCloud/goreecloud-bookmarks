@@ -1,14 +1,14 @@
 openapi: 3.2.1
 info:
   title: GoreeCloud Bookmarks API
-  version: 0.1.0-concept
+  version: 0.1.0-development
   summary: Planned v1 application API contract for GoreeCloud Bookmarks.
   description: >-
-    Concept-stage machine-readable contract. It defines the intended /api/v1 resource
-    surface and schemas but does not assert that any endpoint is implemented, deployed,
-    reachable, accepted, or production-ready.
+    Development-stage machine-readable contract. Health and readiness are implemented;
+    the remaining /api/v1 resource surface and schemas are planned and are not asserted
+    as deployed, reachable, accepted, or production-ready.
 x-goreecloud-status: planned
-x-goreecloud-lifecycle: concept
+x-goreecloud-lifecycle: development
 x-goreecloud-api-major: v1
 security:
   - bearerAuth: []
