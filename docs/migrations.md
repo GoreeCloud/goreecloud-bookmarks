@@ -136,12 +136,12 @@ Readiness remains false when migrations are absent/incomplete, when the database
 
 ### Current implemented PostgreSQL migration boundary
 
-- Schema version `1` creates the initial `bookmarks` relation.
+- Schema version `1` creates the initial `bookmarks` relation; schema version `2` adds owner-scoped durable create-idempotency state and the composite owner/bookmark reference used for atomic retry-safe capture.
 - `cmd/bookmarks-migrate` explicitly applies pending migrations; normal service startup never auto-mutates schema.
 - A PostgreSQL advisory lock serializes migration execution.
 - Each migration is transactional and is recorded only after its SQL succeeds.
 - Applied name/checksum mismatch and newer-than-binary history fail closed.
-- CI integration tests validate first application, idempotent re-run, current readiness, newer-schema rejection, and tampered-history rejection against PostgreSQL `18.6`.
+- CI integration tests validate first application through version `2`, idempotent migration re-run, current readiness, newer-schema rejection, tampered-history rejection, required-schema-object validation, sequential replay/conflict behavior, owner-scoped key independence, and concurrent retry deduplication against PostgreSQL `18.6`.
 - No destructive migration exists yet, so restore-backed destructive migration qualification remains future work.
 
 ## 9. SQLite client migrations
