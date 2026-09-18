@@ -4,9 +4,9 @@
 
 This file records the current verified capability state represented by the source in `GoreeCloud/goreecloud-bookmarks`.
 
-**Verified state date:** 2026-09-17  
+**Verified state date:** 2026-09-18  
 **Release lifecycle:** Development  
-**Implementation status:** Go/PostgreSQL service and persistence foundation implemented; no authenticated end-user bookmarking workflow is implemented.  
+**Implementation status:** Go/PostgreSQL foundation plus an internal retry-safe bookmark capture service is implemented; no authenticated end-user bookmarking workflow is implemented.  
 **Platform Contract:** `0.4`, conformance `unverified`.
 
 The planned product vision remains defined by `SPECIFICATIONS.md`, `ARCHITECTURE.md`, the repository API/data contracts, and the canonical GoreeCloud project specification. Planned functionality must not be interpreted as current capability.
@@ -25,20 +25,22 @@ Implemented behavior is limited to:
 - Bounded HTTP timeouts and graceful SIGINT/SIGTERM shutdown.
 - Unit tests for health, fail-closed readiness, method handling, and listen-address behavior.
 - Explicit `bookmarks-migrate` command for ordered, checksummed PostgreSQL schema migrations; ordinary service startup does not mutate schema automatically.
-- Initial `bookmarks` table and owner-scoped internal create/read persistence for the selected Bookmark subset.
+- Initial `bookmarks` table and owner-scoped internal read persistence for the selected Bookmark subset.
+- Internal Bookmark domain/capture service with absolute-URI and field validation, server-generated opaque IDs, defaults for implemented fields, durable save-before-enrichment semantics, and explicit rejection of collection/tag/archive create inputs that are not yet implemented.
+- Owner-scoped persistent idempotency for bookmark creation through migration version `2`; same-request retries return the original bookmark, conflicting reuse of an idempotency key fails, and concurrent retries are serialized to one bookmark.
 - Repository CI that checks the pinned Go toolchain, formatting, module tidiness, vetting, unit/integration tests against PostgreSQL, and both service/migration-command builds.
 
 This remains Development-stage engineering software. Health means only that the process can answer its bounded health request. Readiness can pass only against an explicitly configured, reachable PostgreSQL database whose migration history exactly matches the embedded schema contract.
 
 ## User capabilities
 
-No end-user bookmark creation, Inbox, collections, tags, favorites, Read Later, metadata extraction, search, archival, reader, annotation, synchronization, offline library, sharing, collaboration, reminders, feeds, rediscovery, automation, import, export, web interface, desktop client, mobile client, or GoreeCloud Browser integration is currently verified as implemented.
+No authenticated end-user bookmark creation route, Inbox, collections, tags, favorites, Read Later, metadata extraction, search, archival, reader, annotation, synchronization, offline library, sharing, collaboration, reminders, feeds, rediscovery, automation, import, export, web interface, desktop client, mobile client, or GoreeCloud Browser integration is currently verified as implemented.
 
 ## Data and persistence
 
-PostgreSQL connectivity, migration history, schema version checks, migration version `1`, the initial `bookmarks` relation, and internal owner-scoped bookmark create/read persistence are implemented. The migration runner rejects newer-than-binary and tampered migration histories and is invoked explicitly through `cmd/bookmarks-migrate`.
+PostgreSQL connectivity, migration history, schema version checks, migrations `1` and `2`, the initial `bookmarks` relation, the `bookmark_create_idempotency` relation, and owner-scoped bookmark persistence are implemented. The migration runner rejects newer-than-binary and tampered migration histories and is invoked explicitly through `cmd/bookmarks-migrate`.
 
-No SQLite client database, archive store, search index, synchronization store, authenticated bookmark-domain HTTP route, backup/restore path, or production database deployment is implemented.
+The internal capture service uses persistent owner-scoped idempotency and returns the original committed bookmark for safe retries. No SQLite client database, archive store, search index, synchronization store, authenticated bookmark-domain HTTP route, backup/restore path, or production database deployment is implemented.
 
 The planned data model and migration rules remain documented in `docs/data-model.md` and `docs/migrations.md`; documentation is not persistence evidence.
 
