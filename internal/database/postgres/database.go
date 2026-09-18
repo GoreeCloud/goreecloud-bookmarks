@@ -102,6 +102,33 @@ func (d *Database) CheckReadiness(ctx context.Context) ReadinessResult {
 	return ReadinessResult{Ready: true, State: string(SchemaCurrent)}
 }
 
+// CheckStartupCompatibility rejects schema states that this binary must never
+// operate against. A temporarily unreachable database is allowed to keep the
+// process alive but not ready; newer, tampered, or structurally invalid schema
+// state is an unsafe startup condition.
+func (d *Database) CheckStartupCompatibility(ctx context.Context) error {
+	checkCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	if err := d.Ping(checkCtx); err != nil {
+		return nil
+	}
+
+	state, err := d.SchemaState(checkCtx)
+	if err != nil {
+		return errors.New("database schema compatibility check failed")
+	}
+
+	switch state {
+	case SchemaCurrent, SchemaMigrationNeeded:
+		return nil
+	case SchemaNewerThanBinary, SchemaHistoryMismatch, SchemaInvalid:
+		return fmt.Errorf("unsafe database schema state: %s", state)
+	default:
+		return errors.New("unknown database schema state")
+	}
+}
+
 // SchemaState returns the migration compatibility state without mutating the
 // database.
 func (d *Database) SchemaState(ctx context.Context) (SchemaState, error) {
