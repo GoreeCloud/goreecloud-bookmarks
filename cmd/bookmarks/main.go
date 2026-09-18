@@ -33,6 +33,13 @@ func main() {
 		}
 		defer database.Close()
 
+		startupCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		if err := database.CheckStartupCompatibility(startupCtx); err != nil {
+			cancel()
+			logger.Fatal("database schema is incompatible with this Bookmarks revision")
+		}
+		cancel()
+
 		handler = httpapi.NewHandlerWithReadiness(httpapi.ReadinessFunc(func(ctx context.Context) httpapi.ReadinessResult {
 			result := database.CheckReadiness(ctx)
 			return httpapi.ReadinessResult{
