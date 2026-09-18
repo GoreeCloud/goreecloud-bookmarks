@@ -2,7 +2,7 @@
 
 ## Status
 
-- **Lifecycle:** Experimental
+- **Lifecycle:** Development
 - **Purpose:** Record accepted implementation/build/test dependencies introduced by the current PostgreSQL data foundation.
 - **Authority boundary:** This record documents repository dependency choices; it does not establish platform acceptance, production deployment, or release qualification.
 
@@ -21,8 +21,8 @@ Direct/transitive module versions are pinned by `go.mod` and integrity-checked t
 
 ## PostgreSQL server baseline
 
-- **Experimental integration-test baseline:** PostgreSQL `18.6`.
-- **CI image:** Docker Official Image `postgres:18.6-bookworm` pinned by an exact linux/amd64 manifest digest in `.github/workflows/validate-go.yml`.
+- **Development integration-test baseline:** PostgreSQL `18.6`.
+- **CI image:** Docker Official Image `postgres:18.6` using an exact release tag for an ephemeral synthetic test database. It is not a production image or important-state database; production database images remain subject to stronger pinning/qualification requirements.
 - **Role:** Authoritative relational/transactional server state for GoreeCloud Bookmarks.
 - **Production status:** No production PostgreSQL deployment, host, database, credential, storage path, backup policy, TLS endpoint, or acceptance evidence is established by this repository state.
 
@@ -36,7 +36,7 @@ This choice minimizes the initial dependency surface. It may be revisited if lat
 
 ## GitHub Actions dependencies
 
-The validation workflow uses GitHub Actions pinned to exact commit revisions. Those build-time dependencies remain separate from application runtime dependencies and are subject to GoreeCloud security-update governance.
+The validation workflow uses GitHub Actions pinned to exact commit revisions. `.github/dependabot.yml` is configured to propose weekly Go-module and GitHub Actions updates; those proposals still require ordinary review and validation before merge. Build-time dependencies remain separate from application runtime dependencies and are subject to GoreeCloud security-update governance.
 
 ## Maintenance rule
 
