@@ -9,7 +9,7 @@ component:
   product_name: GoreeCloud Bookmarks
   repository: GoreeCloud/goreecloud-bookmarks
 
-lifecycle: experimental
+lifecycle: development
 version: "0.1.0"
 
 supported_platforms:
@@ -24,32 +24,32 @@ api:
   endpoints:
     - name: health
       url: "/api/v1/health"
-      purpose: "Return bounded process-health state for the experimental Bookmarks service foundation."
+      purpose: "Return bounded process-health state for the Development Bookmarks service."
     - name: readiness
       url: "/api/v1/ready"
-      purpose: "Return fail-closed readiness state; currently non-ready until the required Bookmarks data layer exists."
+      purpose: "Return fail-closed readiness state backed by PostgreSQL connectivity and exact migration compatibility."
 
 platform_systems:
   manager:
     result: applicable-blocked
     version: null
     evidence: []
-    notes: "Administrative and operational integration is planned, but the experimental health/readiness surface is not GoreeCloud Manager acceptance evidence."
+    notes: "Administrative and operational integration is planned, but the Development health/readiness surface is not GoreeCloud Manager acceptance evidence."
   privacy_shield:
     result: applicable-blocked
     version: null
     evidence: []
-    notes: "The current experimental service does not process bookmark content, but no Bookmarks-specific Privacy Shield runtime integration or acceptance evidence is verified."
+    notes: "The Development data layer can persist bookmark records when explicitly configured, but no Bookmarks-specific Privacy Shield runtime integration or acceptance evidence is verified."
   wardveil_security:
     result: applicable-blocked
     version: null
     evidence: []
-    notes: "The experimental foundation has bounded service hardening and tests, but no Bookmarks-specific Wardveil runtime integration or acceptance evidence is verified."
+    notes: "The Development foundation has bounded service/database hardening and tests, but no Bookmarks-specific Wardveil runtime integration or acceptance evidence is verified."
   everkeep:
     result: applicable-blocked
     version: null
     evidence: []
-    notes: "No Bookmarks data layer exists yet and no Bookmarks-specific Everkeep backup, restore, migration, portability, or acceptance evidence is verified."
+    notes: "A PostgreSQL bookmark data layer and migration runner exist, but no Bookmarks-specific Everkeep backup, restore, portability, or acceptance evidence is verified."
   glaze_ui:
     result: applicable-blocked
     version: null
@@ -68,7 +68,7 @@ platform_systems:
     result: applicable-blocked
     version: null
     evidence: []
-    notes: "Authentication, accounts, devices, sharing, collaboration, and service authorization remain unimplemented; no Bookmarks-specific GoreeCloud Identity acceptance evidence is verified."
+    notes: "Persisted bookmark rows carry opaque owner references, but authentication, accounts, service authorization, and GoreeCloud Identity acceptance remain unimplemented."
   policy:
     result: applicable-blocked
     version: null
@@ -105,7 +105,15 @@ continuity:
       - "The product must support migration away from GoreeCloud Bookmarks without unnecessary lock-in."
       - "Standard browser-compatible and structured machine-readable forms should be supported where applicable."
 
-external_dependencies: []
+external_dependencies:
+  - name: "PostgreSQL"
+    purpose: "Authoritative relational bookmark state and schema migration target."
+    required: true
+    version_constraint: "18.6 Experimental integration-test baseline; production support is not yet qualified"
+  - name: "github.com/jackc/pgx/v5"
+    purpose: "Go PostgreSQL driver and connection-pool implementation."
+    required: true
+    version_constraint: "v5.11.0"
 
 compatibility:
   platform_contract: "0.4"
@@ -122,7 +130,7 @@ conformance:
   validated_at: null
   evidence: []
   blockers:
-    - "Only a minimal Experimental Go service foundation is implemented; bookmark persistence, authentication, authorization, search, synchronization, archival, clients, and end-user workflows remain unimplemented."
-    - "Readiness intentionally returns non-ready because the required Bookmarks data layer is not configured."
+    - "A bounded Development Go/PostgreSQL data foundation is implemented; authentication, authorization, bookmark-domain HTTP operations, search, synchronization, archival, clients, and end-user workflows remain unimplemented."
+    - "No supported deployment database configuration is verified; readiness passes only when explicitly configured PostgreSQL is reachable and the exact embedded migration history is current and untampered."
     - "No Bookmarks-specific acceptance evidence exists for any of the nine Integral Platform Systems."
     - "No supported deployment, release artifact, production-readiness evidence, Release Candidate acceptance, or Stable qualification exists."

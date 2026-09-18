@@ -20,8 +20,25 @@ jobs:
     name: Format, vet, test, and build
     runs-on: ubuntu-24.04
     timeout-minutes: 10
+
+    services:
+      postgres:
+        image: postgres:18.6@sha256:4ef4dbc939d61acea57712655ddb4b4ab27419c913f94cca0cd57cb3ea3c2280
+        env:
+          POSTGRES_DB: goreecloud_bookmarks_test
+          POSTGRES_USER: bookmarks_test
+          POSTGRES_PASSWORD: integration-test-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U bookmarks_test -d goreecloud_bookmarks_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
     env:
       GOTOOLCHAIN: local
+      GOREECLOUD_BOOKMARKS_TEST_DATABASE_URL: postgres://bookmarks_test:integration-test-only@127.0.0.1:5432/goreecloud_bookmarks_test?sslmode=disable
 
     steps:
       - name: Check out exact candidate
@@ -61,5 +78,7 @@ jobs:
       - name: Test
         run: go test -count=1 ./...
 
-      - name: Build service
-        run: go build -o "${RUNNER_TEMP}/goreecloud-bookmarks" ./cmd/bookmarks
+      - name: Build service and migration command
+        run: |
+          go build -o "${RUNNER_TEMP}/goreecloud-bookmarks" ./cmd/bookmarks
+          go build -o "${RUNNER_TEMP}/goreecloud-bookmarks-migrate" ./cmd/bookmarks-migrate

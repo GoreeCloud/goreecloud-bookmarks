@@ -2,8 +2,8 @@
 
 GoreeCloud Bookmarks is the GoreeCloud bookmarking, web-archiving, read-later, annotation, and personal web-memory project.
 
-> **Release lifecycle:** Experimental  
-> **Current capability state:** Minimal Go service foundation only. No end-user bookmarking workflow or persistent Bookmarks data layer is implemented.
+> **Release lifecycle:** Development  
+> **Current capability state:** Go/PostgreSQL service and persistence foundation. No authenticated end-user bookmarking workflow is implemented.
 
 ## Product direction
 
@@ -17,19 +17,22 @@ The preferred workflow is:
 
 > **Capture instantly → enrich automatically → organize when useful → preserve when important → rediscover when relevant.**
 
-## Current experimental implementation
+## Current Development implementation
 
-The repository contains the first executable service foundation:
+The repository contains the current Development service/data foundation:
 
 - Go `1.27.1` toolchain baseline.
 - Standard-library HTTP service entry point under `cmd/bookmarks`.
 - `GET /api/v1/health` returning bounded process-health JSON.
-- `GET /api/v1/ready` returning HTTP `503` and `ready: false` until the required Bookmarks data layer exists.
+- `GET /api/v1/ready` failing closed unless configured PostgreSQL is reachable and its migration history exactly matches the embedded schema set.
 - Loopback-only development default `127.0.0.1:8080`, with optional `GOREECLOUD_BOOKMARKS_LISTEN_ADDR` override.
 - HTTP timeouts and graceful SIGINT/SIGTERM shutdown.
-- Unit tests and GitHub validation for formatting, vetting, tests, and build.
+- PostgreSQL connectivity through `pgx/v5` `v5.11.0`.
+- Explicit ordered/checksummed schema migrations through `cmd/bookmarks-migrate`; service startup never auto-migrates.
+- Initial bookmark persistence schema plus internal owner-scoped create/read operations.
+- Unit tests plus mandatory PostgreSQL integration tests and GitHub validation for formatting, module tidiness, vetting, tests, and builds.
 
-No bookmark persistence, PostgreSQL schema, authentication, authorization, collections, tags, search, synchronization, archival, web UI, desktop/mobile client, Docker deployment, or accepted Integral Platform System integration is implemented yet.
+No authenticated bookmark-domain HTTP endpoint, GoreeCloud Identity integration, collections, tags, search, synchronization, archival, web UI, desktop/mobile client, supported Docker deployment, backup/restore qualification, or accepted Integral Platform System integration is implemented yet.
 
 ## Development
 
@@ -43,6 +46,7 @@ gofmt -w ./cmd ./internal
 go vet ./...
 go test ./...
 go build -o ./build/goreecloud-bookmarks ./cmd/bookmarks
+go build -o ./build/goreecloud-bookmarks-migrate ./cmd/bookmarks-migrate
 ```
 
 The repository validation workflow separately verifies formatting without modifying files, vets, tests, and builds the exact candidate revision.
@@ -62,7 +66,9 @@ GET /api/v1/health
 GET /api/v1/ready
 ```
 
-Readiness is intentionally non-passing while the authoritative Bookmarks data layer is absent. This service is not a production deployment target at the current lifecycle state.
+Without `GOREECLOUD_BOOKMARKS_DATABASE_URL`, readiness remains fail-closed. When a protected database URL is supplied, run `go run ./cmd/bookmarks-migrate` explicitly before expecting readiness to pass. The current PostgreSQL 18.6 baseline is validated only as an Experimental/Development integration-test target, not as a production deployment guarantee.
+
+This service is not a production deployment target at the current lifecycle state.
 
 ## Repository documentation
 
@@ -102,7 +108,7 @@ The broader implementation direction in [`ARCHITECTURE.md`](ARCHITECTURE.md) sel
 - WARC 1.1 / ISO 28500:2017 for complete web-preservation capture containers;
 - a Docker Compose self-hosted server stack with dedicated PostgreSQL and persistent archive storage.
 
-Only the minimal Go service foundation is implemented today. The other selections remain architecture direction until their source and evidence exist.
+The Go service, PostgreSQL connectivity/migration foundation, and initial bookmark relation are implemented today. The remaining selections remain architecture direction until their source and evidence exist.
 
 ## Platform governance
 

@@ -2,14 +2,14 @@
 
 ## Status
 
-- **Lifecycle:** Concept
-- **Policy status:** Selected implementation rules; no migration has been executed or validated yet.
+- **Lifecycle:** Development
+- **Policy status:** Migration framework implemented for PostgreSQL schema version `1`; destructive migration recovery and production rollback remain unqualified.
 - **API major:** `v1`
 - **Server database direction:** PostgreSQL
 - **Installed-client database direction:** SQLite
 - **Complete archive container:** WARC 1.1 / ISO 28500:2017
 
-This document defines how Bookmarks data and interfaces are allowed to evolve. It does not establish that a database, API, client, migration runner, backup, or rollback path currently exists.
+This document defines how Bookmarks data and interfaces are allowed to evolve. The repository now implements an explicit PostgreSQL migration runner and schema version `1`; it does not establish production deployment, backup/restore qualification, client migrations, or release acceptance.
 
 ## 1. Separate version domains
 
@@ -64,7 +64,7 @@ No fixed calendar deprecation interval is invented before Bookmarks has an estab
 
 ## 4. PostgreSQL schema migrations
 
-Server schema changes use ordered, version-controlled migration files committed with the source revision that requires them.
+Server schema changes use ordered, version-controlled migration files committed with the source revision that requires them. The current implementation embeds the ordered SQL set and records applied version/name/SHA-256 checksum in `goreecloud_bookmarks_schema_migrations`.
 
 Rules:
 
@@ -132,7 +132,17 @@ The startup path must distinguish at least:
 - schema newer than the binary and therefore unsafe;
 - migration failed/incomplete and therefore not ready.
 
-Readiness must remain false when required migrations have not completed successfully.
+Readiness remains false when migrations are absent/incomplete, when the database is unreachable, when applied history is newer than the binary, when recorded name/checksum differs from the embedded migration, or when required schema objects are structurally absent.
+
+### Current implemented PostgreSQL migration boundary
+
+- Schema version `1` creates the initial `bookmarks` relation.
+- `cmd/bookmarks-migrate` explicitly applies pending migrations; normal service startup never auto-mutates schema.
+- A PostgreSQL advisory lock serializes migration execution.
+- Each migration is transactional and is recorded only after its SQL succeeds.
+- Applied name/checksum mismatch and newer-than-binary history fail closed.
+- CI integration tests validate first application, idempotent re-run, current readiness, newer-schema rejection, and tampered-history rejection against PostgreSQL `18.6`.
+- No destructive migration exists yet, so restore-backed destructive migration qualification remains future work.
 
 ## 9. SQLite client migrations
 

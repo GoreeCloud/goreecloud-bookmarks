@@ -2,18 +2,18 @@
 
 ## Current availability
 
-GoreeCloud Bookmarks is currently at the **Experimental** lifecycle stage.
+GoreeCloud Bookmarks is currently at the **Development** lifecycle stage.
 
-A minimal Go service foundation now exists for engineering validation, but there is still no supported end-user bookmark workflow, web application, desktop client, mobile client, production service, account system, or persistent bookmark library.
+A Go/PostgreSQL service and persistence foundation now exists for engineering validation, but there is still no supported end-user bookmark workflow, web application, desktop client, mobile client, production service, account/authentication system, or supported user bookmark library.
 
 The only currently implemented HTTP behavior is:
 
 - `GET /api/v1/health` — bounded process-health response.
-- `GET /api/v1/ready` — intentionally returns HTTP `503` and `ready: false` because the required Bookmarks data layer is not configured.
+- `GET /api/v1/ready` — reports fail-closed database/schema readiness and returns HTTP `200` only when configured PostgreSQL is reachable with exact-current migration history.
 
 These endpoints are engineering signals, not an end-user Bookmarks interface.
 
-## Experimental developer execution
+## Development engineer execution
 
 With the pinned Go `1.27.1` toolchain, the service foundation can be validated with:
 
@@ -21,9 +21,10 @@ With the pinned Go `1.27.1` toolchain, the service foundation can be validated w
 go vet ./...
 go test ./...
 go build -o ./build/goreecloud-bookmarks ./cmd/bookmarks
+go build -o ./build/goreecloud-bookmarks-migrate ./cmd/bookmarks-migrate
 ```
 
-For local experimental execution:
+For local Development execution without a database:
 
 ```bash
 go run ./cmd/bookmarks
@@ -31,7 +32,9 @@ go run ./cmd/bookmarks
 
 It listens on `127.0.0.1:8080` by default. `GOREECLOUD_BOOKMARKS_LISTEN_ADDR` may explicitly override that local-development listener.
 
-This is not a production installation procedure. No persistent data, authentication, authorization, migration, backup, reverse-proxy, TLS, database, or deployment configuration is established by the current service foundation.
+For database-backed engineering validation, supply a protected `GOREECLOUD_BOOKMARKS_DATABASE_URL` and run `go run ./cmd/bookmarks-migrate` explicitly before expecting readiness to pass. The repository does not auto-load `.env` files or auto-run migrations on normal service startup.
+
+This is not a production installation procedure. Authentication, authorization, backup/restore qualification, reverse-proxy/TLS configuration, supported production database deployment, and platform acceptance are not established by the current Development source.
 
 ## Intended core workflow
 

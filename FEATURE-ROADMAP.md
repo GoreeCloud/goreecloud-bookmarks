@@ -2,7 +2,7 @@
 
 ## Authority and status
 
-**Release lifecycle:** Experimental  
+**Release lifecycle:** Development  
 **Roadmap status:** Active; completion requires exact authoritative evidence.  
 **Canonical product scope:** `SPECIFICATIONS.md` and the canonical GoreeCloud Bookmarks project specification.
 
@@ -19,16 +19,19 @@ Verified completed foundation work:
 - [x] Initial architecture and technology direction documented.
 - [x] Planned OpenAPI v1, logical data, and migration/compatibility contracts documented.
 - [x] Minimal Go service source foundation added with health/readiness behavior and unit tests.
-- [x] Go validation workflow added for exact-toolchain, formatting, vet, test, and build checks.
+- [x] Go validation workflow added for exact-toolchain, formatting, module-tidy, vet, test, and build checks.
+- [x] PostgreSQL connectivity, explicit migration runner, migration history, initial Bookmark schema, and owner-scoped internal persistence implemented.
+- [x] Mandatory PostgreSQL integration validation added, including newer-schema and migration-history-tamper rejection.
 
 Foundation work that remains open:
 
 - [ ] Activate required protection/rulesets for `main`; current GitHub state remains unprotected and the connected integration does not expose the necessary administration write.
 - [ ] Remove merged short-lived branches when a branch-delete capability is available and dependencies are verified absent.
 - [ ] Maintain exact-revision validation and documentation synchronization for future changes.
-- [ ] Add dependency-maintenance/SBOM/security automation when actual dependency/build surfaces make those controls applicable and their governed design is selected.
+- [x] Add proposal-only dependency update configuration for Go modules and GitHub Actions through `.github/dependabot.yml`; generated proposals still require review/test/merge.
+- [ ] Add SBOM generation and appropriate vulnerability/security scanning automation without introducing unreviewed moving tool dependencies.
 
-The current service foundation is intentionally not ready for production or end-user use. Readiness remains non-passing until the required data layer and subsequent acceptance gates exist.
+The current Development foundation is intentionally not ready for production or end-user use. Readiness can pass only for a configured exact-current PostgreSQL schema; deployment, authentication, backup/recovery, user APIs, and subsequent acceptance gates remain open.
 
 ## Phase 1 — Bookmarking foundation
 
@@ -103,6 +106,6 @@ All nine Integral Platform Systems must be evaluated according to current author
 
 Current verified direction:
 
-**Experimental** → Development → Release Candidate → Stable
+**Development** → Release Candidate → Stable
 
-Experimental is appropriate to the current executable prototype foundation. Movement to Development requires evidence of active product implementation beyond this narrow service scaffold; later lifecycle movement requires the destination-state evidence and authoritative-record updates required by GoreeCloud governance.
+Development is appropriate to the current active implementation/validation state. Movement to Release Candidate requires an identifiable candidate plus the applicable production-readiness, platform, security, privacy, recovery, compatibility, accessibility, and acceptance evidence.

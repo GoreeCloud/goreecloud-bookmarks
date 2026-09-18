@@ -2,27 +2,27 @@
 
 ## Status
 
-GoreeCloud Bookmarks is currently an **Experimental** project with a minimal Go service foundation.
+GoreeCloud Bookmarks is currently a **Development** project with a Go/PostgreSQL service and persistence foundation.
 
-The implemented service currently exposes only bounded health/readiness behavior. It does **not** implement accounts, bookmark persistence, archive processing, search indexing, synchronization, telemetry collection, sharing, or a production user-data-processing path.
+The implemented service exposes bounded health/readiness behavior and an internal PostgreSQL Bookmark persistence layer used through source/tests. It does **not** expose an authenticated bookmark-domain HTTP API, account system, archive processing, search indexing, synchronization, telemetry collection, sharing, or a production user-data-processing path.
 
 This document therefore records both the required privacy model for future Bookmarks functionality and the narrow current processing boundary. It must continue to be updated before user bookmark data is processed by newly implemented subsystems.
 
-## Current experimental processing boundary
+## Current Development processing boundary
 
 The current service foundation:
 
-- does not accept or store bookmark content;
+- can store the implemented Bookmark-row subset when PostgreSQL is explicitly configured, but does not expose a user-facing bookmark ingestion API;
 - does not implement a user/account database;
 - does not implement archive capture or content extraction;
 - does not implement search queries or indexes;
 - does not implement synchronization or sharing;
 - does not implement application telemetry;
-- does not include a third-party runtime module dependency;
+- uses `github.com/jackc/pgx/v5` `v5.11.0` for PostgreSQL connectivity; no bookmark content is sent to that library as an external network service beyond the configured PostgreSQL connection;
 - exposes health/readiness JSON containing only bounded service state;
 - logs service startup/shutdown/error information without a designed user-content logging path.
 
-The optional `GOREECLOUD_BOOKMARKS_LISTEN_ADDR` variable configures a listener address and is not a secret. Active credentials or secret-bearing configuration must remain outside source control under GoreeCloud sensitive-information requirements.
+The optional `GOREECLOUD_BOOKMARKS_LISTEN_ADDR` variable configures a listener address and is not a secret. `GOREECLOUD_BOOKMARKS_DATABASE_URL` may contain database credentials and must remain protected external configuration outside source control under GoreeCloud sensitive-information requirements.
 
 Repository hosting, GitHub Actions, and development-platform processing are separate from a future Bookmarks user-data runtime and remain governed by their applicable systems and policies.
 
@@ -86,4 +86,4 @@ Future implementation must define retention and deletion behavior for bookmark m
 
 ## Current data-processing statement
 
-At the Experimental source state represented by this policy, GoreeCloud Bookmarks has an executable service process but no implemented user bookmark-data plane. No claim of complete Privacy Shield integration, production privacy acceptance, or Private Vault behavior is established.
+At the Development source state represented by this policy, GoreeCloud Bookmarks has an executable service and internal PostgreSQL bookmark persistence foundation but no authenticated end-user bookmark-data plane or production deployment. No claim of complete Privacy Shield integration, production privacy acceptance, or Private Vault behavior is established.

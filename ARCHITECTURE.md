@@ -4,8 +4,8 @@
 
 - **Product:** GoreeCloud Bookmarks
 - **Repository:** `GoreeCloud/goreecloud-bookmarks`
-- **Release lifecycle:** Experimental
-- **Architecture state:** Selected architecture with a minimal executable Go service foundation; broader product runtime remains unimplemented.
+- **Release lifecycle:** Development
+- **Architecture state:** Selected architecture with an implemented Go/PostgreSQL service and persistence foundation; broader product runtime remains incomplete.
 - **Authoritative product scope:** `SPECIFICATIONS.md` and `GoreeCloud/Projects/Project Specification — Bookmarks.md`
 - **Current Platform Contract:** `0.4`
 - **Current repository license:** `AGPL-3.0-or-later` fallback unless an authorized Bookmarks-specific decision supersedes it.
@@ -53,7 +53,7 @@ These boundaries do not initially require separate repositories, network service
 
 ### Current implementation
 
-The first executable server foundation is implemented in Go `1.27.1` using only the Go standard library at runtime.
+The current server is implemented in Go `1.27.1`. It uses the standard library for HTTP/service behavior and `github.com/jackc/pgx/v5` `v5.11.0` for PostgreSQL connectivity/pooling.
 
 Current source provides:
 
@@ -63,9 +63,11 @@ Current source provides:
 - graceful process shutdown;
 - loopback-only default development binding;
 - health and fail-closed readiness endpoints;
-- unit tests and repository CI validation.
+- unit tests plus mandatory PostgreSQL integration validation in repository CI.
+- explicit schema migration through `cmd/bookmarks-migrate`;
+- owner-scoped internal bookmark create/read persistence.
 
-It does **not** yet provide bookmark persistence, authentication, authorization, PostgreSQL access, background jobs, archive processing, search, synchronization, or user-facing product functionality.
+It does **not** yet provide authentication, authorization, bookmark-domain HTTP operations, background jobs, archive processing, search, synchronization, or user-facing product functionality.
 
 ### Server authority
 
@@ -101,15 +103,15 @@ No native Bookmarks client is currently implemented.
 
 ## 6. Server database and relational state
 
-Selected authoritative relational database: **PostgreSQL**.
+Implemented authoritative relational database foundation: **PostgreSQL**. The current CI validation baseline is PostgreSQL `18.6`; production support is not yet qualified.
 
 Planned relational/transactional state includes users/service identity references, devices, bookmarks, collections, tags, notes, highlights, reminders, shares, permissions, automation rules, archive metadata, link-health state, synchronization revisions, durable jobs, saved searches, and server-visible preferences.
 
 A dedicated Bookmarks database is preferred unless a later approved design provides a documented benefit without weakening isolation, backup, migration, or recovery.
 
-Schema evolution must use ordered, version-controlled migrations. `docs/data-model.md` defines logical ownership; `docs/migrations.md` defines version, compatibility, destructive-change, rollback, and recovery requirements.
+Schema evolution uses ordered, embedded version-controlled migrations. Migration version `1` creates the initial `bookmarks` relation; applied history is checksummed and guarded by an advisory lock. `docs/data-model.md` defines logical ownership; `docs/migrations.md` defines version, compatibility, destructive-change, rollback, and recovery requirements.
 
-**Current state:** no PostgreSQL connection, schema, migration, or persistent bookmark record is implemented. This is why readiness intentionally fails.
+**Current state:** PostgreSQL connection/pooling, exact schema-state checks, explicit migration execution, migration version `1`, and owner-scoped internal bookmark create/read persistence are implemented. Readiness passes only when the configured database is reachable and its embedded migration history is current and untampered.
 
 ## 7. Search architecture
 
@@ -158,7 +160,7 @@ Required design behavior includes stable opaque IDs, authorization, request vali
 Only these routes are currently implemented:
 
 - `GET /api/v1/health` — returns HTTP `200` with bounded process-health JSON.
-- `GET /api/v1/ready` — returns HTTP `503` with `ready: false` and `bookmarks-data: not-configured` until the required data layer exists.
+- `GET /api/v1/ready` — returns bounded database/schema readiness. It remains HTTP `503` for absent/unreachable/migration-required/newer/tampered/invalid database state and may return HTTP `200` only for a reachable exact-current schema.
 
 The current health/readiness implementation does not require authentication because it returns only bounded service state and no user/content/dependency detail.
 
@@ -186,7 +188,7 @@ Selected future self-hosted deployment boundary: **Docker Compose** with:
 
 Future deployment must use purpose-specific internal networking, avoid general PostgreSQL host publication, preserve state outside replaceable containers, keep secrets outside Git, pin production images, expose truthful health/readiness, and separate test/production credentials/data/storage.
 
-No hostname, DNS record, Caddy route, NetBird policy, public/private production port, secret, production storage path, container stack, or deployment is established by the current experimental source.
+No hostname, DNS record, Caddy route, NetBird policy, public/private production port, secret, production storage path, container stack, or deployment is established by the current Development source.
 
 ## 13. Backup, export, and recovery boundaries
 

@@ -2,7 +2,7 @@
 
 ## Current state
 
-GoreeCloud Bookmarks is currently **Experimental** and contains a minimal Go service foundation.
+GoreeCloud Bookmarks is currently **Development** and contains a Go/PostgreSQL service and persistence foundation.
 
 Current implemented security-relevant behavior is deliberately narrow:
 
@@ -10,12 +10,13 @@ Current implemented security-relevant behavior is deliberately narrow:
 - The HTTP server uses bounded read-header, read, write, and idle timeouts.
 - SIGINT/SIGTERM trigger bounded graceful shutdown.
 - Responses set `X-Content-Type-Options: nosniff` and `Cache-Control: no-store`.
-- Readiness fails closed with HTTP `503` while the required Bookmarks data layer does not exist.
+- Readiness fails closed for absent, unreachable, migration-required, newer-than-binary, tampered, or invalid PostgreSQL schema state.
 - No active credentials or secrets are embedded in the current source.
-- The executable service currently uses only the Go standard library at runtime.
-- Repository CI uses pinned GitHub Action revisions and validates formatting, vetting, tests, and build.
+- The direct database runtime dependency is `github.com/jackc/pgx/v5` `v5.11.0`; provenance/licensing is recorded in `docs/dependencies.md`.
+- Active database URLs remain external protected configuration and are not logged or committed.
+- Repository CI uses pinned GitHub Action revisions and validates formatting, module tidiness, vetting, unit/integration tests against ephemeral PostgreSQL, and builds.
 
-These controls apply only to the current experimental foundation. They do not establish production hardening, authentication, authorization, TLS termination, database security, Wardveil acceptance, Privacy Shield acceptance, deployment security, or production readiness.
+These controls apply only to the current Development foundation. They do not establish production hardening, authentication, authorization, TLS termination, database deployment security, Wardveil acceptance, Privacy Shield acceptance, backup/recovery qualification, or production readiness.
 
 ## Security objectives for future implementation
 
@@ -40,11 +41,11 @@ Future implementation must address, as applicable:
 
 ## Current attack-surface boundary
 
-The current service does not implement bookmark mutation or content ingestion, so capture/parser/archive/import/search/sync attack surfaces are not yet active Bookmarks runtime capabilities.
+The current service does not expose bookmark mutation/content ingestion over HTTP, so capture/parser/archive/import/search/sync attack surfaces are not yet active user-facing capabilities. The internal PostgreSQL layer can persist test/development bookmark rows when explicitly configured.
 
 The current HTTP foundation must still be treated as untrusted-input-facing code if an operator deliberately binds it beyond loopback. No production exposure is authorized or documented by this repository state.
 
-`GOREECLOUD_BOOKMARKS_LISTEN_ADDR` is a non-secret configuration value. Future credential-bearing configuration must follow GoreeCloud sensitive-information separation requirements and must not be committed to ordinary source history.
+`GOREECLOUD_BOOKMARKS_LISTEN_ADDR` is a non-secret configuration value. `GOREECLOUD_BOOKMARKS_DATABASE_URL` may contain credentials and is protected configuration; active values must not be committed to ordinary source history.
 
 ## Safe archival requirement
 
@@ -60,11 +61,11 @@ No Bookmarks-specific Wardveil integration or acceptance evidence is currently v
 
 ## Dependency and build security
 
-The first service foundation has no third-party Go runtime module dependency. This reduces, but does not eliminate, supply-chain risk.
+The current direct Go runtime dependency is `github.com/jackc/pgx/v5` `v5.11.0`. Its MIT license/provenance baseline and transitive dependency set are recorded through `docs/dependencies.md`, `go.mod`, and `go.sum`. Dependency maintenance and vulnerability review are continuing obligations.
 
 The validation workflow pins `actions/checkout` and `actions/setup-go` to exact Git commit revisions. Build and CI dependencies remain subject to GoreeCloud security-update and vulnerability-management requirements.
 
-Future Go modules, parsers, database drivers, archive libraries, frontend packages, client dependencies, container images, and workflow dependencies must be reviewed for necessity, provenance, licensing, support, and security before they become accepted project dependencies.
+Future Go modules, parsers, archive libraries, frontend packages, client dependencies, production container images, and workflow dependencies must be reviewed for necessity, provenance, licensing, support, and security before they become accepted project dependencies.
 
 ## Vulnerability reporting
 
@@ -74,4 +75,4 @@ Do not place reusable secrets, private keys, API tokens, credentials, recovery c
 
 ## Security claims
 
-Do not describe GoreeCloud Bookmarks as secure, hardened, Wardveil-conformant, production-ready, or accepted merely because the experimental service builds, tests pass, or health returns `200`. Those claims require implementation and attributable evidence for the exact claimed scope.
+Do not describe GoreeCloud Bookmarks as secure, hardened, Wardveil-conformant, production-ready, or accepted merely because the Development service/database foundation builds, tests pass, or health/readiness succeeds in CI. Those claims require implementation and attributable evidence for the exact claimed scope.
