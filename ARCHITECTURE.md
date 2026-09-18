@@ -83,7 +83,11 @@ It is intended to consume the same versioned Bookmarks API as other clients and 
 
 The exact TypeScript UI framework remains deferred pending accessibility, Glaze UI, security, maintenance, reproducibility, and technology-independence review. No web client is currently implemented.
 
-## 5. Native clients
+## 5. Native and browser clients
+
+### Firefox
+
+An application-owned Firefox client source candidate is implemented under `clients/firefox/`. It uses Firefox Manifest V3, add-on ID `goreecloud-bookmarks@goreecloud.com`, and the planned Bookmarks application API rather than becoming a separate data authority. The client remains Development/source-candidate because authoritative `main` does not yet expose the required `/api/v1/bookmarks/extension-capture` endpoint and no Mozilla-signed runtime/restart acceptance has been completed.
 
 ### Android
 
@@ -99,7 +103,7 @@ Selected direction: **Rust with GTK 4**. `libadwaita` may be evaluated only if c
 
 The planned Linux distribution preference remains `.deb`, then Flatpak, then AppImage when each is technically appropriate and validated.
 
-No native Bookmarks client is currently implemented.
+No native Android, Apple, or Linux Bookmarks client is currently implemented. The Firefox browser client source candidate is present, but it is not an accepted end-to-end user workflow.
 
 ## 6. Server database and relational state
 
@@ -227,6 +231,7 @@ Current implemented source structure begins as:
 ```text
 cmd/bookmarks/           Go service entry point and entry-point tests
 internal/httpapi/        HTTP routing, health/readiness behavior, and tests
+clients/firefox/          Firefox client source candidate, validation, and packaging
 docs/api/                planned API contract and guidance
 docs/data-model.md       logical data ownership/model
 docs/migrations.md       version/migration/rollback requirements
@@ -234,7 +239,7 @@ docs/migrations.md       version/migration/rollback requirements
 go.mod                   pinned Go toolchain baseline
 ```
 
-Future source may add conventional locations such as `web/`, `clients/android/`, `clients/linux/`, `clients/apple/`, `migrations/`, and supplementary `docs/` areas when implementation actually requires them. Empty scaffolding must not be created solely to make the repository look complete.
+Future source may add conventional locations such as `web/`, `clients/android/`, `clients/linux/`, `clients/apple/`, `migrations/`, and supplementary `docs/` areas when implementation actually requires them. `clients/firefox/` is now an implemented source location rather than future scaffolding. Empty scaffolding must not be created solely to make the repository look complete.
 
 ## 17. Decisions intentionally deferred
 
@@ -266,7 +271,7 @@ It does **not** establish that:
 - authentication or authorization exists;
 - planned bookmark/collection/tag/note/archive/sync API operations exist;
 - WARC capture works;
-- any web/native client exists;
+- any web/native mobile or desktop client exists; the Firefox browser client source candidate exists but remains blocked on its application endpoint and release gates;
 - synchronization works;
 - Docker Compose deployment exists;
 - any of the nine Integral Platform Systems has passed Bookmarks acceptance;
