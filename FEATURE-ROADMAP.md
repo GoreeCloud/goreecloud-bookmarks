@@ -28,7 +28,8 @@ Foundation work that remains open:
 - [ ] Activate required protection/rulesets for `main`; current GitHub state remains unprotected and the connected integration does not expose the necessary administration write.
 - [ ] Remove merged short-lived branches when a branch-delete capability is available and dependencies are verified absent.
 - [ ] Maintain exact-revision validation and documentation synchronization for future changes.
-- [ ] Add dependency-maintenance/SBOM/security automation when actual dependency/build surfaces make those controls applicable and their governed design is selected.
+- [x] Add proposal-only dependency update configuration for Go modules and GitHub Actions through `.github/dependabot.yml`; generated proposals still require review/test/merge.
+- [ ] Add SBOM generation and appropriate vulnerability/security scanning automation without introducing unreviewed moving tool dependencies.
 
 The current Development foundation is intentionally not ready for production or end-user use. Readiness can pass only for a configured exact-current PostgreSQL schema; deployment, authentication, backup/recovery, user APIs, and subsequent acceptance gates remain open.
 
