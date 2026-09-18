@@ -311,11 +311,16 @@ func schemaState(ctx context.Context, q queryer) (SchemaState, error) {
 		}
 	}
 
-	var bookmarksExists bool
-	if err := q.QueryRow(ctx, "SELECT to_regclass('public.bookmarks') IS NOT NULL").Scan(&bookmarksExists); err != nil {
-		return SchemaInvalid, errors.New("inspect bookmarks table failed")
+	var bookmarksExists, idempotencyExists, ownerIndexExists bool
+	if err := q.QueryRow(ctx, `
+SELECT
+    to_regclass('public.bookmarks') IS NOT NULL,
+    to_regclass('public.bookmark_create_idempotency') IS NOT NULL,
+    to_regclass('public.bookmarks_owner_id_id_unique') IS NOT NULL
+`).Scan(&bookmarksExists, &idempotencyExists, &ownerIndexExists); err != nil {
+		return SchemaInvalid, errors.New("inspect required bookmark schema objects failed")
 	}
-	if !bookmarksExists {
+	if !bookmarksExists || !idempotencyExists || !ownerIndexExists {
 		return SchemaInvalid, nil
 	}
 
