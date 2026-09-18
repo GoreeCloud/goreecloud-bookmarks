@@ -5,28 +5,30 @@
 This file records the current verified capability state represented by the source in `GoreeCloud/goreecloud-bookmarks`.
 
 **Verified state date:** 2026-09-17  
-**Release lifecycle:** Experimental  
-**Implementation status:** Minimal Go service foundation implemented; no end-user bookmarking workflow or persistent Bookmarks data layer is implemented.  
+**Release lifecycle:** Development  
+**Implementation status:** Go/PostgreSQL service and persistence foundation implemented; no authenticated end-user bookmarking workflow is implemented.  
 **Platform Contract:** `0.4`, conformance `unverified`.
 
 The planned product vision remains defined by `SPECIFICATIONS.md`, `ARCHITECTURE.md`, the repository API/data contracts, and the canonical GoreeCloud project specification. Planned functionality must not be interpreted as current capability.
 
-## Verified experimental service foundation
+## Verified Development service and data foundation
 
-The repository now contains a minimal executable Go service foundation using the Go standard library.
+The repository contains an executable Go service plus a bounded PostgreSQL persistence and migration foundation. The HTTP surface remains intentionally limited to health/readiness; bookmark-domain persistence is internal and not exposed as an unauthenticated user API.
 
 Implemented behavior is limited to:
 
 - `GET /api/v1/health` returning HTTP `200` with bounded JSON process-health state.
-- `GET /api/v1/ready` returning HTTP `503` with `ready: false` while the required Bookmarks data layer is not configured.
+- `GET /api/v1/ready` failing closed unless configured PostgreSQL is reachable and the exact embedded migration history is current and untampered.
 - `Cache-Control: no-store` and `X-Content-Type-Options: nosniff` response headers on the current HTTP surface.
 - Method-aware routing that rejects unsupported methods for the implemented routes.
 - A local-development default listen address of `127.0.0.1:8080` with an optional `GOREECLOUD_BOOKMARKS_LISTEN_ADDR` override.
 - Bounded HTTP timeouts and graceful SIGINT/SIGTERM shutdown.
 - Unit tests for health, fail-closed readiness, method handling, and listen-address behavior.
-- Repository CI that checks the pinned Go toolchain, formatting, vetting, tests, and service build.
+- Explicit `bookmarks-migrate` command for ordered, checksummed PostgreSQL schema migrations; ordinary service startup does not mutate schema automatically.
+- Initial `bookmarks` table and owner-scoped internal create/read persistence for the selected Bookmark subset.
+- Repository CI that checks the pinned Go toolchain, formatting, module tidiness, vetting, unit/integration tests against PostgreSQL, and both service/migration-command builds.
 
-This foundation is an engineering prototype. Health means only that the process can answer its bounded health request. Readiness intentionally remains non-passing because no authoritative bookmark persistence layer exists.
+This remains Development-stage engineering software. Health means only that the process can answer its bounded health request. Readiness can pass only against an explicitly configured, reachable PostgreSQL database whose migration history exactly matches the embedded schema contract.
 
 ## User capabilities
 
@@ -34,7 +36,9 @@ No end-user bookmark creation, Inbox, collections, tags, favorites, Read Later, 
 
 ## Data and persistence
 
-No PostgreSQL schema, database connection, durable bookmark record, migration runner, SQLite client database, archive store, search index, or synchronization store is currently implemented.
+PostgreSQL connectivity, migration history, schema version checks, migration version `1`, the initial `bookmarks` relation, and internal owner-scoped bookmark create/read persistence are implemented. The migration runner rejects newer-than-binary and tampered migration histories and is invoked explicitly through `cmd/bookmarks-migrate`.
+
+No SQLite client database, archive store, search index, synchronization store, authenticated bookmark-domain HTTP route, backup/restore path, or production database deployment is implemented.
 
 The planned data model and migration rules remain documented in `docs/data-model.md` and `docs/migrations.md`; documentation is not persistence evidence.
 
@@ -68,13 +72,13 @@ The Platform Contract declaration keeps all nine `applicable-blocked`. No Bookma
 
 ## Security and privacy
 
-The current service foundation does not process user bookmark content, accounts, credentials, archives, searches, or synchronization data. It contains no active secret values and has no third-party runtime module dependency.
+The current Development source can persist bookmark records when a database is explicitly configured. Database URLs are protected external configuration and are not logged or committed. The direct Go runtime dependency is `github.com/jackc/pgx/v5` `v5.11.0`; its provenance/license baseline is recorded in `docs/dependencies.md`. Authentication, authorization, archives, searches, and synchronization remain unimplemented.
 
 That narrow state does not establish that GoreeCloud Bookmarks is secure, hardened, private-by-default in a complete product sense, Wardveil-conformant, Privacy-Shield-conformant, production-ready, or accepted. Those claims require implementation and attributable evidence at the relevant revision.
 
 ## Resilience, backup, and recovery
 
-Graceful process shutdown is implemented for the experimental service foundation. No Bookmarks data backup, restore, archive recovery, migration recovery, tested rollback, or Everkeep integration is currently implemented because no authoritative Bookmarks data layer exists yet.
+Graceful process shutdown, ordered schema migration, exact migration-history verification, and fail-closed schema readiness are implemented. No Bookmarks database backup, tested restore, destructive-migration recovery, archive recovery, rollback qualification, or Everkeep integration is currently implemented.
 
 ## Accessibility and user interface
 
@@ -82,7 +86,7 @@ No Bookmarks user interface is currently implemented, so no Bookmarks-specific a
 
 ## Build and validation boundary
 
-The repository pins Go `1.27.1` and includes `.github/workflows/validate-go.yml` to validate formatting, `go vet`, unit tests, and service compilation on exact pull-request/source revisions.
+The repository pins Go `1.27.1` and includes `.github/workflows/validate-go.yml` to validate formatting, module tidiness, `go vet`, unit tests, mandatory PostgreSQL integration tests, and compilation of both the service and migration command on exact pull-request/source revisions.
 
 Source presence, passing CI, merge state, release state, deployment state, platform acceptance, production readiness, and Stable qualification are distinct states and must not be conflated.
 
