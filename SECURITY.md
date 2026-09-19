@@ -15,6 +15,7 @@ Current implemented security-relevant behavior is deliberately narrow:
 - The direct database runtime dependency is `github.com/jackc/pgx/v5` `v5.11.0`; provenance/licensing is recorded in `docs/dependencies.md`.
 - Active database URLs remain external protected configuration and are not logged or committed.
 - Repository CI uses pinned GitHub Action revisions and validates formatting, module tidiness, vetting, unit/integration tests against ephemeral PostgreSQL, and builds.
+- A separate fail-closed supply-chain workflow generates an exact-revision CycloneDX 1.6 SBOM and runs `govulncheck` against reachable Go vulnerabilities using pinned scanner/tool versions.
 
 These controls apply only to the current Development foundation. They do not establish production hardening, authentication, authorization, TLS termination, database deployment security, Wardveil acceptance, Privacy Shield acceptance, backup/recovery qualification, or production readiness.
 
@@ -63,7 +64,7 @@ No Bookmarks-specific Wardveil integration or acceptance evidence is currently v
 
 The current direct Go runtime dependency is `github.com/jackc/pgx/v5` `v5.11.0`. Its MIT license/provenance baseline and transitive dependency set are recorded through `docs/dependencies.md`, `go.mod`, and `go.sum`. Dependency maintenance and vulnerability review are continuing obligations.
 
-The validation workflow pins `actions/checkout` and `actions/setup-go` to exact Git commit revisions. Build and CI dependencies remain subject to GoreeCloud security-update and vulnerability-management requirements.
+The validation workflow pins `actions/checkout` and `actions/setup-go` to exact Git commit revisions. `.github/workflows/security-supply-chain.yml` additionally pins `govulncheck` `v1.8.0`, `cyclonedx-gomod` `v1.10.0`, and `actions/upload-artifact` `v7.0.1` by exact commit. The workflow generates a CycloneDX 1.6 JSON SBOM, validates its basic structure, retains it as a commit-SHA-named Actions artifact, and fails when `govulncheck` reports reachable known Go vulnerabilities or cannot complete successfully. Build and CI dependencies remain subject to GoreeCloud security-update and vulnerability-management requirements.
 
 Future Go modules, parsers, archive libraries, frontend packages, client dependencies, production container images, and workflow dependencies must be reviewed for necessity, provenance, licensing, support, and security before they become accepted project dependencies.
 
