@@ -30,7 +30,7 @@ The repository contains the current Development service/data foundation:
 - PostgreSQL connectivity through `pgx/v5` `v5.11.0`.
 - Explicit ordered/checksummed schema migrations through `cmd/bookmarks-migrate`; service startup never auto-migrates.
 - Initial bookmark persistence schema plus internal owner-scoped create/read operations.
-- Unit tests plus mandatory PostgreSQL integration tests and GitHub validation for formatting, module tidiness, vetting, tests, and builds.
+- Unit tests plus mandatory PostgreSQL integration tests and GitHub validation for formatting, module tidiness, vetting, tests, builds, exact-revision CycloneDX SBOM generation, and reachable Go vulnerability scanning.
 - Firefox client source candidate `0.1.1` under `clients/firefox/`, with add-on ID `goreecloud-bookmarks@goreecloud.com`, source validation, JavaScript syntax checks, and deterministic packaging.
 
 No authenticated bookmark-domain HTTP endpoint, GoreeCloud Identity integration, collections, tags, search, synchronization, archival, web UI, native desktop/mobile client, supported Docker deployment, backup/restore qualification, or accepted Integral Platform System integration is implemented yet. The Firefox client is not an end-to-end supported workflow because the required `/api/v1/bookmarks/extension-capture` application endpoint is not present on authoritative `main`, and runtime/signing acceptance remains incomplete.
@@ -50,7 +50,7 @@ go build -o ./build/goreecloud-bookmarks ./cmd/bookmarks
 go build -o ./build/goreecloud-bookmarks-migrate ./cmd/bookmarks-migrate
 ```
 
-The repository validation workflow separately verifies formatting without modifying files, vets, tests, and builds the exact candidate revision.
+The repository validation workflows separately verify formatting without modifying files, vet, test, build, generate a CycloneDX 1.6 SBOM, and run pinned `govulncheck` reachability scanning against the exact candidate revision.
 
 For local experimental execution:
 

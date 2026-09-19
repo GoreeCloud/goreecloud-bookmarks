@@ -78,7 +78,7 @@ The Platform Contract declaration keeps all nine `applicable-blocked`. No Bookma
 
 ## Security and privacy
 
-The current Development source can persist bookmark records when a database is explicitly configured. Database URLs are protected external configuration and are not logged or committed. The direct Go runtime dependency is `github.com/jackc/pgx/v5` `v5.11.0`; its provenance/license baseline is recorded in `docs/dependencies.md`. Authentication, authorization, archives, searches, and synchronization remain unimplemented.
+The current Development source can persist bookmark records when a database is explicitly configured. Database URLs are protected external configuration and are not logged or committed. The direct Go runtime dependency is `github.com/jackc/pgx/v5` `v5.11.0`; its provenance/license baseline is recorded in `docs/dependencies.md`. Exact-revision CI also generates a CycloneDX 1.6 SBOM and runs pinned `govulncheck` reachability scanning for known Go vulnerabilities. Authentication, authorization, archives, searches, and synchronization remain unimplemented.
 
 That narrow state does not establish that GoreeCloud Bookmarks is secure, hardened, private-by-default in a complete product sense, Wardveil-conformant, Privacy-Shield-conformant, production-ready, or accepted. Those claims require implementation and attributable evidence at the relevant revision.
 
@@ -92,7 +92,7 @@ Firefox popup/options interface source is implemented under `clients/firefox/`, 
 
 ## Build and validation boundary
 
-The repository pins Go `1.27.1` and includes `.github/workflows/validate-go.yml` to validate formatting, module tidiness, `go vet`, unit tests, mandatory PostgreSQL integration tests, and compilation of both the service and migration command on exact pull-request/source revisions. `.github/workflows/firefox-client.yml` separately validates the Firefox source contract, JavaScript syntax, deterministic packaging, and XPI integrity for Firefox-client changes.
+The repository pins Go `1.27.1` and includes `.github/workflows/validate-go.yml` to validate formatting, module tidiness, `go vet`, unit tests, mandatory PostgreSQL integration tests, and compilation of both the service and migration command on exact pull-request/source revisions. `.github/workflows/security-supply-chain.yml` separately generates and retains a CycloneDX 1.6 JSON SBOM and fails closed on reachable known Go vulnerabilities through pinned `govulncheck`. `.github/workflows/firefox-client.yml` separately validates the Firefox source contract, JavaScript syntax, deterministic packaging, and XPI integrity for Firefox-client changes.
 
 Source presence, passing CI, merge state, release state, deployment state, platform acceptance, production readiness, and Stable qualification are distinct states and must not be conflated.
 

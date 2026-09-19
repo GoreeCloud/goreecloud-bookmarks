@@ -1,0 +1,89 @@
+name: Security Supply Chain
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-supply-chain-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  supply-chain:
+    name: SBOM and Go vulnerability scan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    env:
+      GOTOOLCHAIN: local
+
+    steps:
+      - name: Check out exact candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Set up pinned Go toolchain
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          check-latest: false
+          cache: false
+
+      - name: Verify toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(go env GOVERSION)" = "go1.27.1"
+
+      - name: Generate CycloneDX SBOM
+        shell: bash
+        run: |
+          set -euo pipefail
+          sbom="${RUNNER_TEMP}/goreecloud-bookmarks.cdx.json"
+          go run github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@v1.10.0 \
+            mod \
+            -json \
+            -licenses \
+            -std \
+            -output-version 1.6 \
+            -output "$sbom" \
+            .
+          test -s "$sbom"
+          python3 - "$sbom" <<'PY'
+          import json
+          import sys
+
+          path = sys.argv[1]
+          with open(path, "r", encoding="utf-8") as handle:
+              document = json.load(handle)
+
+          if document.get("bomFormat") != "CycloneDX":
+              raise SystemExit("SBOM bomFormat is not CycloneDX")
+          if document.get("specVersion") != "1.6":
+              raise SystemExit("SBOM specVersion is not 1.6")
+          if not isinstance(document.get("components"), list):
+              raise SystemExit("SBOM components are missing")
+          PY
+
+      - name: Upload exact-revision SBOM
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: goreecloud-bookmarks-sbom-${{ github.sha }}
+          path: ${{ runner.temp }}/goreecloud-bookmarks.cdx.json
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Scan reachable Go vulnerabilities
+        shell: bash
+        run: |
+          set -euo pipefail
+          go run golang.org/x/vuln/cmd/govulncheck@v1.8.0 ./...
