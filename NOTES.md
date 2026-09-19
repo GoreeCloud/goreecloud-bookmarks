@@ -4,20 +4,20 @@
 
 - Product lifecycle represented by this implementation candidate: **Development**.
 - Repository: `GoreeCloud/goreecloud-bookmarks`.
-- Current implementation: Go/PostgreSQL service and persistence foundation; no authenticated end-user bookmark HTTP data plane is implemented.
+- Current implementation: Go/PostgreSQL service and persistence foundation plus application-owned Firefox client source candidate; no authenticated end-user bookmark HTTP data plane is implemented.
 - Go baseline: `1.27.1`, pinned in `go.mod`.
 - Current direct Go runtime dependency: `github.com/jackc/pgx/v5` `v5.11.0`, with provenance/license baseline in `docs/dependencies.md`.
 - Implemented HTTP routes: `GET /api/v1/health` and `GET /api/v1/ready` only.
 - Current readiness behavior: fail closed unless configured PostgreSQL is reachable and the exact embedded migration history is current and untampered.
 - Development listener default: `127.0.0.1:8080`; optional non-secret override through `GOREECLOUD_BOOKMARKS_LISTEN_ADDR`.
-- Repository validation: `.github/workflows/validate-go.yml` pins its GitHub Actions revisions and validates the exact Go toolchain, formatting, module tidiness, `go vet`, unit/integration tests against ephemeral PostgreSQL `18.6`, and service/migration-command builds.
+- Repository validation: `.github/workflows/validate-go.yml` pins its GitHub Actions revisions and validates the exact Go toolchain, formatting, module tidiness, `go vet`, unit/integration tests against ephemeral PostgreSQL `18.6`, and service/migration-command builds. `.github/workflows/security-supply-chain.yml` adds exact-revision CycloneDX SBOM generation plus pinned `govulncheck` scanning.
 - Canonical product specification: `GoreeCloud/Projects/Project Specification — Bookmarks.md`.
 - Repository product specification: `SPECIFICATIONS.md`.
 - Repository architecture record: `ARCHITECTURE.md`.
 - Planned API contract: `docs/api/README.md` and `docs/api/openapi.yaml`.
 - Logical data model: `docs/data-model.md`.
 - Migration/compatibility rules: `docs/migrations.md`.
-- Related capture repository: `GoreeCloud/goreecloud-bookmark-browser-extension`.
+- Firefox client ownership: current source lives under `clients/firefox/` in this application repository; the former shared extension copy is historical/transitional provenance rather than an active Bookmarks source authority.
 - Platform Contract baseline: `0.4`.
 - Integral Platform System model: exactly nine systems.
 - Stable Glaze UI consumer target referenced by Platform Contract `0.4`: `1.5.1`.
@@ -35,7 +35,7 @@
 - `docs/migrations.md` defines evolution/rollback behavior and now records the implemented explicit migration runner; destructive-migration recovery and production rollback remain unqualified.
 - GoreeCloud Bookmarks is authoritative for the implemented PostgreSQL bookmark-domain rows; GoreeCloud Identity remains authoritative for identity/credential data.
 - GoreeCloud Sync is separately governed and is not an Integral Platform System.
-- GoreeCloud Browser integration must be reconciled with Browser authority and the separate bookmark-browser-extension repository.
+- GoreeCloud Browser integration must be reconciled with Browser authority while keeping Bookmarks as the bookmark-domain authority; Firefox client source is maintained as an application-owned platform variant under `clients/firefox/`.
 - Optional intelligence must not become a dependency for core bookmarking.
 - The fallback license may be superseded only by an authorized Bookmarks-specific decision reconciled across repository and canonical records.
 
@@ -52,7 +52,9 @@ The current implemented foundation consists of:
 - `internal/httpapi/handler_test.go` — health, readiness, method, and response-behavior tests.
 - `cmd/bookmarks/main_test.go` — listen-address tests.
 - `go.mod` / `go.sum` — pinned Go `1.27.1` baseline plus reviewed `pgx/v5` dependency graph.
-- `.github/workflows/validate-go.yml` — exact-candidate validation.
+- `.github/workflows/validate-go.yml` — exact-candidate Go/PostgreSQL validation.
+- `.github/workflows/security-supply-chain.yml` — exact-revision CycloneDX SBOM generation and fail-closed Go vulnerability scanning.
+- `clients/firefox/` — application-owned Firefox client source candidate and validation/packaging records.
 
 The foundation deliberately does not expose a bookmark-domain HTTP API, invent local credentials, add placeholder clients, create a supported Docker deployment, or claim platform acceptance merely to increase apparent implementation breadth.
 
