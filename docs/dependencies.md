@@ -3,7 +3,7 @@
 ## Status
 
 - **Lifecycle:** Development
-- **Purpose:** Record accepted implementation/build/test dependencies introduced by the current PostgreSQL data foundation.
+- **Purpose:** Record accepted runtime, build, test, and security-validation dependencies used by the current Development foundation.
 - **Authority boundary:** This record documents repository dependency choices; it does not establish platform acceptance, production deployment, or release qualification.
 
 ## Go runtime dependency
@@ -36,7 +36,31 @@ This choice minimizes the initial dependency surface. It may be revisited if lat
 
 ## GitHub Actions dependencies
 
-The validation workflow uses GitHub Actions pinned to exact commit revisions. `.github/dependabot.yml` is configured to propose weekly Go-module and GitHub Actions updates; those proposals still require ordinary review and validation before merge. Build-time dependencies remain separate from application runtime dependencies and are subject to GoreeCloud security-update governance.
+The validation workflows use GitHub Actions pinned to exact commit revisions. `.github/dependabot.yml` is configured to propose weekly Go-module and GitHub Actions updates; those proposals still require ordinary review and validation before merge. Build-time dependencies remain separate from application runtime dependencies and are subject to GoreeCloud security-update governance.
+
+`.github/workflows/security-supply-chain.yml` additionally uses `actions/upload-artifact` at exact commit `043fb46d1a93c77aae656e7c1c64a875d1fc6a0a` (release `v7.0.1`) to retain the exact-revision CycloneDX SBOM as CI evidence. This is a CI-only GitHub-maintained dependency and does not become an application runtime dependency.
+
+## Security and SBOM tooling
+
+### `golang.org/x/vuln/cmd/govulncheck`
+
+- **Selected version:** `v1.8.0`.
+- **Role:** Exact-revision Go vulnerability reachability scan in CI.
+- **License:** BSD-3-Clause.
+- **Scope:** CI/security validation only; it is not linked into the Bookmarks runtime.
+- **Security behavior:** The tool version is pinned while its vulnerability database remains current by design. A scanner/tool/database failure or a reachable known vulnerability causes the workflow to fail rather than being converted into a pass.
+
+### `github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod`
+
+- **Selected version:** `v1.10.0`.
+- **Role:** Generate a machine-readable CycloneDX JSON SBOM for the Go module at the exact candidate revision.
+- **License:** Apache-2.0.
+- **Scope:** CI/security validation only; it is not linked into the Bookmarks runtime.
+- **Output contract:** CycloneDX `1.6` JSON including Go standard-library and module dependency inventory, retained as a GitHub Actions artifact named with the exact Git commit SHA.
+
+The security workflow invokes both Go security tools by exact module version through the pinned Go toolchain. It does not use `@latest`, floating container tags, or unpinned third-party actions.
+
+The current `pgx/v5 v5.11.0` baseline is newer than the patched version floors for the reviewed 2026 pgx advisories affecting versions before `v5.9.0` and `v5.9.2`. Exact-revision automated vulnerability scanning remains required because a one-time advisory review does not establish ongoing safety.
 
 ## Maintenance rule
 
