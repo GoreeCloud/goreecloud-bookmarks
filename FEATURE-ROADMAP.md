@@ -22,6 +22,7 @@ Verified completed foundation work:
 - [x] Go validation workflow added for exact-toolchain, formatting, module-tidy, vet, test, and build checks.
 - [x] PostgreSQL connectivity, explicit migration runner, migration history, initial Bookmark schema, and owner-scoped internal persistence implemented.
 - [x] Mandatory PostgreSQL integration validation added, including newer-schema and migration-history-tamper rejection.
+- [x] Exact-revision CycloneDX SBOM generation and pinned Go vulnerability scanning added as a fail-closed CI gate.
 
 Foundation work that remains open:
 
@@ -29,7 +30,6 @@ Foundation work that remains open:
 - [ ] Remove merged short-lived branches when a branch-delete capability is available and dependencies are verified absent.
 - [ ] Maintain exact-revision validation and documentation synchronization for future changes.
 - [x] Add proposal-only dependency update configuration for Go modules and GitHub Actions through `.github/dependabot.yml`; generated proposals still require review/test/merge.
-- [ ] Add SBOM generation and appropriate vulnerability/security scanning automation without introducing unreviewed moving tool dependencies.
 
 The current Development foundation is intentionally not ready for production or end-user use. Readiness can pass only for a configured exact-current PostgreSQL schema; deployment, authentication, backup/recovery, user APIs, and subsequent acceptance gates remain open.
 
