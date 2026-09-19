@@ -3,7 +3,7 @@
 ## Status
 
 **Release lifecycle:** Development  
-**Implementation status:** Go/PostgreSQL service and persistence foundation implemented; no authenticated end-user bookmark-management feature is currently exposed.  
+**Implementation status:** Go/PostgreSQL service and persistence foundation plus Firefox client source candidate implemented; no authenticated end-user bookmark-management feature is currently exposed.  
 **Authority:** Planned feature scope is derived from `SPECIFICATIONS.md` and the canonical GoreeCloud Bookmarks project specification. Current verified capability is recorded in `CAPABILITIES.md`.
 
 Inclusion in the planned catalog below does **not** mean a feature is implemented, validated, released, deployed, or production-ready.
@@ -18,6 +18,8 @@ The current source implements engineering service/data-foundation behavior:
 - Explicit ordered/checksummed PostgreSQL migrations and initial Bookmark persistence relation.
 - Owner-scoped internal bookmark create/read persistence; no bookmark-domain HTTP endpoint yet.
 - Automated formatting, module-tidy, vet, unit/integration-test, and build validation for the Go/PostgreSQL foundation.
+- Exact-revision CycloneDX SBOM generation and pinned `govulncheck` vulnerability scanning in fail-closed CI.
+- Application-owned Firefox client source candidate under `clients/firefox/`; application-backed capture and runtime/signing acceptance remain blocked.
 
 These are enabling runtime capabilities, not user-facing bookmark-management features.
 
@@ -107,4 +109,4 @@ These are enabling runtime capabilities, not user-facing bookmark-management fea
 
 ## Current verified capabilities
 
-See [`CAPABILITIES.md`](CAPABILITIES.md). At the current Experimental foundation, no end-user feature in the planned catalog above is verified as implemented.
+See [`CAPABILITIES.md`](CAPABILITIES.md). At the current Development foundation, no end-to-end end-user feature in the planned catalog above is verified as implemented; the Firefox source candidate does not change that boundary.
