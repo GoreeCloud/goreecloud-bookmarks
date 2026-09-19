@@ -17,7 +17,7 @@
 - **Security note:** v5.11.0 follows the 2026 pgx decoder/protocol hardening work and includes additional decoder hardening. Connection strings remain protected configuration.
 - **Replacement boundary:** Bookmarks persistence code is isolated under `internal/database/postgres`; application-domain code must not make pgx-specific types part of the external API contract.
 
-Direct/transitive module versions are pinned by `go.mod` and integrity-checked through `go.sum`. `go mod tidy -diff`, `go vet`, tests, and build validation run in repository CI.
+Direct/transitive module versions are pinned by `go.mod` and integrity-checked through `go.sum`. `golang.org/x/text` is explicitly held at `v0.39.0` as an indirect security floor because exact-revision `govulncheck` demonstrated a reachable `GO-2026-5970` path from Bookmarks through `pgxpool`; versions before `v0.39.0` are affected. `go mod tidy -diff`, `go vet`, tests, vulnerability scanning, and build validation run in repository CI.
 
 ## PostgreSQL server baseline
 
