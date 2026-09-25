@@ -3,10 +3,10 @@
 ## Authority and status
 
 **Release lifecycle:** Development  
-**Roadmap status:** Active; completion requires exact authoritative evidence.  
-**Canonical product scope:** `SPECIFICATIONS.md` and the canonical GoreeCloud Bookmarks project specification.
+**Roadmap status:** Legacy migration control — non-authoritative.  
+**Canonical product scope:** `PROJECT-SPECIFICATIONS.md`; significant project history is in `PROJECT-RECORD.md`.
 
-This roadmap orders intended work and records verified milestone state. It is not release, deployment, platform-acceptance, production-readiness, or Stable evidence.
+This legacy roadmap is retained temporarily as migration input for the separately governed repository-native feature/changelog migration. It is not current project-specification, release, deployment, platform-acceptance, production-readiness, or Stable evidence.
 
 ## Milestone 0 — Governed repository and executable foundation
 
@@ -28,7 +28,7 @@ Foundation work that remains open:
 
 - [ ] Activate required protection/rulesets for `main`; current GitHub state remains unprotected and the connected integration does not expose the necessary administration write.
 - [ ] Remove merged short-lived branches when a branch-delete capability is available and dependencies are verified absent.
-- [ ] Maintain exact-revision validation and documentation synchronization for future changes.
+- [ ] Maintain exact-revision validation and repository-native documentation reconciliation for future changes.
 - [x] Add proposal-only dependency update configuration for Go modules and GitHub Actions through `.github/dependabot.yml`; generated proposals still require review/test/merge.
 
 The current Development foundation is intentionally not ready for production or end-user use. Readiness can pass only for a configured exact-current PostgreSQL schema; deployment, authentication, backup/recovery, user APIs, and subsequent acceptance gates remain open.
@@ -109,3 +109,10 @@ Current verified direction:
 **Development** → Release Candidate → Stable
 
 Development is appropriate to the current active implementation/validation state. Movement to Release Candidate requires an identifiable candidate plus the applicable production-readiness, platform, security, privacy, recovery, compatibility, accessibility, and acceptance evidence.
+
+
+## Migration control
+
+Do not synchronize this file with Google Drive. Remaining obligations must be reconciled into the mandatory repository-native `IMPLEMENTED-FEATURES.md`, `PLANNED-FEATURES.md`, and `CHANGELOGS.md` records before this legacy roadmap is removed.
+
+Current project requirements belong in `PROJECT-SPECIFICATIONS.md`; significant project history belongs in `PROJECT-RECORD.md`. Completion claims require accepted repository evidence.
