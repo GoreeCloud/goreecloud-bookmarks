@@ -11,8 +11,8 @@
 - Current readiness behavior: fail closed unless configured PostgreSQL is reachable and the exact embedded migration history is current and untampered.
 - Development listener default: `127.0.0.1:8080`; optional non-secret override through `GOREECLOUD_BOOKMARKS_LISTEN_ADDR`.
 - Repository validation: `.github/workflows/validate-go.yml` pins its GitHub Actions revisions and validates the exact Go toolchain, formatting, module tidiness, `go vet`, unit/integration tests against ephemeral PostgreSQL `18.6`, and service/migration-command builds. `.github/workflows/security-supply-chain.yml` adds exact-revision CycloneDX SBOM generation plus pinned `govulncheck` scanning.
-- Canonical product specification: `GoreeCloud/Projects/Project Specification — Bookmarks.md`.
-- Repository product specification: `SPECIFICATIONS.md`.
+- Canonical product specification: `PROJECT-SPECIFICATIONS.md`.
+- Significant project history: `PROJECT-RECORD.md`.
 - Repository architecture record: `ARCHITECTURE.md`.
 - Planned API contract: `docs/api/README.md` and `docs/api/openapi.yaml`.
 - Logical data model: `docs/data-model.md`.
@@ -20,7 +20,7 @@
 - Firefox client ownership: current source lives under `clients/firefox/` in this application repository; the former shared extension copy is historical/transitional provenance rather than an active Bookmarks source authority.
 - Platform Contract baseline: `0.4`.
 - Integral Platform System model: exactly nine systems.
-- Stable Glaze UI consumer target referenced by Platform Contract `0.4`: `1.5.1`.
+- Current Official Stable Glaze UI consumer target: `1.6.0`; Bookmarks-specific conformance remains unverified.
 - Governing repository license: `AGPL-3.0-or-later` through the GoreeCloud default fallback; no Bookmarks-specific superseding license decision is currently recorded.
 - Default branch `main` remains unprotected in verified GitHub state; protection remains a repository-administration blocker.
 

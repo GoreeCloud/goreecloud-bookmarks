@@ -73,7 +73,8 @@ This service is not a production deployment target at the current lifecycle stat
 
 ## Repository documentation
 
-- [`SPECIFICATIONS.md`](SPECIFICATIONS.md) — planned product requirements.
+- [`PROJECT-SPECIFICATIONS.md`](PROJECT-SPECIFICATIONS.md) — authoritative product requirements and current/planned scope.
+- [`PROJECT-RECORD.md`](PROJECT-RECORD.md) — significant project history, migration decisions, and acceptance evidence.
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — selected architecture plus current implementation boundary.
 - [`CAPABILITIES.md`](CAPABILITIES.md) — current verified capability state.
 - [`FEATURES.md`](FEATURES.md) — current experimental foundation and planned feature catalog.
@@ -94,7 +95,7 @@ This service is not a production deployment target at the current lifecycle stat
 - [`goreecloud.platform.yaml`](goreecloud.platform.yaml) — Platform Contract `0.4` declaration with unverified conformance.
 - [`clients/firefox/`](clients/firefox/) — Firefox client source candidate, release gates, validation, and deterministic packaging.
 
-The canonical GoreeCloud product record is `GoreeCloud/Projects/Project Specification — Bookmarks.md` in the authorized GoreeCloud documentation system.
+The repository-local `PROJECT-SPECIFICATIONS.md` and `PROJECT-RECORD.md` are the canonical Bookmarks project-governance records once accepted on `main`. Google Drive is not a parallel authority.
 
 ## Selected architecture direction
 

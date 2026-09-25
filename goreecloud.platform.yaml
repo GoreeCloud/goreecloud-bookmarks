@@ -54,7 +54,7 @@ platform_systems:
     result: applicable-blocked
     version: null
     evidence: []
-    notes: "User-facing Browser, web, desktop, and mobile experiences remain unimplemented; the current Stable Glaze UI consumer target is 1.5.1, but no Bookmarks-specific implementation or acceptance evidence exists."
+    notes: "User-facing Browser, web, desktop, and mobile experiences remain unimplemented; the current Official Stable Glaze UI consumer target is 1.6.0, but no Bookmarks-specific implementation or acceptance evidence exists."
   mesh:
     result: applicable-blocked
     version: null
@@ -117,7 +117,7 @@ external_dependencies:
 
 compatibility:
   platform_contract: "0.4"
-  glaze_ui_required: "1.5.1"
+  glaze_ui_required: "1.6.0"
   requires: []
   provides: []
 

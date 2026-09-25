@@ -1,15 +1,31 @@
-# GoreeCloud Bookmarks — Repository Specification
+# GoreeCloud Bookmarks — Project Specifications
 
 ## Status and authority
 
 - **Product:** GoreeCloud Bookmarks
 - **Repository:** `GoreeCloud/goreecloud-bookmarks`
-- **Lifecycle/state represented here:** Planned product specification; implementation state must be established separately from repository evidence.
-- **Canonical project record:** `GoreeCloud/Projects/Project Specification — Bookmarks.md`
-- **Related repository:** `GoreeCloud/goreecloud-bookmark-browser-extension`
-- **Last reconciled:** 2026-09-17
+- **Lifecycle:** Development
+- **Repository visibility:** Public
+- **Default branch:** `main`
+- **Migration baseline:** `899f2294257cf47a3846a2af9d10c1e2c84477bb`
+- **Current governing license:** `AGPL-3.0-or-later` through the GoreeCloud fallback recorded in `LICENSE` and `LICENSE-DECISION.md`
+- **Canonical project record:** [PROJECT-RECORD.md](PROJECT-RECORD.md)
+- **Firefox client ownership:** application-owned source under `clients/firefox/`; the former standalone extension boundary is historical
+- **Canonical authority:** this file is the authoritative project specification once accepted on the default branch.
 
-> This file records intended product scope and architecture. It must not be used as evidence that a planned capability is implemented, deployed, validated, production-ready, or accepted.
+> Planned capability remains distinct from implemented, released, deployed, production-accepted, and Stable state. Current implementation truth is established by accepted repository evidence.
+
+## Migration and precedence
+
+This specification consolidates the former root `SPECIFICATIONS.md` with the active Google Drive **Project Specification — Bookmarks** (source ID `1SWEt2FFD8ATFJPn3CKTlnZO5E0MELR7P`) and verified repository state.
+
+The Drive source contains 69 numbered planned capability sections plus a September 2026 verified-state checkpoint. Its still-applicable product requirements are represented by the requirements below. Source-era implementation, Glaze version, roadmap synchronization, and repository-state claims do not override newer verified GitHub state.
+
+The archived Bookmarks Drive sources remain historical comparison material and must not override this active-source reconciliation.
+
+## Current design-system authority
+
+Live `GoreeCloud/glaze-ui` authority establishes **GLAZE UI V1.6 / 1.6.0** as the current Official Stable consumer baseline. Historical Bookmarks references to V1.5.1 are source-era state. Bookmarks remains `applicable-blocked` for Glaze UI and has no accepted Bookmarks-specific rendered/accessibility conformance evidence.
 
 ## 1. Product vision
 
@@ -433,6 +449,34 @@ The product should sit between traditional bookmarks, read-later software, web a
 
 ## 30. Current implementation boundary
 
-As of this reconciliation, the repository was verified to contain only its initial minimal `README.md` on `main`. This specification therefore establishes planned repository-coupled requirements only.
+At migration baseline `899f2294257cf47a3846a2af9d10c1e2c84477bb`, authoritative `main` contains a bounded Development service/data foundation and an application-owned Firefox client source candidate.
 
-No product capability described above may be promoted to current/implemented status until authoritative repository, test, runtime, release, and acceptance evidence supports that claim.
+Accepted Development evidence includes:
+- Go `1.27.1` service foundation;
+- `GET /api/v1/health`;
+- fail-closed PostgreSQL/schema-backed `GET /api/v1/ready`;
+- PostgreSQL through `pgx/v5` `v5.11.0`;
+- explicit ordered/checksummed migrations through `cmd/bookmarks-migrate`;
+- initial Bookmark relation and internal owner-scoped create/read persistence;
+- mandatory PostgreSQL integration tests;
+- exact-revision CycloneDX 1.6 SBOM generation;
+- pinned reachable-vulnerability scanning; and
+- Firefox client `0.1.1` source under `clients/firefox/` with validation and deterministic packaging.
+
+The required application-side Firefox capture endpoint is not present on authoritative `main`. No authenticated end-to-end bookmark workflow is accepted.
+
+Collections, tags, search, synchronization, archival, web UI, native desktop/mobile clients, production deployment, backup/restore qualification, and all nine Integral Platform System integrations remain unimplemented or unaccepted as described by current repository evidence.
+
+No planned capability may be promoted to implemented, released, deployed, Production Accepted, Release Candidate, or Stable state without authoritative exact-scope evidence.
+
+## 31. Repository-native governance
+
+The legacy `FEATURE-ROADMAP.md` is temporary migration input pending the separately governed feature/changelog migration required to establish `IMPLEMENTED-FEATURES.md`, `PLANNED-FEATURES.md`, and `CHANGELOGS.md`.
+
+Google Drive must not remain a parallel project-specification, feature-roadmap, or changelog authority after successful migration.
+
+## 32. Maintenance
+
+Update this specification when product scope, data authority, capture/sync architecture, client ownership, privacy/security, Glaze requirements, platform-system relationships, licensing, deployment, lifecycle, or retirement materially changes.
+
+Significant project history belongs in `PROJECT-RECORD.md`; routine accepted feature/fix chronology belongs in `CHANGELOGS.md` once that mandatory record is established.
