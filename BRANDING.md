@@ -16,7 +16,7 @@ Supporting workflow principle:
 
 ## Visual direction
 
-GoreeCloud Bookmarks should use the current approved Stable **Glaze UI** consumer contract at the time a user-facing implementation is built and qualified. The present Platform Contract reference target is Glaze UI `1.5.1`; documentation of that target is not acceptance evidence.
+GoreeCloud Bookmarks should use the current approved Stable **Glaze UI** consumer contract at the time a user-facing implementation is built and qualified. The current Official Stable Glaze UI consumer target is `1.6.0`; documentation of that target is not Bookmarks-specific acceptance evidence.
 
 Intended product-specific visual emphasis includes:
 
