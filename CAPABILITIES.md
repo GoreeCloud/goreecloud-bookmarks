@@ -9,7 +9,7 @@ This file records the current verified capability state represented by the sourc
 **Implementation status:** Go/PostgreSQL service and persistence foundation plus Firefox client source candidate implemented; no authenticated end-to-end bookmarking workflow is implemented.  
 **Platform Contract:** `0.4`, conformance `unverified`.
 
-The planned product vision remains defined by `SPECIFICATIONS.md`, `ARCHITECTURE.md`, the repository API/data contracts, and the canonical GoreeCloud project specification. Planned functionality must not be interpreted as current capability.
+The planned product vision remains defined by `PROJECT-SPECIFICATIONS.md`, `ARCHITECTURE.md`, and the repository API/data contracts. Planned functionality must not be interpreted as current capability.
 
 ## Verified Development service and data foundation
 
