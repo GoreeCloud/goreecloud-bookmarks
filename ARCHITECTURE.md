@@ -6,7 +6,7 @@
 - **Repository:** `GoreeCloud/goreecloud-bookmarks`
 - **Release lifecycle:** Development
 - **Architecture state:** Selected architecture with an implemented Go/PostgreSQL service and persistence foundation; broader product runtime remains incomplete.
-- **Authoritative product scope:** `SPECIFICATIONS.md` and `GoreeCloud/Projects/Project Specification — Bookmarks.md`
+- **Authoritative product scope:** `PROJECT-SPECIFICATIONS.md`; significant project history is recorded in `PROJECT-RECORD.md`
 - **Current Platform Contract:** `0.4`
 - **Current repository license:** `AGPL-3.0-or-later` fallback unless an authorized Bookmarks-specific decision supersedes it.
 - **API/data contracts:** `docs/api/README.md`, `docs/api/openapi.yaml`, `docs/data-model.md`, and `docs/migrations.md`.
