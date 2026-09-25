@@ -4,7 +4,7 @@
 
 **Release lifecycle:** Development  
 **Implementation status:** Go/PostgreSQL service and persistence foundation plus Firefox client source candidate implemented; no authenticated end-user bookmark-management feature is currently exposed.  
-**Authority:** Planned feature scope is derived from `SPECIFICATIONS.md` and the canonical GoreeCloud Bookmarks project specification. Current verified capability is recorded in `CAPABILITIES.md`.
+**Authority:** Planned feature scope is governed by `PROJECT-SPECIFICATIONS.md`. Current verified capability is recorded in `CAPABILITIES.md`.
 
 Inclusion in the planned catalog below does **not** mean a feature is implemented, validated, released, deployed, or production-ready.
 
