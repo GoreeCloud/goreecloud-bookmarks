@@ -66,6 +66,8 @@ The project-governance migration updates Bookmarks references to V1.6 while reta
 
 ## Drive project-specification migration
 
+Migration pull request: PR #14.
+
 The active Drive source, **Project Specification — Bookmarks** (source ID `1SWEt2FFD8ATFJPn3CKTlnZO5E0MELR7P`), contains 69 numbered planned capability sections plus a September 2026 verified-state checkpoint.
 
 The migration:
